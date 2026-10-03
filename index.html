@@ -1798,9 +1798,112 @@ var pjsLite = function (cv, text) {
     return P;
 };
 
+// The player code without its function wrapper.
+var pjsBody = function (code) {
+    var ls = code.slice(code.indexOf("{") + 1, code.lastIndexOf("}")).split("\n");
+    return ls.map(function (l) { return l.replace(/^ {4}/, ""); }).join("\n");
+};
+
+// Runs the player on a canvas in the page and returns a stop function.
+var pjsRun = function (cv, text) {
+    var P = pjsLite(cv, text);
+    var live = true;
+    var spot = function (e) {
+        var r = cv.getBoundingClientRect();
+        P.mouseX = (e.clientX - r.left) * cv.width / r.width;
+        P.mouseY = (e.clientY - r.top) * cv.height / r.height;
+    };
+    var click = function (e) {
+        spot(e);
+        if (P.mouseClicked) { P.mouseClicked(); }
+    };
+    var move = function (e) {
+        spot(e);
+        if (P.mouseMoved) { P.mouseMoved(); }
+    };
+    var key = function (e) {
+        var tag = document.activeElement ? document.activeElement.tagName : "";
+        if (tag === "INPUT" || tag === "TEXTAREA") { return; }
+        P.keyCode = e.keyCode;
+        if (e.keyCode === 32) { e.preventDefault(); }
+        if (P.keyPressed) { P.keyPressed(); }
+    };
+    new Function("P", "with (P) {\n" + pjsBody(String(playerSrc)) + "\n}")(P);
+    cv.addEventListener("click", click);
+    cv.addEventListener("mousemove", move);
+    window.addEventListener("keydown", key);
+    var loop = function () {
+        if (!live) { return; }
+        if (P.draw) { P.draw(); }
+        requestAnimationFrame(loop);
+    };
+    loop();
+    return function () {
+        live = false;
+        sfx.stop();
+        cv.removeEventListener("click", click);
+        cv.removeEventListener("mousemove", move);
+        window.removeEventListener("keydown", key);
+    };
+};
+
+// Khan Academy rewrites this page's code (dropping comments and adding loop checks).
+// When that happens, exports and the full window use the original page from GitHub instead.
+var orig = { text: null, tried: false, wait: [] };
+
+var getOrig = function (fn) {
+    if (orig.tried || !/KAInfiniteLoop/.test(String(playerSrc)) || !window.fetch || !window.voiceFrom) {
+        fn();
+        return;
+    }
+    orig.wait.push(fn);
+    if (orig.wait.length > 1) { return; }
+    var done = function (t) {
+        orig.tried = true;
+        orig.text = t ? t.replace(/\r/g, "") : null;
+        var list = orig.wait;
+        orig.wait = [];
+        list.forEach(function (f) { f(); });
+    };
+    fetch(voiceFrom[voiceFrom.length - 1].replace(/js\/$/, "") + "index.html").then(function (r) {
+        return r.ok ? r.text() : "";
+    }).then(done, function () { done(""); });
+};
+
+// The engine's credits, put back if Khan Academy's rewrite dropped the comment.
+var sfxCredits = [
+    "    /**",
+    "    *    --- SFX ENGINE ---",
+    "    *",
+    "    *    Code by SwankyMan",
+    "    *   IIFE by LemonTurtle",
+    "    *",
+    "    * AudioContext made by Squishy",
+    "    * Non ES6 and easy to use.",
+    "    *",
+    "    * Keep credits here. Do not remove.",
+    "    * Credits in comments other than here are not necessary.",
+    "    *",
+    "    **/"
+].join("\n");
+
 var pjs = {
-    lines: function (fn, keep) {
-        var src = fn.toString();
+    // Source of one of the page's functions, from the original page when there is one.
+    src: function (name) {
+        var t = orig.text;
+        var at = t ? t.indexOf("\nvar " + name + " = ") : -1;
+        if (at >= 0) {
+            var begin = at + ("\nvar " + name + " = ").length;
+            return t.slice(begin, t.indexOf("\n};", begin) + 2);
+        }
+        var fns = { sfxSrc: sfxSrc, sfxDefs: sfxDefs, coreSrc: coreSrc, playerSrc: playerSrc, pjsLite: pjsLite, pjsBody: pjsBody, pjsRun: pjsRun };
+        var code = String(fns[name]).replace(/KAInfiniteLoop\w*\([^()]*\);?\s*/g, "");
+        if (name === "sfxSrc" && code.indexOf("SFX ENGINE") < 0) { code = code.replace("{", "{\n" + sfxCredits); }
+        return code;
+    },
+
+    lines: function (name, keep) {
+        var src = pjs.src(name);
         var out = [];
         var inside = false;
         src.slice(src.indexOf("{") + 1, src.lastIndexOf("}")).split("\n").forEach(function (l) {
@@ -1875,20 +1978,19 @@ var pjs = {
             "",
             "// The SFX engine expects Processing's random(), which a plain page does not have.",
             "var random = function () { return Math.random(); };",
-            "var sfx = (" + sfxSrc.toString() + ")(); // SFX IIFE",
+            "var sfx = (" + pjs.src("sfxSrc") + ")(); // SFX IIFE",
             "",
-            pjs.lines(sfxDefs, true).join("\n"),
+            pjs.lines("sfxDefs", true).join("\n"),
             "",
-            "var core = (" + coreSrc.toString() + ")();",
+            "var core = (" + pjs.src("coreSrc") + ")();",
             "",
-            "var playerSrc = " + playerSrc.toString() + ";",
+            "var playerSrc = " + pjs.src("playerSrc") + ";",
             "",
-            "var pjsLite = " + pjsLite.toString() + ";",
+            "var pjsLite = " + pjs.src("pjsLite") + ";",
             "",
-            "var pjs = {",
-            "    lines: " + pjs.lines.toString() + ",",
-            "    run: " + pjs.run.toString(),
-            "};",
+            "var pjsBody = " + pjs.src("pjsBody") + ";",
+            "",
+            "var pjsRun = " + pjs.src("pjsRun") + ";",
             "",
             "// The singing voice loads from GitHub, the songs still play without it.",
             "var voiceFiles = [\"voice.js\", \"voice-hd.js\", \"voice-dict.js\"];",
@@ -1896,7 +1998,7 @@ var pjs = {
             "var start = function () {",
             "    if (started) { return; }",
             "    started = true;",
-            "    pjs.run(document.getElementById(\"cv\"), songs);",
+            "    pjsRun(document.getElementById(\"cv\"), songs);",
             "};",
             "voiceFiles.forEach(function (f, i) {",
             "    var tag = document.createElement(\"script\");",
@@ -1935,7 +2037,8 @@ var pjs = {
             "        <canvas id=\"cv\" width=\"600\" height=\"600\"></canvas>",
             "        <script>",
             js,
-            "        <\/script>",
+            // Split in two so no closing script tag ever appears in this page's own code, even after Khan Academy rewrites it.
+            "        </scr" + "ipt>",
             "    </body>",
             "</html>",
             ""
@@ -1944,7 +2047,7 @@ var pjs = {
 
     // texts: the song texts to put in the program, the first one plays first
     build: function (texts) {
-        var defs = pjs.lines(sfxDefs).join("\n");
+        var defs = pjs.lines("sfxDefs").join("\n");
         var title = core.decode(texts[0]).title || "Untitled";
         return [
             "/**",
@@ -1956,60 +2059,20 @@ var pjs = {
             texts.map(function (t) { return "    \"" + t + "\""; }).join(",\n"),
             "];",
             "",
-            "var sfx = (" + sfxSrc.toString().split("\n").filter(function (l) { return l.trim(); }).join("\n") + ")(); // SFX IIFE",
+            "var sfx = (" + pjs.src("sfxSrc").split("\n").filter(function (l) { return l.trim(); }).join("\n") + ")(); // SFX IIFE",
             defs,
             "",
             "var core = (function () {",
-            pjs.lines(coreSrc).map(function (l) { return "    " + l; }).join("\n"),
+            pjs.lines("coreSrc").map(function (l) { return "    " + l; }).join("\n"),
             "})();",
             "",
-            pjs.lines(playerSrc).join("\n"),
+            pjs.lines("playerSrc").join("\n"),
             ""
         ].join("\n");
     },
 
-    // Runs the player on a canvas in the page.
-    // Returns a stop function.
     run: function (cv, text) {
-        var P = pjsLite(cv, text);
-        var live = true;
-        var spot = function (e) {
-            var r = cv.getBoundingClientRect();
-            P.mouseX = (e.clientX - r.left) * cv.width / r.width;
-            P.mouseY = (e.clientY - r.top) * cv.height / r.height;
-        };
-        var click = function (e) {
-            spot(e);
-            if (P.mouseClicked) { P.mouseClicked(); }
-        };
-        var move = function (e) {
-            spot(e);
-            if (P.mouseMoved) { P.mouseMoved(); }
-        };
-        var key = function (e) {
-            var tag = document.activeElement ? document.activeElement.tagName : "";
-            if (tag === "INPUT" || tag === "TEXTAREA") { return; }
-            P.keyCode = e.keyCode;
-            if (e.keyCode === 32) { e.preventDefault(); }
-            if (P.keyPressed) { P.keyPressed(); }
-        };
-        new Function("P", "with (P) {\n" + pjs.lines(playerSrc, true).join("\n") + "\n}")(P);
-        cv.addEventListener("click", click);
-        cv.addEventListener("mousemove", move);
-        window.addEventListener("keydown", key);
-        var loop = function () {
-            if (!live) { return; }
-            if (P.draw) { P.draw(); }
-            requestAnimationFrame(loop);
-        };
-        loop();
-        return function () {
-            live = false;
-            sfx.stop();
-            cv.removeEventListener("click", click);
-            cv.removeEventListener("mousemove", move);
-            window.removeEventListener("keydown", key);
-        };
+        return pjsRun(cv, text);
     }
 };
         </script>
@@ -2019,7 +2082,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v2/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v3/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -3539,8 +3602,8 @@ var exportBox = function (kind) {
 };
 
 $("expBtn").addEventListener("click", function () { exportBox("text"); });
-$("pjsBtn").addEventListener("click", function () { exportBox("pjs"); });
-$("pageBtn").addEventListener("click", function () { exportBox("page"); });
+$("pjsBtn").addEventListener("click", function () { getOrig(function () { exportBox("pjs"); }); });
+$("pageBtn").addEventListener("click", function () { getOrig(function () { exportBox("page"); }); });
 
 $("impBtn").addEventListener("click", function () {
     modal({
@@ -3780,13 +3843,27 @@ var fullPage = function () {
     return "<!DOCTYPE html>" + page.outerHTML;
 };
 
+// The original page with the current song list written in, so the new window starts from scratch with the music.
+var withSongs = function (page) {
+    var open = '<script id="songScript">';
+    var at = page.indexOf(open);
+    var end = page.indexOf("</scr" + "ipt>", at);
+    if (at < 0 || end < 0) { return null; }
+    var mine = "\nvar startInPlayer = false;\nvar songs = " + JSON.stringify(book.list) + ";\nvar songAt = " + book.at + ";\nvar popped = true;\n";
+    return page.slice(0, at + open.length) + mine + page.slice(end);
+};
+
 $("fullBtn").addEventListener("click", function () {
-    var html = fullPage();
     stopPlay();
     var w = window.open();
     if (!w) { return; }
-    w.document.write(html);
-    w.document.close();
+    w.document.write("<p style=\"font: 16px sans-serif\">Opening Songboard...</p>");
+    getOrig(function () {
+        var html = (orig.text && withSongs(orig.text)) || fullPage();
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+    });
 });
 
 $("homeBtn").addEventListener("click", function () {
