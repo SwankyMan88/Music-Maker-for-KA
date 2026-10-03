@@ -490,6 +490,10 @@
                 justify-content: center;
                 gap: 12px;
             }
+            .stageBar {
+                display: flex;
+                gap: 8px;
+            }
             #stage.hide {
                 display: none;
             }
@@ -584,6 +588,8 @@
                         <option value="1">Off</option>
                     </select>
                 </label>
+                <select id="songSel" title="Songs in this page"></select>
+                <button id="songDel" title="Remove this song from the list">✕</button>
                 <input id="title" type="text" placeholder="Song title" maxlength="60">
                 <div class="grow"></div>
                 <button id="undoBtn" title="Ctrl+Z">Undo</button>
@@ -635,7 +641,10 @@
 
         <div id="stage" class="hide">
             <canvas id="stageCv" width="600" height="600"></canvas>
-            <button id="stageBtn">Open in editor</button>
+            <div class="stageBar">
+                <select id="stageSong" title="Pick a song"></select>
+                <button id="stageBtn">Open in editor</button>
+            </div>
         </div>
 
         <div id="modal" class="hide">
@@ -648,8 +657,11 @@
         </div>
 
         <script id="songScript">
-            // The song this page plays. Swap in text from Export Text to hardcode a different one.
-            var songText = "CkDMBBHcAyCAA8IACnC0CGCB8BGCB~K3BPmCACR~PAP6~KA~UAXkDACZ6CGCBg~ZA~PAR~PF~eGXuCACZ~jBZ~hClNVgDACF~oBIACNgDGCLg~/CBDGCvB~zBDACd8C~aBGCf~2CFR~PAn~kBE~3CDp~sDB~lBGLwCACd~qBL~6BB~pCxO~2SBV~pBI~2SDX~yCDACJ~7SQb~zZ7D~nE/B0BIAkCAA1DAtBvBgDwBtBSwBJVoDMEAGEAGJA~JES~SNI~SNO~SNc~oCfG~6CfU~SNK~+Df~oCoD~JOa~SMvBdgDAA8BTA7CAtBBy~GAQAtBMwBtBe~JAAtBU~NAa~aVmB~ODQ~oBE~bFS~1Be~OBW~NGVb4CAVQAVMYVbs~LFnB~XAMAVQ~XD~LD~WDUYVf~WDUYVX~WR~5C0CtBb~4JK~rJJ~pHIvBT6CAvBQAvBMAvBUEAyBkBAZAFxB8CGFRoCGFN~KAL~KAP~UPT~KAN~KAV~KAT~KAL~UNmb~pBjBGvBxB6CVAmBAAegP~jFEUAvBQwBvBuB~OIy~OJa~NIO~2BuBEvBq~bJG~NEgBA0CAE8BgDEQCGEADGKMEMEAFGEIGGKGHMuBKIwBEGJGEAKGKILMEEMGECNGKGOMuBGPwBEQQGEARGKMSMEATGEIUGKAV~eAWwBEGXGEAYGKCZMEGaGEIbGKGcMuBAdwBKceMKGeMEGfGEIYG6BAgB8BEK~zCCEMhBGEAiBGKUjBMKCkBMuBGlBwBKA~6BEmBGEIFG6BQnB8BEOaGEAoBGKIpBMEGqBGEKrBGKGMMuBGsBwBEc~jBbgDdB6CehBtB0BYEgBgPKwBeMKC~qFOO~qFDQ~qFKG~qFL~6BB~qFFM~qFBK~nEEEpBMECqBGEO~nEFC~qFK~jBT~qFD|Silver Boats|sil-|ver|b~PBon|mor-|ning|rain|sail-|~PAdown|the|win-~OA|pane|ev-|ry|drop|be-|comes|a|song|hum|it|as|we|float|a-|l~bAoh|let|shine|lit-|tle|star|is|m~WAhold|tight|will|sing|in-|to|n~XBHarmony";
+            // The songs this page plays, the first one opens in the player.
+            // Add lines from Export Text, or swap in a whole list from Export Text > The whole song list.
+            var songs = [
+                "CkDMBBHcAyCAA8IACnC0CGCB8BGCB~K3BPmCACR~PAP6~KA~UAXkDACZ6CGCBg~ZA~PAR~PF~eGXuCACZ~jBZ~hClNVgDACF~oBIACNgDGCLg~/CBDGCvB~zBDACd8C~aBGCf~2CFR~PAn~kBE~3CDp~sDB~lBGLwCACd~qBL~6BB~pCxO~2SBV~pBI~2SDX~yCDACJ~7SQb~zZ7D~nE/B0BIAkCAA1DAtBvBgDwBtBSwBJVoDMEAGEAGJA~JES~SNI~SNO~SNc~oCfG~6CfU~SNK~+Df~oCoD~JOa~SMvBdgDAA8BTA7CAtBBy~GAQAtBMwBtBe~JAAtBU~NAa~aVmB~ODQ~oBE~bFS~1Be~OBW~NGVb4CAVQAVMYVbs~LFnB~XAMAVQ~XD~LD~WDUYVf~WDUYVX~WR~5C0CtBb~4JK~rJJ~pHIvBT6CAvBQAvBMAvBUEAyBkBAZAFxB8CGFRoCGFN~KAL~KAP~UPT~KAN~KAV~KAT~KAL~UNmb~pBjBGvBxB6CVAmBAAegP~jFEUAvBQwBvBuB~OIy~OJa~NIO~2BuBEvBq~bJG~NEgBA0CAE8BgDEQCGEADGKMEMEAFGEIGGKGHMuBKIwBEGJGEAKGKILMEEMGECNGKGOMuBGPwBEQQGEARGKMSMEATGEIUGKAV~eAWwBEGXGEAYGKCZMEGaGEIbGKGcMuBAdwBKceMKGeMEGfGEIYG6BAgB8BEK~zCCEMhBGEAiBGKUjBMKCkBMuBGlBwBKA~6BEmBGEIFG6BQnB8BEOaGEAoBGKIpBMEGqBGEKrBGKGMMuBGsBwBEc~jBbgDdB6CehBtB0BYEgBgPKwBeMKC~qFOO~qFDQ~qFKG~qFL~6BB~qFFM~qFBK~nEEEpBMECqBGEO~nEFC~qFK~jBT~qFD|Silver Boats|sil-|ver|b~PBon|mor-|ning|rain|sail-|~PAdown|the|win-~OA|pane|ev-|ry|drop|be-|comes|a|song|hum|it|as|we|float|a-|l~bAoh|let|shine|lit-|tle|star|is|m~WAhold|tight|will|sing|in-|to|n~XBHarmony"
+            ];
         </script>
         <script>
 var random = function () {
@@ -1004,26 +1016,21 @@ var coreSrc = function () {
         { n: "Brass", g: "Wind", c: [233, 167, 66], l: [{ w: "saw", g: 0.24, a: 0.035, d: 0.3, s: 0.85, r: 0.12, ft: "lp", fc: 1.2, fe: 7, fk: 1, fd: 0.07, vb: [5.2, 10, 0.35] }, { w: "saw", dt: 6, g: 0.12, a: 0.04, d: 0.3, s: 0.85, r: 0.12, ft: "lp", fc: 1.2, fe: 7, fk: 1, fd: 0.07, vb: [5.2, 10, 0.35] }] },
         { n: "Flute", g: "Wind", c: [242, 211, 106], l: [{ w: "sin", g: 0.38, a: 0.07, d: 0.3, s: 0.9, r: 0.12, vb: [5, 16, 0.3] }, { w: "tri", m: 2, g: 0.05, a: 0.07, d: 0.3, s: 0.8, r: 0.12 }, { w: "noi", g: 0.06, a: 0.03, d: 0.15, s: 0.5, r: 0.1, ft: "bp", fc: 1, fk: 1, fq: 0.75 }] },
         { n: "Drum Kit", g: "Drums", c: [228, 93, 82], k: "kit", kit: {
-            35: { n: "Deep Kick", len: 0.6, l: [{ w: "sin", f: 45, g: 0.9, a: 0.001, d: 0.3, s: 0, r: 0.05, pe: [24, 0.05] }] }, 36: { n: "Kick", len: 0.45, l: [{ w: "sin", f: 50, g: 0.95, a: 0.001, d: 0.16, s: 0, r: 0.04, pe: [30, 0.03] }, { w: "noi", g: 0.2, a: 0.001, d: 0.008, s: 0, r: 0.01, ft: "lp", fc: 4000 }] },
-            37: { n: "Rim", len: 0.08, l: [{ w: "tri", f: 820, g: 0.5, a: 0.001, d: 0.012, s: 0, r: 0.02 }, { w: "noi", g: 0.2, a: 0.001, d: 0.006, s: 0, r: 0.01, ft: "hp", fc: 3000 }] }, 38: { n: "Snare", len: 0.3, l: [{ w: "tri", f: 185, g: 0.5, a: 0.001, d: 0.05, s: 0, r: 0.04, pe: [8, 0.015] }, { w: "noi", g: 0.55, a: 0.001, d: 0.085, s: 0, r: 0.05, ft: "hp", fc: 1400 }] },
-            39: { n: "Clap", len: 0.35, l: [{ w: "noi", g: 0.6, a: 0.001, d: 0.11, s: 0, r: 0.05, ft: "bp", fc: 1250, fq: 0.4, bu: 3 }] }, 41: { n: "Low Tom", len: 0.5, l: [{ w: "sin", f: 92, g: 0.75, a: 0.001, d: 0.22, s: 0, r: 0.05, pe: [7, 0.04] }] },
-            42: { n: "Closed Hat", len: 0.1, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.022, s: 0, r: 0.02, ft: "hp", fc: 7500 }] }, 44: { n: "Pedal Hat", len: 0.1, l: [{ w: "noi", g: 0.25, a: 0.004, d: 0.015, s: 0, r: 0.02, ft: "hp", fc: 6000 }] },
-            45: { n: "Mid Tom", len: 0.45, l: [{ w: "sin", f: 128, g: 0.7, a: 0.001, d: 0.2, s: 0, r: 0.05, pe: [7, 0.04] }] }, 46: { n: "Open Hat", len: 0.45, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.16, s: 0, r: 0.06, ft: "hp", fc: 7000 }] },
-            48: { n: "High Tom", len: 0.4, l: [{ w: "sin", f: 170, g: 0.65, a: 0.001, d: 0.18, s: 0, r: 0.05, pe: [7, 0.04] }] }, 49: { n: "Crash", len: 1.8, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.6, s: 0, r: 0.2, ft: "hp", fc: 4500 }, { w: "sqr", f: 410, g: 0.04, a: 0.001, d: 0.3, s: 0, r: 0.1, ft: "hp", fc: 3000 }] },
+            35: { n: "Deep Kick", len: 0.6, l: [{ w: "sin", f: 45, g: 0.9, a: 0.001, d: 0.3, s: 0, r: 0.05, pe: [24, 0.05] }] }, 36: { n: "Kick", len: 0.45, l: [{ w: "sin", f: 50, g: 0.95, a: 0.001, d: 0.16, s: 0, r: 0.04, pe: [30, 0.03] }, { w: "noi", g: 0.2, a: 0.001, d: 0.008, s: 0, r: 0.01, ft: "lp", fc: 4000 }] }, 37: { n: "Rim", len: 0.08, l: [{ w: "tri", f: 820, g: 0.5, a: 0.001, d: 0.012, s: 0, r: 0.02 }, { w: "noi", g: 0.2, a: 0.001, d: 0.006, s: 0, r: 0.01, ft: "hp", fc: 3000 }] },
+            38: { n: "Snare", len: 0.3, l: [{ w: "tri", f: 185, g: 0.5, a: 0.001, d: 0.05, s: 0, r: 0.04, pe: [8, 0.015] }, { w: "noi", g: 0.55, a: 0.001, d: 0.085, s: 0, r: 0.05, ft: "hp", fc: 1400 }] }, 39: { n: "Clap", len: 0.35, l: [{ w: "noi", g: 0.6, a: 0.001, d: 0.11, s: 0, r: 0.05, ft: "bp", fc: 1250, fq: 0.4, bu: 3 }] }, 41: { n: "Low Tom", len: 0.5, l: [{ w: "sin", f: 92, g: 0.75, a: 0.001, d: 0.22, s: 0, r: 0.05, pe: [7, 0.04] }] },
+            42: { n: "Closed Hat", len: 0.1, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.022, s: 0, r: 0.02, ft: "hp", fc: 7500 }] }, 44: { n: "Pedal Hat", len: 0.1, l: [{ w: "noi", g: 0.25, a: 0.004, d: 0.015, s: 0, r: 0.02, ft: "hp", fc: 6000 }] }, 45: { n: "Mid Tom", len: 0.45, l: [{ w: "sin", f: 128, g: 0.7, a: 0.001, d: 0.2, s: 0, r: 0.05, pe: [7, 0.04] }] },
+            46: { n: "Open Hat", len: 0.45, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.16, s: 0, r: 0.06, ft: "hp", fc: 7000 }] }, 48: { n: "High Tom", len: 0.4, l: [{ w: "sin", f: 170, g: 0.65, a: 0.001, d: 0.18, s: 0, r: 0.05, pe: [7, 0.04] }] }, 49: { n: "Crash", len: 1.8, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.6, s: 0, r: 0.2, ft: "hp", fc: 4500 }, { w: "sqr", f: 410, g: 0.04, a: 0.001, d: 0.3, s: 0, r: 0.1, ft: "hp", fc: 3000 }] },
             51: { n: "Ride", len: 1.2, l: [{ w: "noi", g: 0.15, a: 0.001, d: 0.35, s: 0, r: 0.1, ft: "hp", fc: 8500 }, { w: "sin", f: 3150, g: 0.07, a: 0.001, d: 0.45, s: 0, r: 0.1 }] }
         } },
         { n: "8-Bit Kit", g: "Drums", c: [241, 118, 73], k: "kit", kit: {
-            36: { n: "Kick", len: 0.3, l: [{ w: "tri", f: 60, g: 0.8, a: 0.001, d: 0.14, s: 0, r: 0.03, pe: [30, 0.03], qz: 8 }] }, 38: { n: "Snare", len: 0.25, l: [{ w: "noi", nr: 9000, g: 0.45, a: 0.001, d: 0.08, s: 0, r: 0.04 }, { w: "tri", f: 220, g: 0.3, a: 0.001, d: 0.04, s: 0, r: 0.03, pe: [12, 0.02], qz: 8 }] },
-            39: { n: "Clap", len: 0.25, l: [{ w: "noi", nr: 7000, g: 0.5, a: 0.001, d: 0.08, s: 0, r: 0.04, bu: 3 }] }, 42: { n: "Hat", len: 0.08, l: [{ w: "noi", nr: 22000, g: 0.25, a: 0.001, d: 0.02, s: 0, r: 0.02, ft: "hp", fc: 5000 }] },
-            45: { n: "Tom", len: 0.35, l: [{ w: "tri", f: 140, g: 0.6, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [12, 0.05], qz: 8 }] }, 46: { n: "Open Hat", len: 0.3, l: [{ w: "noi", nr: 22000, g: 0.22, a: 0.001, d: 0.12, s: 0, r: 0.04, ft: "hp", fc: 5000 }] },
+            36: { n: "Kick", len: 0.3, l: [{ w: "tri", f: 60, g: 0.8, a: 0.001, d: 0.14, s: 0, r: 0.03, pe: [30, 0.03], qz: 8 }] }, 38: { n: "Snare", len: 0.25, l: [{ w: "noi", nr: 9000, g: 0.45, a: 0.001, d: 0.08, s: 0, r: 0.04 }, { w: "tri", f: 220, g: 0.3, a: 0.001, d: 0.04, s: 0, r: 0.03, pe: [12, 0.02], qz: 8 }] }, 39: { n: "Clap", len: 0.25, l: [{ w: "noi", nr: 7000, g: 0.5, a: 0.001, d: 0.08, s: 0, r: 0.04, bu: 3 }] },
+            42: { n: "Hat", len: 0.08, l: [{ w: "noi", nr: 22000, g: 0.25, a: 0.001, d: 0.02, s: 0, r: 0.02, ft: "hp", fc: 5000 }] }, 45: { n: "Tom", len: 0.35, l: [{ w: "tri", f: 140, g: 0.6, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [12, 0.05], qz: 8 }] }, 46: { n: "Open Hat", len: 0.3, l: [{ w: "noi", nr: 22000, g: 0.22, a: 0.001, d: 0.12, s: 0, r: 0.04, ft: "hp", fc: 5000 }] },
             49: { n: "Crash", len: 1, l: [{ w: "noi", nr: 14000, g: 0.25, a: 0.001, d: 0.5, s: 0, r: 0.1 }] }, 50: { n: "Blip", len: 0.12, l: [{ w: "sqr", f: 880, g: 0.15, a: 0.001, d: 0.05, s: 0, r: 0.02, pe: [12, 0.01] }] }
         } },
         { n: "Percussion", g: "Drums", c: [212, 121, 94], k: "kit", kit: {
-            54: { n: "Tambourine", len: 0.3, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "hp", fc: 6500, bu: 2 }, { w: "sin", f: 5200, g: 0.05, a: 0.001, d: 0.1, s: 0, r: 0.05 }] }, 56: { n: "Cowbell", len: 0.4, l: [{ w: "sqr", f: 562, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }, { w: "sqr", f: 845, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }] },
-            60: { n: "Hi Bongo", len: 0.25, l: [{ w: "sin", f: 420, g: 0.6, a: 0.001, d: 0.08, s: 0, r: 0.03, pe: [4, 0.01] }] }, 61: { n: "Lo Bongo", len: 0.3, l: [{ w: "sin", f: 300, g: 0.6, a: 0.001, d: 0.1, s: 0, r: 0.03, pe: [4, 0.01] }] },
-            63: { n: "Conga", len: 0.4, l: [{ w: "sin", f: 220, g: 0.65, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [5, 0.02] }] }, 70: { n: "Shaker", len: 0.12, l: [{ w: "noi", g: 0.3, a: 0.015, d: 0.04, s: 0, r: 0.03, ft: "hp", fc: 6000 }] },
-            75: { n: "Claves", len: 0.12, l: [{ w: "sin", f: 2500, g: 0.5, a: 0.001, d: 0.03, s: 0, r: 0.02 }] }, 76: { n: "Woodblock", len: 0.12, l: [{ w: "sin", f: 1050, g: 0.5, a: 0.001, d: 0.035, s: 0, r: 0.02 }, { w: "tri", f: 2600, g: 0.1, a: 0.001, d: 0.01, s: 0, r: 0.01 }] },
-            81: { n: "Triangle", len: 1.4, l: [{ w: "sin", f: 4200, g: 0.12, a: 0.001, d: 0.8, s: 0, r: 0.2 }, { w: "sin", f: 6300, g: 0.04, a: 0.001, d: 0.5, s: 0, r: 0.2 }] }
+            54: { n: "Tambourine", len: 0.3, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "hp", fc: 6500, bu: 2 }, { w: "sin", f: 5200, g: 0.05, a: 0.001, d: 0.1, s: 0, r: 0.05 }] }, 56: { n: "Cowbell", len: 0.4, l: [{ w: "sqr", f: 562, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }, { w: "sqr", f: 845, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }] }, 60: { n: "Hi Bongo", len: 0.25, l: [{ w: "sin", f: 420, g: 0.6, a: 0.001, d: 0.08, s: 0, r: 0.03, pe: [4, 0.01] }] },
+            61: { n: "Lo Bongo", len: 0.3, l: [{ w: "sin", f: 300, g: 0.6, a: 0.001, d: 0.1, s: 0, r: 0.03, pe: [4, 0.01] }] }, 63: { n: "Conga", len: 0.4, l: [{ w: "sin", f: 220, g: 0.65, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [5, 0.02] }] }, 70: { n: "Shaker", len: 0.12, l: [{ w: "noi", g: 0.3, a: 0.015, d: 0.04, s: 0, r: 0.03, ft: "hp", fc: 6000 }] },
+            75: { n: "Claves", len: 0.12, l: [{ w: "sin", f: 2500, g: 0.5, a: 0.001, d: 0.03, s: 0, r: 0.02 }] }, 76: { n: "Woodblock", len: 0.12, l: [{ w: "sin", f: 1050, g: 0.5, a: 0.001, d: 0.035, s: 0, r: 0.02 }, { w: "tri", f: 2600, g: 0.1, a: 0.001, d: 0.01, s: 0, r: 0.01 }] }, 81: { n: "Triangle", len: 1.4, l: [{ w: "sin", f: 4200, g: 0.12, a: 0.001, d: 0.8, s: 0, r: 0.2 }, { w: "sin", f: 6300, g: 0.04, a: 0.001, d: 0.5, s: 0, r: 0.2 }] }
         } },
         { n: "Laser", g: "FX", c: [143, 233, 64], l: [{ w: "sqr", g: 0.17, a: 0.001, d: 0.25, s: 0, r: 0.05, pe: [24, 0.06] }, { w: "saw", dt: 12, g: 0.08, a: 0.001, d: 0.2, s: 0, r: 0.05, pe: [30, 0.05] }] },
         { n: "Vox", g: "Voice", c: [252, 141, 211], k: "vox", vx: { fs: 1, op: 0.4, cl: 0.16, br: 0.04, tl: 0.62, vr: 5.5, vd: 0.3 } },
@@ -1423,45 +1430,53 @@ var core = coreEdit(coreSrc());
 * and the HTML player runs the same code through pjsLite below.
 */
 var playerSrc = function () {
-    var data = core.decode(song);
-    var spt = 60 / (data.bpm * data.res);
-    var look = data.vis || 1;
-    var evs = [], notes = [], lyr = [], jobs = [], bufs = {}, parts = [], lev = [], tint = [];
-    var lo = 127, hi = 0, total = 0, done = 0, base = 0, pos = 0, idx = 0, vi = 0, kick = 0;
-    var state = "load", over = false, solo = false;
-    var U = width / 400;
-    core.setup(sfx);
-
-    for (var a = 0; a < data.tracks.length; a++) {
-        if (data.tracks[a].solo) { solo = true; }
-    }
-    for (var ti = 0; ti < data.tracks.length; ti++) {
-        var tr = data.tracks[ti], ins = core.insts[tr.inst], prev = "";
-        var on = !tr.mute && (!solo || tr.solo);
-        for (var ni = 0; ins && ni < tr.notes.length; ni++) {
-            var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox";
-            total = max(total, e);
-            notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti });
-            lo = ins.k === "kit" ? lo : min(lo, nt.p);
-            hi = ins.k === "kit" ? hi : max(hi, nt.p);
-            if (vox) { lyr.push({ s: s, e: e, w: nt.w }); }
-            var k = vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round((e - s) * 1000) : core.key(tr.inst, nt.p, e - s);
-            var pw = prev;
-            if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
-            if (!on || (vox && !core.vox)) { continue; }
-            if (bufs[k] === undefined) {
-                bufs[k] = null;
-                jobs.push({ k: k, i: tr.inst, p: nt.p, d: e - s, w: nt.w, pw: pw, tl: tr.notes, nt: nt });
-            }
-            evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50 });
-        }
-    }
+    var list = typeof songs !== "undefined" ? songs : [song];
+    var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
+    var data, spt, look, evs, notes, lyr, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state;
     var bySt = function (x, y) { return x.s - y.s; };
-    evs.sort(bySt);
-    notes.sort(bySt);
-    lyr.sort(bySt);
-    lo = hi < lo ? 60 : lo;
-    hi = hi < lo ? 72 : hi;
+    core.setup(sfx);
+    for (var q = 0; q < list.length; q++) { names.push(core.decode(list[q]).title || "Song " + (q + 1)); }
+
+    // gets one song from the list ready to play, sounds already built for other songs are kept
+    var prep = function (n) {
+        sfx.stop();
+        at = n;
+        data = core.decode(list[n]);
+        spt = 60 / (data.bpm * data.res);
+        look = data.vis || 1;
+        evs = []; notes = []; lyr = []; jobs = []; parts = []; lev = []; tint = [];
+        lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0;
+        state = "load";
+        var solo = false;
+        for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; }
+        for (var ti = 0; ti < data.tracks.length; ti++) {
+            var tr = data.tracks[ti], ins = core.insts[tr.inst], prev = "";
+            var on = !tr.mute && (!solo || tr.solo);
+            for (var ni = 0; ins && ni < tr.notes.length; ni++) {
+                var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox";
+                total = max(total, e);
+                notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti });
+                lo = ins.k === "kit" ? lo : min(lo, nt.p);
+                hi = ins.k === "kit" ? hi : max(hi, nt.p);
+                if (vox) { lyr.push({ s: s, e: e, w: nt.w }); }
+                var k = vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round((e - s) * 1000) : core.key(tr.inst, nt.p, e - s);
+                var pw = prev;
+                if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
+                if (!on || (vox && !core.vox)) { continue; }
+                if (bufs[k] === undefined) {
+                    bufs[k] = null;
+                    jobs.push({ k: k, i: tr.inst, p: nt.p, d: e - s, w: nt.w, pw: pw, tl: tr.notes, nt: nt });
+                }
+                evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50 });
+            }
+        }
+        evs.sort(bySt);
+        notes.sort(bySt);
+        lyr.sort(bySt);
+        lo = hi < lo ? 60 : lo;
+        hi = hi < lo ? 72 : hi;
+    };
+    prep(0);
 
     var clock = function (t) {
         t = max(0, t);
@@ -1619,7 +1634,7 @@ var playerSrc = function () {
         textAlign(LEFT, CENTER);
         fill(236, 238, 243);
         textSize(18 * U);
-        text(data.title || "Untitled", 16 * U, 24 * U);
+        text((data.title || "Untitled") + (list.length > 1 ? "  \u25BE" : ""), 16 * U, 24 * U);
         fill(141, 148, 163);
         textSize(12 * U);
         text(data.bpm + " BPM", 16 * U, 46 * U);
@@ -1635,6 +1650,15 @@ var playerSrc = function () {
         rect(66 * U, by - 4 * U, width - 86 * U, 8 * U, 4);
         fill(96, 183, 247);
         rect(66 * U, by - 4 * U, bar, 8 * U, 4);
+        if (!menu) { return; }
+        fill(31, 34, 42, 245);
+        rect(10 * U, 38 * U, 250 * U, list.length * 24 * U + 8 * U, 6);
+        textAlign(LEFT, CENTER);
+        textSize(14 * U);
+        for (var m = 0; m < list.length; m++) {
+            fill(m === at ? 252 : 226, m === at ? 160 : 228, m === at ? 216 : 235);
+            text(names[m], 22 * U, 54 * U + m * 24 * U);
+        }
     };
 
     var looks = [drRoll, drRoll, drBars, drOrbit, drStars];
@@ -1680,6 +1704,12 @@ var playerSrc = function () {
     };
 
     mouseClicked = function () {
+        var row = floor((mouseY - 42 * U) / (24 * U));
+        if (menu || (mouseY < 36 * U && list.length > 1)) {
+            if (menu && mouseX < 260 * U && row >= 0 && row < list.length) { prep(row); }
+            menu = !menu;
+            return;
+        }
         if (state === "load") { return; }
         var p = constrain((mouseX - 66 * U) / (width - 86 * U), 0, 1) * total;
         var seek = mouseY > height - 56 * U && mouseX > 60 * U;
@@ -1717,7 +1747,7 @@ var pjsLite = function (cv, text) {
         if (st.stroke) { g.stroke(); }
     };
     var P = {
-        song: text, width: cv.width, height: cv.height, mouseX: 0, mouseY: 0, keyCode: 0,
+        songs: [text], width: cv.width, height: cv.height, mouseX: 0, mouseY: 0, keyCode: 0,
         LEFT: "left", CENTER: "center", RIGHT: "right", PI: Math.PI, TWO_PI: Math.PI * 2,
         draw: null, mouseClicked: null, mouseMoved: null, keyPressed: null,
         max: Math.max, min: Math.min, floor: Math.floor, round: Math.round, sin: Math.sin, cos: Math.cos,
@@ -1825,6 +1855,14 @@ var pjs = {
                 i += 2;
                 continue;
             }
+            var d3 = ls[i + 3] || "";
+            var two = c.trim();
+            var simple2 = /;$/.test(two) && !/[{}]/.test(two) && two.indexOf("//") < 0;
+            if (/\{$/.test(a) && simple && simple2 && /^\}[;,)]*$/.test(d3.trim()) && d3.indexOf(pad + "}") === 0 && (a + one + two).length < 112) {
+                out.push(a + " " + one + " " + two + " " + d3.trim());
+                i += 3;
+                continue;
+            }
             if (/\{$/.test(a) && simple && ends && /^\} else/.test(shut) && (a + one).length < 118) {
                 out.push(a + " " + one + " }");
                 ls[i + 2] = pad + shut.slice(2);
@@ -1843,14 +1881,19 @@ var pjs = {
         });
     },
 
-    build: function (s) {
+    // texts: the song texts to put in the program, the first one plays first
+    build: function (texts) {
         var defs = pjs.lines(sfxDefs).join("\n");
+        var title = core.decode(texts[0]).title || "Untitled";
         return [
             "/**",
-            " * " + (s.title || "Untitled") + " - made with Songboard.",
-            " * To play another song, swap the text in song below. Vox tracks show their lyrics but only sing in Songboard.",
+            " * " + title + (texts.length > 1 ? " and " + (texts.length - 1) + " more" : "") + " - made with Songboard.",
+            " * The songs list holds song text from Songboard. Add, remove or swap lines to change the songs.",
+            " * Vox tracks show their lyrics but only sing in Songboard.",
             "**/",
-            "var song = \"" + core.encode(s) + "\";",
+            "var songs = [",
+            texts.map(function (t) { return "    \"" + t + "\""; }).join(",\n"),
+            "];",
             "",
             "var sfx = (" + sfxSrc.toString().split("\n").filter(function (l) { return l.trim(); }).join("\n") + ")(); // SFX IIFE",
             defs,
@@ -1997,6 +2040,8 @@ var drag = null;
 var prevSrc = null;
 var ctx = sfx.context;
 var stage = null;
+var book = { list: [], at: 0 };
+var blank = { title: "", bpm: 120, res: core.res, vis: 1, tracks: [{ inst: 0, name: "Piano", vol: 75, pan: 0, mute: false, solo: false, notes: [] }] };
 var names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 var cv = { ruler: $("ruler"), lanes: $("lanes"), roll: $("roll") };
 
@@ -2040,6 +2085,12 @@ var songEnd = function () {
         tr.notes.forEach(function (n) { end = Math.max(end, n.t + n.l); });
     });
     return Math.max(bar(), Math.ceil(end / bar()) * bar());
+};
+
+// how many ticks fit across whichever time pane is showing
+var viewTicks = function () {
+    var w = cv.roll.clientWidth ? cv.roll.clientWidth - HEAD : cv.lanes.clientWidth;
+    return Math.max(1, w) / ui.zx;
 };
 
 var fit = function (c) {
@@ -2088,7 +2139,47 @@ var commit = function () {
         if (hist.length > 300) { hist.shift(); }
         hpos = hist.length - 1;
     }
+    if (book.list[book.at] !== s) {
+        book.list[book.at] = s;
+        songMenu();
+    }
     dirty = true;
+};
+
+var titleOf = function (text, i) {
+    try {
+        return core.decode(text).title || "Untitled " + (i + 1);
+    } catch (er) {
+        return "Song " + (i + 1);
+    }
+};
+
+var songMenu = function () {
+    var opts = book.list.map(function (t, i) {
+        return '<option value="' + i + '">' + (i + 1) + ". " + titleOf(t, i).replace(/</g, "&lt;") + "</option>";
+    });
+    $("songSel").innerHTML = opts.join("") + '<option value="new">+ New song</option>';
+    $("songSel").value = book.at;
+    $("stageSong").innerHTML = opts.join("");
+    $("songDel").disabled = book.list.length < 2;
+};
+
+// switches the editor to another song in the list, each song keeps its own undo from here
+var pickSong = function (i) {
+    stopPlay();
+    book.at = clamp(i, 0, book.list.length - 1);
+    load(book.list[book.at], 0);
+    hist = [{ s: book.list[book.at], c: 0 }];
+    hpos = 0;
+    ui.head = ui.x = ui.lo = ui.hi = 0;
+    setLoop(false);
+    songMenu();
+};
+
+var addSongs = function (texts) {
+    var first = book.list.length;
+    texts.forEach(function (t) { book.list.push(core.encode(core.decode(t))); });
+    pickSong(first);
 };
 
 var load = function (s, c) {
@@ -2102,14 +2193,6 @@ var load = function (s, c) {
     mixAll();
     focusTrack();
     dirty = true;
-};
-
-var fresh = function (s) {
-    stopPlay();
-    load(s, 0);
-    ui.head = ui.x = ui.lo = ui.hi = 0;
-    setLoop(false);
-    commit();
 };
 
 var undo = function () {
@@ -2321,7 +2404,7 @@ var stopPlay = function () {
     clearInterval(play.timer);
     sfx.stop();
     ui.head = play.start;
-    var vis = (cv.roll.clientWidth - HEAD) / ui.zx;
+    var vis = viewTicks();
     if (ui.follow && (ui.head < ui.x || ui.head > ui.x + vis * 0.92)) { ui.x = Math.max(0, ui.head - vis * 0.05); }
     $("playBtn").textContent = "▶";
     $("playBtn").classList.remove("on");
@@ -2567,7 +2650,7 @@ var drClock = function () {
 var frame = function () {
     if (play.on) {
         var t = nowTick();
-        var vis = (cv.roll.clientWidth - HEAD) / ui.zx;
+        var vis = viewTicks();
         if (ui.follow && !drag && (t > ui.x + vis * 0.92 || t < ui.x)) { ui.x = Math.max(0, t - vis * 0.05); }
         dirty = true;
     }
@@ -3109,7 +3192,7 @@ var neighbor = function (n, dir) {
 
 var openLyric = function (n) {
     var el = lyr.el;
-    var vis = (cv.roll.clientWidth - HEAD) / ui.zx;
+    var vis = viewTicks();
     if (n.t < ui.x || n.t > ui.x + vis * 0.85) { ui.x = Math.max(0, n.t - vis * 0.2); }
     if (rollY(n.p) < RUL || rollY(n.p) > cv.roll.clientHeight - ui.zy) { ui.py = clampPy((127 - n.p) * ui.zy - (cv.roll.clientHeight - RUL) / 2); }
     lyr.n = n;
@@ -3354,11 +3437,14 @@ var size = function (n) {
 var exportBox = function (kind) {
     var make = function () {
         var txt = core.encode(song);
-        var code = kind === "pjs" ? pjs.build(song) : txt;
+        var all = $("whatSel") && $("whatSel").value === "all";
+        var listLine = "var songs = [\n" + book.list.map(function (t) { return '    "' + t + '"'; }).join(",\n") + "\n];";
+        var code = kind === "pjs" ? pjs.build(book.list) : (all ? listLine : txt);
         var info = kind === "pjs" ?
-            "Paste into a new Processing.js program on Khan Academy. <b>" + code.split("\n").length + " lines</b>, the song itself is " + size(txt.length) + "." :
-            "<b>" + size(txt.length) + "</b>, lossless. Paste it into <b>var songText</b> in the HTML page, <b>var song</b> in a PJS program, or Import.";
-        if (kind === "pjs" && pjs.hasVox(song)) { info += '<br><span class="warn">Vox tracks are not sung in the PJS version. Their lyrics still show as karaoke text.</span>'; }
+            "Paste into a new Processing.js program on Khan Academy. <b>" + code.split("\n").length + " lines</b> with " + book.list.length + (book.list.length === 1 ? " song" : " songs") + ". Click the title in the program to switch songs." :
+            (all ? "Replace <b>var songs</b> in the HTML page or a PJS program with this." :
+                "<b>" + size(txt.length) + "</b>, lossless. Add it as a line in <b>var songs</b> in the HTML page or a PJS program, or Import it.");
+        if (kind === "pjs" && book.list.some(function (t) { return pjs.hasVox(core.decode(t)); })) { info += '<br><span class="warn">Vox tracks are not sung in the PJS version. Their lyrics still show as karaoke text.</span>'; }
         return { code: code, info: info };
     };
     var picks = core.visuals.map(function (v, i) {
@@ -3367,7 +3453,9 @@ var exportBox = function (kind) {
     var first = make();
     modal({
         title: kind === "pjs" ? "Khan Academy program" : "Song text",
-        html: '<label class="visPick">Visual <select id="visSel">' + picks + '</select></label><div id="expInfo">' + first.info + "</div>",
+        html: '<label class="visPick">Visual for this song <select id="visSel">' + picks + "</select></label>" +
+            (kind === "pjs" ? "" : '<label class="visPick">Copy <select id="whatSel"><option value="one">This song</option><option value="all">The whole song list</option></select></label>') +
+            '<div id="expInfo">' + first.info + "</div>",
         area: first.code,
         ro: true,
         btns: [
@@ -3376,19 +3464,23 @@ var exportBox = function (kind) {
                 t: "Preview",
                 fn: function () {
                     closeModal();
-                    openStage(core.encode(song), true);
+                    openStage(book.at, true);
                 }
             },
             { t: "Close", fn: closeModal }
         ]
     });
-    $("visSel").addEventListener("change", function () {
-        song.vis = Number($("visSel").value);
-        commit();
+    var refresh = function () {
         var now = make();
         $("mArea").value = now.code;
         $("expInfo").innerHTML = now.info;
+    };
+    $("visSel").addEventListener("change", function () {
+        song.vis = Number($("visSel").value);
+        commit();
+        refresh();
     });
+    if ($("whatSel")) { $("whatSel").addEventListener("change", refresh); }
 };
 
 $("expBtn").addEventListener("click", function () { exportBox("text"); });
@@ -3397,7 +3489,7 @@ $("pjsBtn").addEventListener("click", function () { exportBox("pjs"); });
 $("impBtn").addEventListener("click", function () {
     modal({
         title: "Import song text",
-        html: "Paste song text from Export Text, or a whole exported program.",
+        html: "Paste song text from Export Text, a song list, or a whole exported program. Every song found is added to the list.",
         area: "",
         ph: "Paste here...",
         btns: [
@@ -3406,9 +3498,17 @@ $("impBtn").addEventListener("click", function () {
                 hi: true,
                 fn: function () {
                     var raw = $("mArea").value.trim();
-                    var m = raw.match(/var\s+song(?:Text)?\s*=\s*"([^"]*)"/);
+                    var found = (raw.match(/"[^"]*"/g) || []).map(function (q) { return q.slice(1, -1); });
+                    var texts = (found.length ? found : [raw]).filter(function (t) {
+                        try {
+                            return !!core.decode(t);
+                        } catch (er) {
+                            return false;
+                        }
+                    });
                     try {
-                        fresh(core.decode(m ? m[1] : raw));
+                        if (!texts.length) { throw "no song text found"; }
+                        addSongs(texts);
                         closeModal();
                     } catch (er) {
                         $("mText").innerHTML = '<span class="warn">That text could not be read: ' + String(er) + "</span>";
@@ -3435,7 +3535,7 @@ $("saveBtn").addEventListener("click", function () {
         hi: true,
         fn: function () {
             try {
-                localStorage.setItem(SAVE, core.encode(song));
+                localStorage.setItem(SAVE, JSON.stringify({ songs: book.list, at: book.at }));
                 $("mText").innerHTML = "<b>Saved.</b> Load it again from this same button.";
             } catch (er) {
                 $("mText").innerHTML = '<span class="warn">This browser blocked saving. Use Export Text instead.</span>';
@@ -3447,7 +3547,10 @@ $("saveBtn").addEventListener("click", function () {
             t: "Load saved",
             fn: function () {
                 try {
-                    fresh(core.decode(stored()));
+                    var raw = stored();
+                    var saved = raw.charAt(0) === "{" ? JSON.parse(raw) : { songs: [raw], at: 0 };
+                    book.list = saved.songs.filter(function (t) { return !!core.decode(t); });
+                    pickSong(saved.at || 0);
                     closeModal();
                 } catch (er) {
                     $("mText").innerHTML = '<span class="warn">The saved song could not be read.</span>';
@@ -3465,11 +3568,11 @@ $("saveBtn").addEventListener("click", function () {
     btns.push({ t: "Close", fn: closeModal });
     modal({
         title: "Save in this browser",
-        html: '<span class="warn">Before you save:</span> this keeps one song in this browser\'s local storage. ' +
+        html: '<span class="warn">Before you save:</span> this keeps your song list (' + book.list.length + (book.list.length === 1 ? " song" : " songs") + ') in this browser\'s local storage. ' +
             "It only stays on this device and browser, clearing your browsing data deletes it, saving again replaces it, " +
             "and other pages on the same site (like other Khan Academy programs) can read or overwrite it. " +
             "Nothing is stored unless you press Save here. For a copy you can't lose, use Export Text." +
-            (has ? "<br><br>There is a saved song in this browser right now." : ""),
+            (has ? "<br><br>There is a saved song list in this browser right now. Loading it replaces the list you have open." : ""),
         btns: btns
     });
 });
@@ -3506,16 +3609,30 @@ $("mArea").addEventListener("input", function () {
     if ($("mTitle").textContent === "Fill lyrics") { liveScrub($("mArea"), false); }
 });
 
-$("newBtn").addEventListener("click", function () {
+$("newBtn").addEventListener("click", function () { addSongs([core.encode(blank)]); });
+
+$("songSel").addEventListener("change", function () {
+    var v = $("songSel").value;
+    if (v === "new") {
+        addSongs([core.encode(blank)]);
+    } else {
+        pickSong(Number(v));
+    }
+    $("songSel").blur();
+});
+
+$("songDel").addEventListener("click", function () {
+    if (book.list.length < 2) { return; }
     modal({
-        title: "Start a new song?",
-        html: "The board is cleared. Undo can still bring it back.",
+        title: "Remove this song?",
+        html: "<b>" + titleOf(book.list[book.at], book.at).replace(/</g, "&lt;") + "</b> leaves the song list. This can't be undone, so use Export Text first if you want to keep it.",
         btns: [
             {
-                t: "New song",
+                t: "Remove",
                 hi: true,
                 fn: function () {
-                    fresh({ title: "", bpm: 120, res: core.res, vis: 1, tracks: [{ inst: 0, name: "Piano", vol: 75, pan: 0, mute: false, solo: false, notes: [] }] });
+                    book.list.splice(book.at, 1);
+                    pickSong(Math.min(book.at, book.list.length - 1));
                     closeModal();
                 }
             },
@@ -3527,18 +3644,28 @@ $("newBtn").addEventListener("click", function () {
 
 /* ---------- player stage ---------- */
 
-var openStage = function (text, back) {
+var openStage = function (i, back) {
     stopPlay();
     shutLyric(true);
+    if (stage) { stage(); }
     $("stage").classList.remove("hide");
     $("stageBtn").textContent = back ? "Back to editor" : "Open in editor";
-    stage = pjs.run($("stageCv"), text);
+    $("stageSong").value = i;
+    $("stageSong").style.display = book.list.length > 1 ? "" : "none";
+    stage = pjs.run($("stageCv"), book.list[i]);
 };
 
+$("stageSong").addEventListener("change", function () {
+    openStage(Number($("stageSong").value), $("stageBtn").textContent === "Back to editor");
+    $("stageSong").blur();
+});
+
 $("stageBtn").addEventListener("click", function () {
+    var i = Number($("stageSong").value);
     if (stage) { stage(); }
     stage = null;
     $("stage").classList.add("hide");
+    if (i !== book.at) { pickSong(i); }
     dirty = true;
 });
 
@@ -3590,12 +3717,12 @@ var fullPage = function () {
     var page = document.documentElement.cloneNode(true);
     var body = page.querySelector("body");
     page.querySelectorAll("[data-dyn]").forEach(function (el) { el.remove(); });
-    ["pal", "heads", "mBtns", "trackSel"].forEach(function (id) { page.querySelector("#" + id).innerHTML = ""; });
+    ["pal", "heads", "mBtns", "trackSel", "songSel", "stageSong"].forEach(function (id) { page.querySelector("#" + id).innerHTML = ""; });
     ["arr", "lanes"].forEach(function (id) { page.querySelector("#" + id).removeAttribute("style"); });
     ["stage", "modal"].forEach(function (id) { page.querySelector("#" + id).className = "hide"; });
     body.removeAttribute("class");
     body.removeAttribute("data-view");
-    page.querySelector("#songScript").textContent = "\nvar songText = \"" + core.encode(song) + "\";\nvar popped = true;\n";
+    page.querySelector("#songScript").textContent = "\nvar songs = " + JSON.stringify(book.list) + ";\nvar songAt = " + book.at + ";\nvar popped = true;\n";
     return "<!DOCTYPE html>" + page.outerHTML;
 };
 
@@ -3652,25 +3779,26 @@ $("vel").addEventListener("change", function () {
 /* ---------- start up ---------- */
 
 (function () {
-    var text = typeof songText === "string" ? songText : "";
+    var texts = window.songs || (typeof songText === "string" ? [songText] : []);
     document.body.dataset.view = "tracks";
     layout();
     if (window.popped) { $("fullBtn").style.display = "none"; }
-    var blank = { title: "", bpm: 120, res: core.res, vis: 1, tracks: [{ inst: 0, name: "Piano", vol: 75, pan: 0, mute: false, solo: false, notes: [] }] };
     core.setup(sfx);
-    try {
-        load(text ? core.decode(text) : blank, 0);
-    } catch (er) {
-        console.warn("songText could not be read", er);
-        load(blank, 0);
-    }
-    hist = [{ s: core.encode(song), c: 0 }];
-    hpos = 0;
+    book.list = texts.filter(function (t) {
+        try {
+            return !!core.decode(t);
+        } catch (er) {
+            console.warn("A song in the page could not be read", er);
+            return false;
+        }
+    });
+    if (!book.list.length) { book.list = [core.encode(blank)]; }
+    pickSong(window.songAt || 0);
     var ro = new ResizeObserver(function () { dirty = true; });
     [cv.roll, cv.ruler, $("arrBody")].forEach(function (el) { ro.observe(el); });
     requestAnimationFrame(frame);
-    if (text && song.vis && !window.popped) {
-        voiceReady(function () { openStage(text, false); });
+    if (texts.length && core.decode(book.list[0]).vis && !window.popped) {
+        voiceReady(function () { openStage(0, false); });
     }
 })();
         </script>

@@ -1,8 +1,11 @@
 /**
  * Silver Boats - made with Songboard.
- * To play another song, swap the text in song below. Vox tracks show their lyrics but only sing in Songboard.
+ * The songs list holds song text from Songboard. Add, remove or swap lines to change the songs.
+ * Vox tracks show their lyrics but only sing in Songboard.
 **/
-var song = "CkDMBBHcAyCAA8IACnC0CGCB8BGCB~K3BPmCACR~PAP6~KA~UAXkDACZ6CGCBg~ZA~PAR~PF~eGXuCACZ~jBZ~hClNVgDACF~oBIACNgDGCLg~/CBDGCvB~zBDACd8C~aBGCf~2CFR~PAn~kBE~3CDp~sDB~lBGLwCACd~qBL~6BB~pCxO~2SBV~pBI~2SDX~yCDACJ~7SQb~zZ7D~nE/B0BIAkCAA1DAtBvBgDwBtBSwBJVoDMEAGEAGJA~JES~SNI~SNO~SNc~oCfG~6CfU~SNK~+Df~oCoD~JOa~SMvBdgDAA8BTA7CAtBBy~GAQAtBMwBtBe~JAAtBU~NAa~aVmB~ODQ~oBE~bFS~1Be~OBW~NGVb4CAVQAVMYVbs~LFnB~XAMAVQ~XD~LD~WDUYVf~WDUYVX~WR~5C0CtBb~4JK~rJJ~pHIvBT6CAvBQAvBMAvBUEAyBkBAZAFxB8CGFRoCGFN~KAL~KAP~UPT~KAN~KAV~KAT~KAL~UNmb~pBjBGvBxB6CVAmBAAegP~jFEUAvBQwBvBuB~OIy~OJa~NIO~2BuBEvBq~bJG~NEgBA0CAE8BgDEQCGEADGKMEMEAFGEIGGKGHMuBKIwBEGJGEAKGKILMEEMGECNGKGOMuBGPwBEQQGEARGKMSMEATGEIUGKAV~eAWwBEGXGEAYGKCZMEGaGEIbGKGcMuBAdwBKceMKGeMEGfGEIYG6BAgB8BEK~zCCEMhBGEAiBGKUjBMKCkBMuBGlBwBKA~6BEmBGEIFG6BQnB8BEOaGEAoBGKIpBMEGqBGEKrBGKGMMuBGsBwBEc~jBbgDdB6CehBtB0BYEgBgPKwBeMKC~qFOO~qFDQ~qFKG~qFL~6BB~qFFM~qFBK~nEEEpBMECqBGEO~nEFC~qFK~jBT~qFD|Silver Boats|sil-|ver|b~PBon|mor-|ning|rain|sail-|~PAdown|the|win-~OA|pane|ev-|ry|drop|be-|comes|a|song|hum|it|as|we|float|a-|l~bAoh|let|shine|lit-|tle|star|is|m~WAhold|tight|will|sing|in-|to|n~XBHarmony";
+var songs = [
+    "CkDMBBHcAyCAA8IACnC0CGCB8BGCB~K3BPmCACR~PAP6~KA~UAXkDACZ6CGCBg~ZA~PAR~PF~eGXuCACZ~jBZ~hClNVgDACF~oBIACNgDGCLg~/CBDGCvB~zBDACd8C~aBGCf~2CFR~PAn~kBE~3CDp~sDB~lBGLwCACd~qBL~6BB~pCxO~2SBV~pBI~2SDX~yCDACJ~7SQb~zZ7D~nE/B0BIAkCAA1DAtBvBgDwBtBSwBJVoDMEAGEAGJA~JES~SNI~SNO~SNc~oCfG~6CfU~SNK~+Df~oCoD~JOa~SMvBdgDAA8BTA7CAtBBy~GAQAtBMwBtBe~JAAtBU~NAa~aVmB~ODQ~oBE~bFS~1Be~OBW~NGVb4CAVQAVMYVbs~LFnB~XAMAVQ~XD~LD~WDUYVf~WDUYVX~WR~5C0CtBb~4JK~rJJ~pHIvBT6CAvBQAvBMAvBUEAyBkBAZAFxB8CGFRoCGFN~KAL~KAP~UPT~KAN~KAV~KAT~KAL~UNmb~pBjBGvBxB6CVAmBAAegP~jFEUAvBQwBvBuB~OIy~OJa~NIO~2BuBEvBq~bJG~NEgBA0CAE8BgDEQCGEADGKMEMEAFGEIGGKGHMuBKIwBEGJGEAKGKILMEEMGECNGKGOMuBGPwBEQQGEARGKMSMEATGEIUGKAV~eAWwBEGXGEAYGKCZMEGaGEIbGKGcMuBAdwBKceMKGeMEGfGEIYG6BAgB8BEK~zCCEMhBGEAiBGKUjBMKCkBMuBGlBwBKA~6BEmBGEIFG6BQnB8BEOaGEAoBGKIpBMEGqBGEKrBGKGMMuBGsBwBEc~jBbgDdB6CehBtB0BYEgBgPKwBeMKC~qFOO~qFDQ~qFKG~qFL~6BB~qFFM~qFBK~nEEEpBMECqBGEO~nEFC~qFK~jBT~qFD|Silver Boats|sil-|ver|b~PBon|mor-|ning|rain|sail-|~PAdown|the|win-~OA|pane|ev-|ry|drop|be-|comes|a|song|hum|it|as|we|float|a-|l~bAoh|let|shine|lit-|tle|star|is|m~WAhold|tight|will|sing|in-|to|n~XBHarmony"
+];
 
 var sfx = (function () {
     /**
@@ -267,30 +270,27 @@ var core = (function () {
         { n: "Brass", g: "Wind", c: [233, 167, 66], l: [{ w: "saw", g: 0.24, a: 0.035, d: 0.3, s: 0.85, r: 0.12, ft: "lp", fc: 1.2, fe: 7, fk: 1, fd: 0.07, vb: [5.2, 10, 0.35] }, { w: "saw", dt: 6, g: 0.12, a: 0.04, d: 0.3, s: 0.85, r: 0.12, ft: "lp", fc: 1.2, fe: 7, fk: 1, fd: 0.07, vb: [5.2, 10, 0.35] }] },
         { n: "Flute", g: "Wind", c: [242, 211, 106], l: [{ w: "sin", g: 0.38, a: 0.07, d: 0.3, s: 0.9, r: 0.12, vb: [5, 16, 0.3] }, { w: "tri", m: 2, g: 0.05, a: 0.07, d: 0.3, s: 0.8, r: 0.12 }, { w: "noi", g: 0.06, a: 0.03, d: 0.15, s: 0.5, r: 0.1, ft: "bp", fc: 1, fk: 1, fq: 0.75 }] },
         { n: "Drum Kit", g: "Drums", c: [228, 93, 82], k: "kit", kit: {
-            35: { n: "Deep Kick", len: 0.6, l: [{ w: "sin", f: 45, g: 0.9, a: 0.001, d: 0.3, s: 0, r: 0.05, pe: [24, 0.05] }] }, 36: { n: "Kick", len: 0.45, l: [{ w: "sin", f: 50, g: 0.95, a: 0.001, d: 0.16, s: 0, r: 0.04, pe: [30, 0.03] }, { w: "noi", g: 0.2, a: 0.001, d: 0.008, s: 0, r: 0.01, ft: "lp", fc: 4000 }] },
-            37: { n: "Rim", len: 0.08, l: [{ w: "tri", f: 820, g: 0.5, a: 0.001, d: 0.012, s: 0, r: 0.02 }, { w: "noi", g: 0.2, a: 0.001, d: 0.006, s: 0, r: 0.01, ft: "hp", fc: 3000 }] }, 38: { n: "Snare", len: 0.3, l: [{ w: "tri", f: 185, g: 0.5, a: 0.001, d: 0.05, s: 0, r: 0.04, pe: [8, 0.015] }, { w: "noi", g: 0.55, a: 0.001, d: 0.085, s: 0, r: 0.05, ft: "hp", fc: 1400 }] },
-            39: { n: "Clap", len: 0.35, l: [{ w: "noi", g: 0.6, a: 0.001, d: 0.11, s: 0, r: 0.05, ft: "bp", fc: 1250, fq: 0.4, bu: 3 }] }, 41: { n: "Low Tom", len: 0.5, l: [{ w: "sin", f: 92, g: 0.75, a: 0.001, d: 0.22, s: 0, r: 0.05, pe: [7, 0.04] }] },
-            42: { n: "Closed Hat", len: 0.1, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.022, s: 0, r: 0.02, ft: "hp", fc: 7500 }] }, 44: { n: "Pedal Hat", len: 0.1, l: [{ w: "noi", g: 0.25, a: 0.004, d: 0.015, s: 0, r: 0.02, ft: "hp", fc: 6000 }] },
-            45: { n: "Mid Tom", len: 0.45, l: [{ w: "sin", f: 128, g: 0.7, a: 0.001, d: 0.2, s: 0, r: 0.05, pe: [7, 0.04] }] }, 46: { n: "Open Hat", len: 0.45, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.16, s: 0, r: 0.06, ft: "hp", fc: 7000 }] },
-            48: { n: "High Tom", len: 0.4, l: [{ w: "sin", f: 170, g: 0.65, a: 0.001, d: 0.18, s: 0, r: 0.05, pe: [7, 0.04] }] }, 49: { n: "Crash", len: 1.8, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.6, s: 0, r: 0.2, ft: "hp", fc: 4500 }, { w: "sqr", f: 410, g: 0.04, a: 0.001, d: 0.3, s: 0, r: 0.1, ft: "hp", fc: 3000 }] },
+            35: { n: "Deep Kick", len: 0.6, l: [{ w: "sin", f: 45, g: 0.9, a: 0.001, d: 0.3, s: 0, r: 0.05, pe: [24, 0.05] }] }, 36: { n: "Kick", len: 0.45, l: [{ w: "sin", f: 50, g: 0.95, a: 0.001, d: 0.16, s: 0, r: 0.04, pe: [30, 0.03] }, { w: "noi", g: 0.2, a: 0.001, d: 0.008, s: 0, r: 0.01, ft: "lp", fc: 4000 }] }, 37: { n: "Rim", len: 0.08, l: [{ w: "tri", f: 820, g: 0.5, a: 0.001, d: 0.012, s: 0, r: 0.02 }, { w: "noi", g: 0.2, a: 0.001, d: 0.006, s: 0, r: 0.01, ft: "hp", fc: 3000 }] },
+            38: { n: "Snare", len: 0.3, l: [{ w: "tri", f: 185, g: 0.5, a: 0.001, d: 0.05, s: 0, r: 0.04, pe: [8, 0.015] }, { w: "noi", g: 0.55, a: 0.001, d: 0.085, s: 0, r: 0.05, ft: "hp", fc: 1400 }] }, 39: { n: "Clap", len: 0.35, l: [{ w: "noi", g: 0.6, a: 0.001, d: 0.11, s: 0, r: 0.05, ft: "bp", fc: 1250, fq: 0.4, bu: 3 }] }, 41: { n: "Low Tom", len: 0.5, l: [{ w: "sin", f: 92, g: 0.75, a: 0.001, d: 0.22, s: 0, r: 0.05, pe: [7, 0.04] }] },
+            42: { n: "Closed Hat", len: 0.1, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.022, s: 0, r: 0.02, ft: "hp", fc: 7500 }] }, 44: { n: "Pedal Hat", len: 0.1, l: [{ w: "noi", g: 0.25, a: 0.004, d: 0.015, s: 0, r: 0.02, ft: "hp", fc: 6000 }] }, 45: { n: "Mid Tom", len: 0.45, l: [{ w: "sin", f: 128, g: 0.7, a: 0.001, d: 0.2, s: 0, r: 0.05, pe: [7, 0.04] }] },
+            46: { n: "Open Hat", len: 0.45, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.16, s: 0, r: 0.06, ft: "hp", fc: 7000 }] }, 48: { n: "High Tom", len: 0.4, l: [{ w: "sin", f: 170, g: 0.65, a: 0.001, d: 0.18, s: 0, r: 0.05, pe: [7, 0.04] }] }, 49: { n: "Crash", len: 1.8, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.6, s: 0, r: 0.2, ft: "hp", fc: 4500 }, { w: "sqr", f: 410, g: 0.04, a: 0.001, d: 0.3, s: 0, r: 0.1, ft: "hp", fc: 3000 }] },
             51: { n: "Ride", len: 1.2, l: [{ w: "noi", g: 0.15, a: 0.001, d: 0.35, s: 0, r: 0.1, ft: "hp", fc: 8500 }, { w: "sin", f: 3150, g: 0.07, a: 0.001, d: 0.45, s: 0, r: 0.1 }] }
         } },
         { n: "8-Bit Kit", g: "Drums", c: [241, 118, 73], k: "kit", kit: {
-            36: { n: "Kick", len: 0.3, l: [{ w: "tri", f: 60, g: 0.8, a: 0.001, d: 0.14, s: 0, r: 0.03, pe: [30, 0.03], qz: 8 }] }, 38: { n: "Snare", len: 0.25, l: [{ w: "noi", nr: 9000, g: 0.45, a: 0.001, d: 0.08, s: 0, r: 0.04 }, { w: "tri", f: 220, g: 0.3, a: 0.001, d: 0.04, s: 0, r: 0.03, pe: [12, 0.02], qz: 8 }] },
-            39: { n: "Clap", len: 0.25, l: [{ w: "noi", nr: 7000, g: 0.5, a: 0.001, d: 0.08, s: 0, r: 0.04, bu: 3 }] }, 42: { n: "Hat", len: 0.08, l: [{ w: "noi", nr: 22000, g: 0.25, a: 0.001, d: 0.02, s: 0, r: 0.02, ft: "hp", fc: 5000 }] },
-            45: { n: "Tom", len: 0.35, l: [{ w: "tri", f: 140, g: 0.6, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [12, 0.05], qz: 8 }] }, 46: { n: "Open Hat", len: 0.3, l: [{ w: "noi", nr: 22000, g: 0.22, a: 0.001, d: 0.12, s: 0, r: 0.04, ft: "hp", fc: 5000 }] },
+            36: { n: "Kick", len: 0.3, l: [{ w: "tri", f: 60, g: 0.8, a: 0.001, d: 0.14, s: 0, r: 0.03, pe: [30, 0.03], qz: 8 }] }, 38: { n: "Snare", len: 0.25, l: [{ w: "noi", nr: 9000, g: 0.45, a: 0.001, d: 0.08, s: 0, r: 0.04 }, { w: "tri", f: 220, g: 0.3, a: 0.001, d: 0.04, s: 0, r: 0.03, pe: [12, 0.02], qz: 8 }] }, 39: { n: "Clap", len: 0.25, l: [{ w: "noi", nr: 7000, g: 0.5, a: 0.001, d: 0.08, s: 0, r: 0.04, bu: 3 }] },
+            42: { n: "Hat", len: 0.08, l: [{ w: "noi", nr: 22000, g: 0.25, a: 0.001, d: 0.02, s: 0, r: 0.02, ft: "hp", fc: 5000 }] }, 45: { n: "Tom", len: 0.35, l: [{ w: "tri", f: 140, g: 0.6, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [12, 0.05], qz: 8 }] }, 46: { n: "Open Hat", len: 0.3, l: [{ w: "noi", nr: 22000, g: 0.22, a: 0.001, d: 0.12, s: 0, r: 0.04, ft: "hp", fc: 5000 }] },
             49: { n: "Crash", len: 1, l: [{ w: "noi", nr: 14000, g: 0.25, a: 0.001, d: 0.5, s: 0, r: 0.1 }] }, 50: { n: "Blip", len: 0.12, l: [{ w: "sqr", f: 880, g: 0.15, a: 0.001, d: 0.05, s: 0, r: 0.02, pe: [12, 0.01] }] }
         } },
         { n: "Percussion", g: "Drums", c: [212, 121, 94], k: "kit", kit: {
-            54: { n: "Tambourine", len: 0.3, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "hp", fc: 6500, bu: 2 }, { w: "sin", f: 5200, g: 0.05, a: 0.001, d: 0.1, s: 0, r: 0.05 }] }, 56: { n: "Cowbell", len: 0.4, l: [{ w: "sqr", f: 562, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }, { w: "sqr", f: 845, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }] },
-            60: { n: "Hi Bongo", len: 0.25, l: [{ w: "sin", f: 420, g: 0.6, a: 0.001, d: 0.08, s: 0, r: 0.03, pe: [4, 0.01] }] }, 61: { n: "Lo Bongo", len: 0.3, l: [{ w: "sin", f: 300, g: 0.6, a: 0.001, d: 0.1, s: 0, r: 0.03, pe: [4, 0.01] }] },
-            63: { n: "Conga", len: 0.4, l: [{ w: "sin", f: 220, g: 0.65, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [5, 0.02] }] }, 70: { n: "Shaker", len: 0.12, l: [{ w: "noi", g: 0.3, a: 0.015, d: 0.04, s: 0, r: 0.03, ft: "hp", fc: 6000 }] },
-            75: { n: "Claves", len: 0.12, l: [{ w: "sin", f: 2500, g: 0.5, a: 0.001, d: 0.03, s: 0, r: 0.02 }] }, 76: { n: "Woodblock", len: 0.12, l: [{ w: "sin", f: 1050, g: 0.5, a: 0.001, d: 0.035, s: 0, r: 0.02 }, { w: "tri", f: 2600, g: 0.1, a: 0.001, d: 0.01, s: 0, r: 0.01 }] },
-            81: { n: "Triangle", len: 1.4, l: [{ w: "sin", f: 4200, g: 0.12, a: 0.001, d: 0.8, s: 0, r: 0.2 }, { w: "sin", f: 6300, g: 0.04, a: 0.001, d: 0.5, s: 0, r: 0.2 }] }
+            54: { n: "Tambourine", len: 0.3, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "hp", fc: 6500, bu: 2 }, { w: "sin", f: 5200, g: 0.05, a: 0.001, d: 0.1, s: 0, r: 0.05 }] }, 56: { n: "Cowbell", len: 0.4, l: [{ w: "sqr", f: 562, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }, { w: "sqr", f: 845, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }] }, 60: { n: "Hi Bongo", len: 0.25, l: [{ w: "sin", f: 420, g: 0.6, a: 0.001, d: 0.08, s: 0, r: 0.03, pe: [4, 0.01] }] },
+            61: { n: "Lo Bongo", len: 0.3, l: [{ w: "sin", f: 300, g: 0.6, a: 0.001, d: 0.1, s: 0, r: 0.03, pe: [4, 0.01] }] }, 63: { n: "Conga", len: 0.4, l: [{ w: "sin", f: 220, g: 0.65, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [5, 0.02] }] }, 70: { n: "Shaker", len: 0.12, l: [{ w: "noi", g: 0.3, a: 0.015, d: 0.04, s: 0, r: 0.03, ft: "hp", fc: 6000 }] },
+            75: { n: "Claves", len: 0.12, l: [{ w: "sin", f: 2500, g: 0.5, a: 0.001, d: 0.03, s: 0, r: 0.02 }] }, 76: { n: "Woodblock", len: 0.12, l: [{ w: "sin", f: 1050, g: 0.5, a: 0.001, d: 0.035, s: 0, r: 0.02 }, { w: "tri", f: 2600, g: 0.1, a: 0.001, d: 0.01, s: 0, r: 0.01 }] }, 81: { n: "Triangle", len: 1.4, l: [{ w: "sin", f: 4200, g: 0.12, a: 0.001, d: 0.8, s: 0, r: 0.2 }, { w: "sin", f: 6300, g: 0.04, a: 0.001, d: 0.5, s: 0, r: 0.2 }] }
         } },
         { n: "Laser", g: "FX", c: [143, 233, 64], l: [{ w: "sqr", g: 0.17, a: 0.001, d: 0.25, s: 0, r: 0.05, pe: [24, 0.06] }, { w: "saw", dt: 12, g: 0.08, a: 0.001, d: 0.2, s: 0, r: 0.05, pe: [30, 0.05] }] },
         { n: "Vox", g: "Voice", c: [252, 141, 211], k: "vox", vx: { fs: 1, op: 0.4, cl: 0.16, br: 0.04, tl: 0.62, vr: 5.5, vd: 0.3 } },
-        { n: "Bright Vox", g: "Voice", c: [246, 181, 112], k: "vox", vx: { fs: 1.17, op: 0.45, cl: 0.2, br: 0.1, tl: 0.8, vr: 5.8, vd: 0.35 } }
+        { n: "Bright Vox", g: "Voice", c: [246, 181, 112], k: "vox", vx: { fs: 1.17, op: 0.45, cl: 0.2, br: 0.1, tl: 0.8, vr: 5.8, vd: 0.35 } },
+        { n: "Vox HD", g: "Voice", c: [238, 104, 171], k: "vox", vx: { hd: 1, fs: 1, op: 0.4, cl: 0.16, br: 0.04, tl: 0.62, vr: 5.5, vd: 0.3 } },
+        { n: "Bright Vox HD", g: "Voice", c: [251, 152, 92], k: "vox", vx: { hd: 1, fs: 1.17, op: 0.45, cl: 0.2, br: 0.1, tl: 0.8, vr: 5.8, vd: 0.35 } }
     ];
     core.freq = function (m) { return 440 * Math.pow(2, (m - 69) / 12); };
     core.arr = function (ctx, n) { return ctx.createBuffer(1, Math.max(1, n), ctx.sampleRate).getChannelData(0); };
@@ -525,44 +525,51 @@ var core = (function () {
     return core;
 })();
 
-var data = core.decode(song);
-var spt = 60 / (data.bpm * data.res);
-var look = data.vis || 1;
-var evs = [], notes = [], lyr = [], jobs = [], bufs = {}, parts = [], lev = [], tint = [];
-var lo = 127, hi = 0, total = 0, done = 0, base = 0, pos = 0, idx = 0, vi = 0, kick = 0;
-var state = "load", over = false, solo = false;
-var U = width / 400;
-core.setup(sfx);
-for (var a = 0; a < data.tracks.length; a++) {
-    if (data.tracks[a].solo) { solo = true; }
-}
-for (var ti = 0; ti < data.tracks.length; ti++) {
-    var tr = data.tracks[ti], ins = core.insts[tr.inst], prev = "";
-    var on = !tr.mute && (!solo || tr.solo);
-    for (var ni = 0; ins && ni < tr.notes.length; ni++) {
-        var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox";
-        total = max(total, e);
-        notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti });
-        lo = ins.k === "kit" ? lo : min(lo, nt.p);
-        hi = ins.k === "kit" ? hi : max(hi, nt.p);
-        if (vox) { lyr.push({ s: s, e: e, w: nt.w }); }
-        var k = vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + nt.p + ":" + round((e - s) * 1000) : core.key(tr.inst, nt.p, e - s);
-        var pw = prev;
-        if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
-        if (!on || (vox && !core.vox)) { continue; }
-        if (bufs[k] === undefined) {
-            bufs[k] = null;
-            jobs.push({ k: k, i: tr.inst, p: nt.p, d: e - s, w: nt.w, pw: pw });
-        }
-        evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50 });
-    }
-}
+var list = typeof songs !== "undefined" ? songs : [song];
+var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
+var data, spt, look, evs, notes, lyr, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state;
 var bySt = function (x, y) { return x.s - y.s; };
-evs.sort(bySt);
-notes.sort(bySt);
-lyr.sort(bySt);
-lo = hi < lo ? 60 : lo;
-hi = hi < lo ? 72 : hi;
+core.setup(sfx);
+for (var q = 0; q < list.length; q++) { names.push(core.decode(list[q]).title || "Song " + (q + 1)); }
+var prep = function (n) {
+    sfx.stop();
+    at = n;
+    data = core.decode(list[n]);
+    spt = 60 / (data.bpm * data.res);
+    look = data.vis || 1;
+    evs = []; notes = []; lyr = []; jobs = []; parts = []; lev = []; tint = [];
+    lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0;
+    state = "load";
+    var solo = false;
+    for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; }
+    for (var ti = 0; ti < data.tracks.length; ti++) {
+        var tr = data.tracks[ti], ins = core.insts[tr.inst], prev = "";
+        var on = !tr.mute && (!solo || tr.solo);
+        for (var ni = 0; ins && ni < tr.notes.length; ni++) {
+            var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox";
+            total = max(total, e);
+            notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti });
+            lo = ins.k === "kit" ? lo : min(lo, nt.p);
+            hi = ins.k === "kit" ? hi : max(hi, nt.p);
+            if (vox) { lyr.push({ s: s, e: e, w: nt.w }); }
+            var k = vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round((e - s) * 1000) : core.key(tr.inst, nt.p, e - s);
+            var pw = prev;
+            if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
+            if (!on || (vox && !core.vox)) { continue; }
+            if (bufs[k] === undefined) {
+                bufs[k] = null;
+                jobs.push({ k: k, i: tr.inst, p: nt.p, d: e - s, w: nt.w, pw: pw, tl: tr.notes, nt: nt });
+            }
+            evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50 });
+        }
+    }
+    evs.sort(bySt);
+    notes.sort(bySt);
+    lyr.sort(bySt);
+    lo = hi < lo ? 60 : lo;
+    hi = hi < lo ? 72 : hi;
+};
+prep(0);
 var clock = function (t) {
     t = max(0, t);
     var sc = floor(t % 60);
@@ -581,18 +588,12 @@ var go = function (p) {
     while (vi < notes.length && notes[vi].s < p) { vi++; }
     state = "play";
 };
-var halt = function () {
-    sfx.stop();
-    state = "stop";
-};
+var halt = function () { sfx.stop(); state = "stop"; };
 var toggle = function () {
     if (state === "play") {
         halt();
         sfx.play("released");
-    } else if (state === "stop") {
-        sfx.play("press");
-        go(pos >= total ? 0 : pos);
-    }
+    } else if (state === "stop") { sfx.play("press"); go(pos >= total ? 0 : pos); }
 };
 var drRoll = function () {
     var top = 64 * U, bot = height - 104 * U, cx = width * 0.3;
@@ -672,10 +673,7 @@ var drStars = function () {
         q.x += q.vx;
         q.y += q.vy;
         q.life -= 0.012;
-        if (q.life <= 0) {
-            parts.splice(i, 1);
-            continue;
-        }
+        if (q.life <= 0) { parts.splice(i, 1); continue; }
         col(q.c, q.life * 255);
         ellipse(q.x, q.y, 6 * U * q.life + 2, 6 * U * q.life + 2);
     }
@@ -706,7 +704,7 @@ var drUi = function () {
     textAlign(LEFT, CENTER);
     fill(236, 238, 243);
     textSize(18 * U);
-    text(data.title || "Untitled", 16 * U, 24 * U);
+    text((data.title || "Untitled") + (list.length > 1 ? "  \u25BE" : ""), 16 * U, 24 * U);
     fill(141, 148, 163);
     textSize(12 * U);
     text(data.bpm + " BPM", 16 * U, 46 * U);
@@ -722,6 +720,15 @@ var drUi = function () {
     rect(66 * U, by - 4 * U, width - 86 * U, 8 * U, 4);
     fill(96, 183, 247);
     rect(66 * U, by - 4 * U, bar, 8 * U, 4);
+    if (!menu) { return; }
+    fill(31, 34, 42, 245);
+    rect(10 * U, 38 * U, 250 * U, list.length * 24 * U + 8 * U, 6);
+    textAlign(LEFT, CENTER);
+    textSize(14 * U);
+    for (var m = 0; m < list.length; m++) {
+        fill(m === at ? 252 : 226, m === at ? 160 : 228, m === at ? 216 : 235);
+        text(names[m], 22 * U, 54 * U + m * 24 * U);
+    }
 };
 var looks = [drRoll, drRoll, drBars, drOrbit, drStars];
 draw = function () {
@@ -732,7 +739,7 @@ draw = function () {
         while (done < jobs.length && millis() - t0 < 12) {
             var j = jobs[done];
             var ji = core.insts[j.i];
-            bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx) : { buf: core.render(sfx.context, ji, j.p, j.d), pre: 0 };
+            bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt) : { buf: core.render(sfx.context, ji, j.p, j.d), pre: 0 };
             done++;
         }
         state = done >= jobs.length ? "stop" : state;
@@ -754,16 +761,19 @@ draw = function () {
             if (b && b.buf && ev.s > pos - 0.03) { core.fire(sfx, b.buf, base + ev.s - b.pre, ev.g, ev.pan); }
             idx++;
         }
-        if (pos > total + 0.6) {
-            halt();
-            pos = 0;
-        }
+        if (pos > total + 0.6) { halt(); pos = 0; }
     }
     (looks[look] || drRoll)();
     drLyrics();
     drUi();
 };
 mouseClicked = function () {
+    var row = floor((mouseY - 42 * U) / (24 * U));
+    if (menu || (mouseY < 36 * U && list.length > 1)) {
+        if (menu && mouseX < 260 * U && row >= 0 && row < list.length) { prep(row); }
+        menu = !menu;
+        return;
+    }
     if (state === "load") { return; }
     var p = constrain((mouseX - 66 * U) / (width - 86 * U), 0, 1) * total;
     var seek = mouseY > height - 56 * U && mouseX > 60 * U;
@@ -771,10 +781,7 @@ mouseClicked = function () {
 };
 mouseMoved = function () {
     var now = dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U;
-    if (now !== over) {
-        over = now;
-        sfx.play(over ? "hover" : "unhover");
-    }
+    if (now !== over) { over = now; sfx.play(over ? "hover" : "unhover"); }
 };
 keyPressed = function () {
     if (keyCode === 32) { toggle(); }
