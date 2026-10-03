@@ -9,7 +9,9 @@ Processing.js program.
 - `index.html` - the whole app: instruments, editor, player and exporters. Works offline.
 - `js/voice.js` - the singing voices (Vox, Bright Vox, Vox HD, Bright Vox HD). The page loads it
   from next to itself first, then from jsDelivr (this repo), and still works without it.
+- `js/voice-hd.js` - the HD voices' own synthesizer (clearer consonants).
 - `js/voice-dict.js` - the pronunciation dictionary the HD voices read from.
+- `tools/voice-test.html` - sing any text with all four voices side by side.
 - `tools/build-dict.js` - rebuilds `voice-dict.js` from a fresh copy of CMUdict.
 - `songs/` - example song text and a ready-made Khan Academy program.
 
@@ -17,9 +19,9 @@ Processing.js program.
 
 In `index.html`, the voice loads from this repo through jsDelivr:
 
-    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v1/js/voice.js
+    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v2/js/voice.js
 
-It points at the `v1` tag. After changing the voice files, push a new tag (`v2`, ...) and update the
+It points at the `v2` tag. After changing the voice files, push a new tag (`v2`, ...) and update the
 link in `index.html`, since jsDelivr caches files for a while.
 
 ## Credits

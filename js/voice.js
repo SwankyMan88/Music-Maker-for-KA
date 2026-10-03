@@ -193,11 +193,22 @@ var voice = {
         return parts;
     },
 
+    // A reduced syllable ("bih" in becomes) held on its own note is sung with its full vowel ("bee")
+    // when the syllable is also a word with the same consonants.
+    full: function (part, text) {
+        var vs = part.filter(this.isV, this);
+        if (vs.length !== 1 || (vs[0] !== "IH0" && vs[0] !== "AH0")) { return part; }
+        var own = this.look(text);
+        var self = this;
+        var bare = function (l) { return l.filter(function (p) { return !self.isV(p); }).join(" "); };
+        return own && own.filter(this.isV, this).length === 1 && bare(own) === bare(part) ? own : part;
+    },
+
     hdList: function (word, notes, note) {
         var ch = notes && note ? this.chain(notes, note) : null;
         if (ch) {
             var parts = this.syll(this.look(ch.word) || this.g2p(ch.word), ch.count);
-            if (parts) { return parts[ch.part]; }
+            if (parts) { return this.full(parts[ch.part], note.w); }
         }
         return this.look(word);
     },

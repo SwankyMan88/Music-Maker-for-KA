@@ -48,9 +48,16 @@ voice.hd = {
     },
 
     // the segments one consonant turns into
-    cons: function (p) {
+    cons: function (p, before) {
         var c = this.con[p];
         if (!c) { return []; }
+        // after s, sh or f a stop is short and has no puff of air ("st" in star, "sp" in spin)
+        if (c.k === "stop" && (before === "S" || before === "SH" || before === "F")) {
+            return [
+                { d: 0.03, f: c.f, av: 0, low: 1 },
+                { d: 0.01, f: c.f, af: 0.8, p: c.p, av: 0, rel: 0.035 }
+            ];
+        }
         if (c.k === "stop") {
             var out = [
                 { d: 0.06, f: c.f, av: c.v ? 0.18 : 0, low: 1 },
@@ -83,11 +90,11 @@ voice.hd = {
         var dur = function (a) { return a.reduce(function (t, s) { return t + s.d; }, 0); };
         list.forEach(function (p, i) {
             if (i < first) {
-                onset = onset.concat(self.cons(p));
+                onset = onset.concat(self.cons(p, list[i - 1]));
             } else if (i > last) {
-                coda = coda.concat(self.cons(p));
+                coda = coda.concat(self.cons(p, list[i - 1]));
             } else if (!V.isV(p)) {
-                mid += dur(self.cons(p));
+                mid += dur(self.cons(p, list[i - 1]));
             }
         });
         var vt = Math.max(0.07 * vi.length, sec - dur(coda) - mid);
@@ -99,7 +106,7 @@ voice.hd = {
         for (var k = first; k <= last; k++) {
             var p = list[k];
             if (!V.isV(p)) {
-                segs = segs.concat(this.cons(p));
+                segs = segs.concat(this.cons(p, list[k - 1]));
                 continue;
             }
             var each = weak && /0$/.test(p) ? short : (vt - short * weak) / (vi.length - weak);
