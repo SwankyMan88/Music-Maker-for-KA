@@ -325,8 +325,7 @@ var core = (function () {
                 f = f * Math.pow(2, L.vb[1] * vr * Math.sin(6.2832 * L.vb[0] * t) / 1200);
             }
             var dp = f / sr, v = 0;
-            if (w === "sin") { v = Math.sin(6.2832 * ph); }
-            else if (w === "tri") { v = 4 * Math.abs(ph - 0.5) - 1; }
+            if (w === "sin") { v = Math.sin(6.2832 * ph); } else if (w === "tri") { v = 4 * Math.abs(ph - 0.5) - 1; }
             else if (w === "saw") { v = 2 * ph - 1 - core.blep(ph, dp); }
             else if (w === "sqr" || w === "pls") {
                 v = (ph < pw ? 1 : -1) + core.blep(ph, dp) - core.blep((ph + 1 - pw) % 1, dp);
@@ -527,7 +526,7 @@ var core = (function () {
 
 var list = typeof songs !== "undefined" ? songs : [song];
 var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
-var data, spt, look, evs, notes, lyr, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state;
+var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot;
 var bySt = function (x, y) { return x.s - y.s; };
 core.setup(sfx);
 for (var q = 0; q < list.length; q++) { names.push(core.decode(list[q]).title || "Song " + (q + 1)); }
@@ -537,13 +536,14 @@ var prep = function (n) {
     data = core.decode(list[n]);
     spt = 60 / (data.bpm * data.res);
     look = data.vis || 1;
-    evs = []; notes = []; lyr = []; jobs = []; parts = []; lev = []; tint = [];
+    evs = []; notes = []; sing = []; jobs = []; parts = []; lev = []; tint = [];
+    var seen = {};
     lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0;
     state = "load";
     var solo = false;
     for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; }
     for (var ti = 0; ti < data.tracks.length; ti++) {
-        var tr = data.tracks[ti], ins = core.insts[tr.inst], prev = "";
+        var tr = data.tracks[ti], ins = core.insts[tr.inst], prev = "", ly = [];
         var on = !tr.mute && (!solo || tr.solo);
         for (var ni = 0; ins && ni < tr.notes.length; ni++) {
             var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox";
@@ -551,7 +551,7 @@ var prep = function (n) {
             notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti });
             lo = ins.k === "kit" ? lo : min(lo, nt.p);
             hi = ins.k === "kit" ? hi : max(hi, nt.p);
-            if (vox) { lyr.push({ s: s, e: e, w: nt.w }); }
+            if (vox && !seen[round(s * 100) + nt.w]) { ly.push({ s: s, e: e, w: nt.w }); }
             var k = vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round((e - s) * 1000) : core.key(tr.inst, nt.p, e - s);
             var pw = prev;
             if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
@@ -562,10 +562,12 @@ var prep = function (n) {
             }
             evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50 });
         }
+        for (var sl = 0; sl < ly.length; sl++) { seen[round(ly[sl].s * 100) + ly[sl].w] = true; }
+        if (ly.length && sing.length < 3) { sing.push({ l: ly, c: ins.c }); }
     }
+    foot = 104 + max(0, sing.length - 1) * 22;
     evs.sort(bySt);
     notes.sort(bySt);
-    lyr.sort(bySt);
     lo = hi < lo ? 60 : lo;
     hi = hi < lo ? 72 : hi;
 };
@@ -596,7 +598,7 @@ var toggle = function () {
     } else if (state === "stop") { sfx.play("press"); go(pos >= total ? 0 : pos); }
 };
 var drRoll = function () {
-    var top = 64 * U, bot = height - 104 * U, cx = width * 0.3;
+    var top = 64 * U, bot = height - foot * U, cx = width * 0.3;
     var rh = (bot - top - 26 * U) / max(12, hi - lo + 1);
     for (var i = 0; i < notes.length; i++) {
         var n = notes[i];
@@ -612,7 +614,7 @@ var drRoll = function () {
     noStroke();
 };
 var drBars = function () {
-    var nb = 32, bw = width / nb, bot = height - 112 * U, tall = bot - 74 * U;
+    var nb = 32, bw = width / nb, bot = height - (foot + 8) * U, tall = bot - 74 * U;
     for (var i = 0; i < notes.length && notes[i].s <= pos; i++) {
         var n = notes[i];
         if (!lit(n)) { continue; }
@@ -679,24 +681,24 @@ var drStars = function () {
     }
 };
 var drLyrics = function () {
-    var k = -1;
-    for (var i = 0; i < lyr.length && lyr[i].s <= pos + 0.05; i++) { k = i; }
-    var line1 = [];
-    for (var j = max(0, k - 3); j < lyr.length && line1.length < 7; j++) {
-        if (/^[-_+]?$/.test(lyr[j].w)) { continue; }
-        var glue = line1.length && !/-$/.test(line1[line1.length - 1].w);
-        line1.push({ w: lyr[j].w, j: j, t: (glue ? " " : "") + lyr[j].w.replace(/-$/, "") });
-    }
     textSize(17 * U);
     textAlign(LEFT, CENTER);
-    var x = width / 2;
-    for (var a = 0; a < line1.length; a++) { x -= textWidth(line1[a].t) / 2; }
-    for (var b = 0; b < line1.length; b++) {
-        var pt = line1[b];
-        if (state === "play" && pt.j === k && pos < lyr[k].e + 0.3) { fill(252, 160, 216); }
-        else { fill(pt.j < k ? 150 : 226, pt.j < k ? 154 : 228, pt.j < k ? 168 : 235); }
-        text(pt.t, x, height - 82 * U);
-        x += textWidth(pt.t);
+    for (var li = 0; li < sing.length; li++) {
+        var ly = sing[li].l, c = sing[li].c, y = height - (82 + (sing.length - 1 - li) * 22) * U;
+        var k = -1, words = [], x = width / 2;
+        for (var i = 0; i < ly.length && ly[i].s <= pos + 0.05; i++) { k = i; }
+        for (var j = max(0, k - 3); j < ly.length && words.length < 7; j++) {
+            if (/^[-_+]?$/.test(ly[j].w)) { continue; }
+            var glue = words.length && !/-$/.test(words[words.length - 1].w);
+            words.push({ j: j, w: ly[j].w, t: (glue ? " " : "") + ly[j].w.replace(/-$/, "") });
+        }
+        for (var a = 0; a < words.length; a++) { x -= textWidth(words[a].t) / 2; }
+        for (var b = 0; b < words.length; b++) {
+            var now = state === "play" && words[b].j === k && pos < ly[k].e + 0.3;
+            fill(now ? c[0] : (words[b].j < k ? 150 : 226), now ? c[1] : (words[b].j < k ? 154 : 228), now ? c[2] : (words[b].j < k ? 168 : 235));
+            text(words[b].t, x, y);
+            x += textWidth(words[b].t);
+        }
     }
 };
 var drUi = function () {
@@ -737,8 +739,7 @@ draw = function () {
     if (state === "load") {
         var t0 = millis();
         while (done < jobs.length && millis() - t0 < 12) {
-            var j = jobs[done];
-            var ji = core.insts[j.i];
+            var j = jobs[done], ji = core.insts[j.i];
             bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt) : { buf: core.render(sfx.context, ji, j.p, j.d), pre: 0 };
             done++;
         }
@@ -756,8 +757,7 @@ draw = function () {
     if (state === "play") {
         pos = sfx.context.currentTime - base;
         while (idx < evs.length && evs[idx].s < pos + 0.4) {
-            var ev = evs[idx];
-            var b = bufs[ev.k];
+            var ev = evs[idx], b = bufs[ev.k];
             if (b && b.buf && ev.s > pos - 0.03) { core.fire(sfx, b.buf, base + ev.s - b.pre, ev.g, ev.pan); }
             idx++;
         }
