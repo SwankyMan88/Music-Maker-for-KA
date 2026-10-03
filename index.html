@@ -1952,9 +1952,15 @@ var pjs = {
                 tag.src = voiceFrom[i] + "voice.js";
                 tag.setAttribute("data-dyn", "1");
                 tag.onload = function () {
+                    var hd = document.createElement("script");
+                    hd.src = voiceFrom[i] + "voice-hd.js";
+                    hd.setAttribute("data-dyn", "1");
+                    hd.async = false;
+                    document.head.appendChild(hd);
                     var dict = document.createElement("script");
                     dict.src = voiceFrom[i] + "voice-dict.js";
                     dict.setAttribute("data-dyn", "1");
+                    dict.async = false;
                     dict.onload = function () { voiceEnd(true); };
                     dict.onerror = function () { voiceEnd(true); };
                     document.head.appendChild(dict);

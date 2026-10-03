@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Voice Test</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 18px;
+                background: rgb(23, 25, 31);
+                color: rgb(221, 224, 231);
+                font: 14px system-ui, sans-serif;
+            }
+            h1 {
+                font-size: 18px;
+                margin: 0 0 4px;
+            }
+            p {
+                color: rgb(141, 148, 163);
+                margin: 0 0 14px;
+            }
+            .row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            input, select, button {
+                font: inherit;
+                color: inherit;
+                background: rgb(41, 45, 55);
+                border: 1px solid rgb(55, 61, 73);
+                border-radius: 5px;
+                padding: 5px 9px;
+            }
+            input[type="text"] {
+                flex: 1;
+                min-width: 220px;
+            }
+            button {
+                cursor: pointer;
+            }
+            button:hover {
+                background: rgb(51, 56, 68);
+            }
+            .hd {
+                border-color: rgb(238, 104, 171);
+            }
+            table {
+                border-collapse: collapse;
+                margin-top: 8px;
+            }
+            td {
+                padding: 4px 8px 4px 0;
+            }
+            .say {
+                color: rgb(171, 232, 151);
+                min-width: 220px;
+            }
+            #status {
+                font-size: 12px;
+                color: rgb(244, 203, 87);
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Voice Test</h1>
+        <p>Compare the small voices and the HD voices. Type anything, or play the lines below. Split one word over two notes with a hyphen, like "sil-ver".</p>
+        <div class="row">
+            <input id="text" type="text" value="silver boats on morning rain">
+            <label>Pitch <select id="pitch"></select></label>
+            <label>Note length <select id="len"><option value="0.25">short</option><option value="0.45" selected>medium</option><option value="0.8">long</option></select></label>
+            <label><input id="speak" type="checkbox"> Speak (HD only)</label>
+        </div>
+        <div class="row" id="buttons"></div>
+        <div id="status">Loading voices...</div>
+        <table id="lines"></table>
+
+        <script>
+            // The few pieces of the Songboard core the voices need.
+            var core = {
+                freq: function (m) { return 440 * Math.pow(2, (m - 69) / 12); },
+                arr: function (ctx, n) { return ctx.createBuffer(1, Math.max(1, n), ctx.sampleRate).getChannelData(0); },
+                blep: function (t, dt) {
+                    if (t < dt) { t = t / dt; return t + t - t * t - 1; }
+                    if (t > 1 - dt) { t = (t - 1) / dt; return t * t + t + t + 1; }
+                    return 0;
+                }
+            };
+            var ctx = new (window.AudioContext || window.webkitAudioContext)();
+            var voices = [
+                { n: "Vox", vx: { fs: 1, op: 0.4, cl: 0.16, br: 0.04, tl: 0.62, vr: 5.5, vd: 0.3 } },
+                { n: "Bright Vox", vx: { fs: 1.17, op: 0.45, cl: 0.2, br: 0.1, tl: 0.8, vr: 5.8, vd: 0.35 } },
+                { n: "Vox HD", vx: { hd: 1, fs: 1, op: 0.4, cl: 0.16, br: 0.04, tl: 0.62, vr: 5.5, vd: 0.3 } },
+                { n: "Bright Vox HD", vx: { hd: 1, fs: 1.17, op: 0.45, cl: 0.2, br: 0.1, tl: 0.8, vr: 5.8, vd: 0.35 } }
+            ];
+            var lines = [
+                "silver boats on morning rain",
+                "sail-ing down the win-dow pane",
+                "every little star is mine",
+                "we will sing into the night",
+                "bat pat cat that",
+                "sip ship zip chip",
+                "seat sheet feet heat",
+                "light night right bright",
+                "song long strong wrong",
+                "moon soon noon tune",
+                "the quick brown fox jumps over the lazy dog"
+            ];
+            var names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+            var playing = [];
+
+            var stopAll = function () {
+                playing.forEach(function (s) {
+                    try {
+                        s.stop();
+                    } catch (er) {
+                        console.warn(er);
+                    }
+                });
+                playing = [];
+            };
+
+            // Each word is one note, a hyphen joins syllables into one word over several notes.
+            var sing = function (text, v) {
+                ctx.resume();
+                stopAll();
+                var len = Number(document.getElementById("len").value);
+                var pitch = Number(document.getElementById("pitch").value);
+                var parts = [];
+                text.trim().split(/\s+/).forEach(function (w) {
+                    var bits = w.split("-");
+                    bits.forEach(function (b, i) {
+                        if (b) { parts.push(i < bits.length - 1 ? b + "-" : b); }
+                    });
+                });
+                var notes = parts.map(function (w, i) { return { t: i * 12, l: 12, p: pitch, w: w }; });
+                if (window.voice && voice.hd) { voice.hd.speak = document.getElementById("speak").checked; }
+                var at = ctx.currentTime + 0.3;
+                notes.forEach(function (n) {
+                    var r = voice.render(ctx, n.w, n.p, len, "", v.vx, notes, n);
+                    var src = ctx.createBufferSource();
+                    src.buffer = r.buf;
+                    src.connect(ctx.destination);
+                    src.start(Math.max(ctx.currentTime, at - r.pre));
+                    playing.push(src);
+                    at += len + 0.04;
+                });
+            };
+
+            var row = function (text) {
+                var tr = document.createElement("tr");
+                var td = document.createElement("td");
+                td.className = "say";
+                td.textContent = text;
+                tr.appendChild(td);
+                voices.forEach(function (v) {
+                    var cell = document.createElement("td");
+                    var b = document.createElement("button");
+                    b.textContent = v.n;
+                    if (v.vx.hd) { b.className = "hd"; }
+                    b.addEventListener("click", function () { sing(text, v); });
+                    cell.appendChild(b);
+                    tr.appendChild(cell);
+                });
+                document.getElementById("lines").appendChild(tr);
+            };
+
+            for (var m = 43; m <= 72; m++) {
+                var o = document.createElement("option");
+                o.value = m;
+                o.textContent = names[m % 12] + (Math.floor(m / 12) - 1);
+                if (m === 55) { o.selected = true; }
+                document.getElementById("pitch").appendChild(o);
+            }
+            voices.forEach(function (v) {
+                var b = document.createElement("button");
+                b.textContent = "Sing with " + v.n;
+                if (v.vx.hd) { b.className = "hd"; }
+                b.addEventListener("click", function () { sing(document.getElementById("text").value, v); });
+                document.getElementById("buttons").appendChild(b);
+            });
+            lines.forEach(row);
+
+            ["../js/voice.js", "../js/voice-hd.js", "../js/voice-dict.js"].forEach(function (f, i, all) {
+                var s = document.createElement("script");
+                s.src = f;
+                s.async = false;
+                if (i === all.length - 1) {
+                    s.onload = function () { document.getElementById("status").textContent = "Voices ready."; };
+                }
+                s.onerror = function () { document.getElementById("status").textContent = "Could not load " + f + ". Open this page from inside the Songboard folder."; };
+                document.body.appendChild(s);
+            });
+        </script>
+    </body>
+</html>

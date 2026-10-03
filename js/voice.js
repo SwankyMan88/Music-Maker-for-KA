@@ -423,7 +423,7 @@ var voice = {
         return d;
     },
 
-    plan: function (word, sec, prev, given) {
+    phones: function (word, prev, given) {
         var list;
         if (given && given.length) {
             list = given.slice();
@@ -451,6 +451,11 @@ var voice = {
             }
         }
 
+        return list;
+    },
+
+    plan: function (word, sec, prev, given) {
+        var list = this.phones(word, prev, given);
         var vi = [];
         for (var b = 0; b < list.length; b++) {
             if (this.isV(list[b])) {
@@ -539,7 +544,10 @@ var voice = {
         var tl = o.tl || dflt.tl;
         var vr = o.vr || dflt.vr;
         var vdep = o.vd || dflt.vd;
-        var plan = this.plan(word, sec, prev || "", o.hd ? this.hdList(word, notes, note) : null);
+        if (o.hd && this.hd) {
+            return this.hd.render(ctx, this.phones(word, prev || "", this.hdList(word, notes, note)), midi, sec, o);
+        }
+        var plan = this.plan(word, sec, prev || "", null);
         var segs = plan.segs;
         var total = this.dur(segs);
         var len = Math.ceil((total + 0.1) * sr);
