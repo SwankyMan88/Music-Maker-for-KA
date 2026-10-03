@@ -2,6 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Songboard</title>
         <style>
             * {
@@ -111,6 +112,114 @@
             }
             .grow {
                 flex: 1;
+            }
+            #more {
+                display: contents;
+            }
+            .small {
+                display: none;
+            }
+            .sideHd {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .sideHd button {
+                padding: 1px 7px;
+                font-size: 12px;
+            }
+
+            /*
+            * Single view: small screens (like a Khan Academy page) show one pane at a time.
+            * The top bar picks the pane and track, the rest of the controls live in the menu.
+            */
+            body.single #top {
+                position: relative;
+                flex-wrap: nowrap;
+                gap: 6px;
+                padding: 6px 8px;
+            }
+            body.single .small {
+                display: block;
+            }
+            body.single .logo {
+                display: none;
+            }
+            body.single #trackSel {
+                min-width: 0;
+                max-width: 150px;
+            }
+            body.single #more {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 6px;
+                z-index: 25;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+                width: min(260px, calc(100vw - 12px));
+                max-height: calc(100vh - 60px);
+                overflow-y: auto;
+                padding: 10px;
+                background: rgb(31, 34, 42);
+                border: 1px solid rgb(55, 61, 73);
+                border-radius: 8px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
+            body.single.menu #more {
+                display: flex;
+            }
+            body.single #more .grow {
+                display: none;
+            }
+            body.single #title {
+                width: auto;
+            }
+            body.single #side,
+            body.single .corner,
+            body.single #heads {
+                width: 150px;
+            }
+            body.single #split {
+                display: none;
+            }
+            body.single[data-view="tracks"] #side,
+            body.single[data-view="tracks"] #rollBar,
+            body.single[data-view="tracks"] #rollWrap,
+            body.single[data-view="notes"] #side,
+            body.single[data-view="notes"] #arr,
+            body.single[data-view="sounds"] #work {
+                display: none;
+            }
+            body.single[data-view="tracks"] #arr {
+                flex: 1;
+                height: auto !important;
+            }
+            body.single[data-view="sounds"] #side {
+                width: 100%;
+                border-right: none;
+            }
+            body.single #rollBar {
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 5px 8px;
+            }
+            body.single #rollName,
+            body.single #rollBar label {
+                display: none;
+            }
+            body.single .sec {
+                margin-left: 0;
+            }
+            body.single .hd .vo {
+                width: 34px;
+            }
+            body.single .hd .pa {
+                display: none;
+            }
+            body.single .hd .is {
+                width: 64px;
             }
 
             #main {
@@ -448,37 +557,48 @@
         <div id="top">
             <div class="logo">Songboard</div>
             <button id="playBtn" title="Play / Stop (Space)">▶</button>
-            <button id="homeBtn" title="Back to start (Home)">⏮</button>
-            <button id="loopBtn" title="Loop (L). Drag on the ruler to pick a section, otherwise the whole song loops.">Loop</button>
-            <button id="followBtn" class="on" title="Scroll with the playhead">Follow</button>
-            <span id="voiceTag" class="tag">Voice...</span>
-            <div id="clock">1.1.1 · 0:00.0</div>
-            <label>BPM <input id="bpm" type="number" min="20" max="400" value="120"></label>
-            <label>Snap
-                <select id="snap">
-                    <option value="48">Bar</option>
-                    <option value="12">1/4</option>
-                    <option value="6">1/8</option>
-                    <option value="3" selected>1/16</option>
-                    <option value="4">1/8 T</option>
-                    <option value="2">1/16 T</option>
-                    <option value="1">Off</option>
-                </select>
-            </label>
-            <input id="title" type="text" placeholder="Song title" maxlength="60">
-            <div class="grow"></div>
-            <button id="undoBtn" title="Ctrl+Z">Undo</button>
-            <button id="redoBtn" title="Ctrl+Y">Redo</button>
-            <button id="newBtn">New</button>
-            <button id="saveBtn" title="Save or load one song in this browser">Save</button>
-            <button id="impBtn">Import</button>
-            <button id="expBtn">Export Text</button>
-            <button id="pjsBtn" class="hi">Export PJS</button>
+            <select id="viewSel" class="small" title="Which pane to show">
+                <option value="tracks">Tracks</option>
+                <option value="notes">Notes</option>
+                <option value="sounds">Sounds</option>
+            </select>
+            <select id="trackSel" class="small" title="Track to edit"></select>
+            <div class="grow small"></div>
+            <button id="menuBtn" class="small" title="Song menu">☰</button>
+            <button id="fullBtn" title="Open in a full window">⛶</button>
+            <div id="more">
+                <button id="homeBtn" title="Back to start (Home)">⏮</button>
+                <button id="loopBtn" title="Loop (L). Drag on the ruler to pick a section, otherwise the whole song loops.">Loop</button>
+                <button id="followBtn" class="on" title="Scroll with the playhead">Follow</button>
+                <span id="voiceTag" class="tag">Voice...</span>
+                <div id="clock">1.1.1 · 0:00.0</div>
+                <label>BPM <input id="bpm" type="number" min="20" max="400" value="120"></label>
+                <label>Snap
+                    <select id="snap">
+                        <option value="48">Bar</option>
+                        <option value="12">1/4</option>
+                        <option value="6">1/8</option>
+                        <option value="3" selected>1/16</option>
+                        <option value="4">1/8 T</option>
+                        <option value="2">1/16 T</option>
+                        <option value="1">Off</option>
+                    </select>
+                </label>
+                <input id="title" type="text" placeholder="Song title" maxlength="60">
+                <div class="grow"></div>
+                <button id="undoBtn" title="Ctrl+Z">Undo</button>
+                <button id="redoBtn" title="Ctrl+Y">Redo</button>
+                <button id="newBtn">New</button>
+                <button id="saveBtn" title="Save or load one song in this browser">Save</button>
+                <button id="impBtn">Import</button>
+                <button id="expBtn">Export Text</button>
+                <button id="pjsBtn" class="hi">Export PJS</button>
+            </div>
         </div>
 
         <div id="main">
             <div id="side">
-                <div class="sideHd">Instruments</div>
+                <div class="sideHd">Instruments <button id="sideAdd" title="Add a track with the picked instrument">+ Track</button></div>
                 <div id="pal"></div>
                 <div class="tip">Click to hear one. Drag it onto the board to make a track, or onto a track to swap its sound. Double-click also adds a track.</div>
             </div>
@@ -527,7 +647,7 @@
             </div>
         </div>
 
-        <script>
+        <script id="songScript">
             // The song this page plays. Swap in text from Export Text to hardcode a different one.
             var songText = "CkDMBBHcAyCAA8IACnC0CGCB8BGCB~K3BPmCACR~PAP6~KA~UAXkDACZ6CGCBg~ZA~PAR~PF~eGXuCACZ~jBZ~hClNVgDACF~oBIACNgDGCLg~/CBDGCvB~zBDACd8C~aBGCf~2CFR~PAn~kBE~3CDp~sDB~lBGLwCACd~qBL~6BB~pCxO~2SBV~pBI~2SDX~yCDACJ~7SQb~zZ7D~nE/B0BIAkCAA1DAtBvBgDwBtBSwBJVoDMEAGEAGJA~JES~SNI~SNO~SNc~oCfG~6CfU~SNK~+Df~oCoD~JOa~SMvBdgDAA8BTA7CAtBBy~GAQAtBMwBtBe~JAAtBU~NAa~aVmB~ODQ~oBE~bFS~1Be~OBW~NGVb4CAVQAVMYVbs~LFnB~XAMAVQ~XD~LD~WDUYVf~WDUYVX~WR~5C0CtBb~4JK~rJJ~pHIvBT6CAvBQAvBMAvBUEAyBkBAZAFxB8CGFRoCGFN~KAL~KAP~UPT~KAN~KAV~KAT~KAL~UNmb~pBjBGvBxB6CVAmBAAegP~jFEUAvBQwBvBuB~OIy~OJa~NIO~2BuBEvBq~bJG~NEgBA0CAE8BgDEQCGEADGKMEMEAFGEIGGKGHMuBKIwBEGJGEAKGKILMEEMGECNGKGOMuBGPwBEQQGEARGKMSMEATGEIUGKAV~eAWwBEGXGEAYGKCZMEGaGEIbGKGcMuBAdwBKceMKGeMEGfGEIYG6BAgB8BEK~zCCEMhBGEAiBGKUjBMKCkBMuBGlBwBKA~6BEmBGEIFG6BQnB8BEOaGEAoBGKIpBMEGqBGEKrBGKGMMuBGsBwBEc~jBbgDdB6CehBtB0BYEgBgPKwBeMKC~qFOO~qFDQ~qFKG~qFL~6BB~qFFM~qFBK~nEEEpBMECqBGEO~nEFC~qFK~jBT~qFD|Silver Boats|sil-|ver|b~PBon|mor-|ning|rain|sail-|~PAdown|the|win-~OA|pane|ev-|ry|drop|be-|comes|a|song|hum|it|as|we|float|a-|l~bAoh|let|shine|lit-|tle|star|is|m~WAhold|tight|will|sing|in-|to|n~XBHarmony";
         </script>
@@ -1830,9 +1950,11 @@ var pjs = {
                 }
                 var tag = document.createElement("script");
                 tag.src = voiceFrom[i] + "voice.js";
+                tag.setAttribute("data-dyn", "1");
                 tag.onload = function () {
                     var dict = document.createElement("script");
                     dict.src = voiceFrom[i] + "voice-dict.js";
+                    dict.setAttribute("data-dyn", "1");
                     dict.onload = function () { voiceEnd(true); };
                     dict.onerror = function () { voiceEnd(true); };
                     document.head.appendChild(dict);
@@ -1848,6 +1970,8 @@ var pjs = {
         </script>
         <script>
 var HEAD = 200;
+var SMALL_W = 900;
+var SMALL_H = 560;
 var LANE = 56;
 var RUL = 22;
 var SAVE = "songboard";
@@ -2025,8 +2149,9 @@ var mixAll = function () {
     });
 };
 
-var keep = function (key, make) {
+var keep = function (key, make, peek) {
     if (bufs[key] === undefined) {
+        if (peek) { return null; }
         if (bufCount++ > 3000) {
             bufs = {};
             bufCount = 0;
@@ -2044,7 +2169,7 @@ var prevWord = function (tr, n) {
     return best ? best.w : "";
 };
 
-var getBuf = function (tr, n, sec) {
+var getBuf = function (tr, n, sec, peek) {
     var ins = insOf(tr);
     if (ins.k === "vox") {
         if (!window.voice) { return null; }
@@ -2053,11 +2178,49 @@ var getBuf = function (tr, n, sec) {
         var key = "v" + tr.inst + ":" + n.w + ":" + pw + ":" + (ch ? ch.word + ch.part : "") + ":" + (voice.big ? 1 : 0);
         return keep(key + ":" + n.p + ":" + Math.round(sec * 1000), function () {
             return voice.render(ctx, n.w, n.p, sec, pw, ins.vx, tr.notes, n);
-        });
+        }, peek);
     }
     return keep(core.key(tr.inst, n.p, sec), function () {
         return { buf: core.render(ctx, core.insts[tr.inst], n.p, sec), pre: 0 };
+    }, peek);
+};
+
+/*
+* Sounds are built a little at a time. Khan Academy stops any script that keeps
+* looping for too long in one go, so nothing here runs for more than ~25ms at once.
+*/
+var warm = { list: [], at: 0, timer: 0, wait: null };
+
+var warmUp = function (from, ready) {
+    var list = [];
+    song.tracks.forEach(function (tr) {
+        tr.notes.forEach(function (n) {
+            if (n.t + n.l > from) { list.push({ tr: tr, n: n }); }
+        });
     });
+    list.sort(function (a, b) { return a.n.t - b.n.t; });
+    clearTimeout(warm.timer);
+    warm.list = list;
+    warm.at = 0;
+    warm.wait = { until: from + 2 / spt(), fn: ready };
+    warmStep();
+};
+
+var warmStep = function () {
+    var t0 = performance.now();
+    while (warm.at < warm.list.length && performance.now() - t0 < 25) {
+        var w = warm.list[warm.at];
+        getBuf(w.tr, w.n, w.n.l * spt());
+        warm.at++;
+    }
+    var w2 = warm.list[warm.at];
+    if (warm.wait && (!w2 || w2.n.t > warm.wait.until)) {
+        var fn = warm.wait.fn;
+        warm.wait = null;
+        fn();
+    }
+    if (warm.at < warm.list.length) { warm.timer = setTimeout(warmStep, 5); }
+    if (warm.wait) { $("playBtn").textContent = Math.round(warm.at / Math.max(1, warm.list.length) * 100) + "%"; }
 };
 
 var preview = function (inst, p, w) {
@@ -2078,10 +2241,11 @@ var preview = function (inst, p, w) {
 
 var schedule = function (a, b, sg) {
     var sp = spt();
+    var t0 = performance.now();
     song.tracks.forEach(function (tr) {
         tr.notes.forEach(function (n) {
             if (n.t < a || n.t >= b) { return; }
-            var r = getBuf(tr, n, n.l * sp);
+            var r = getBuf(tr, n, n.l * sp, performance.now() - t0 > 120);
             if (r && r.buf) { core.fire(sfx, r.buf, sg.base + (n.t - sg.from) * sp - r.pre, n.v / 127, 0, bus(tr).g); }
         });
     });
@@ -2123,26 +2287,29 @@ var startPlay = function (from) {
     if (play.on) {
         clearInterval(play.timer);
         sfx.stop();
+        play.on = false;
     }
     ctx.resume();
     mixAll();
-    var count = 0;
-    song.tracks.forEach(function (tr) {
-        tr.notes.forEach(function (n) {
-            if (n.t >= from && count++ < 1500) { getBuf(tr, n, n.l * spt()); }
-        });
-    });
-    play.on = true;
     play.start = from;
-    play.sched = from;
-    play.segs = [{ from: from, base: ctx.currentTime + 0.06 }];
-    tick();
-    play.timer = setInterval(tick, 25);
-    $("playBtn").textContent = "■";
     $("playBtn").classList.add("on");
+    warmUp(from, function () {
+        play.on = true;
+        play.sched = from;
+        play.segs = [{ from: from, base: ctx.currentTime + 0.06 }];
+        tick();
+        play.timer = setInterval(tick, 25);
+        $("playBtn").textContent = "■";
+        dirty = true;
+    });
 };
 
 var stopPlay = function () {
+    if (warm.wait) {
+        warm.wait = null;
+        $("playBtn").textContent = "▶";
+        $("playBtn").classList.remove("on");
+    }
     if (!play.on) { return; }
     play.on = false;
     clearInterval(play.timer);
@@ -2156,7 +2323,7 @@ var stopPlay = function () {
 };
 
 var toggle = function () {
-    if (play.on) {
+    if (play.on || warm.wait) {
         stopPlay();
     } else {
         startPlay(ui.head);
@@ -2362,14 +2529,14 @@ var drRoll = function () {
             continue;
         }
         g.fillStyle = hot ? "rgb(150, 205, 248)" : "rgb(222, 225, 231)";
-        g.fillRect(HEAD - 70, ky, 69, ui.zy - 0.5);
+        g.fillRect(HEAD - Math.min(70, HEAD), ky, Math.min(69, HEAD - 1), ui.zy - 0.5);
         if (black(q)) {
             g.fillStyle = hot ? "rgb(70, 120, 170)" : "rgb(30, 32, 38)";
-            g.fillRect(HEAD - 70, ky + 1, 42, ui.zy - 2);
+            g.fillRect(HEAD - Math.min(70, HEAD), ky + 1, Math.min(42, HEAD * 0.6), ui.zy - 2);
         }
         if (q % 12 === 0 && ui.zy >= 9) {
-            g.fillStyle = "rgb(141, 148, 163)";
-            g.fillText(pname(q), HEAD - 104, ky + ui.zy / 2);
+            g.fillStyle = HEAD > 110 ? "rgb(141, 148, 163)" : "rgb(30, 32, 38)";
+            g.fillText(pname(q), HEAD > 110 ? HEAD - 104 : HEAD - 24, ky + ui.zy / 2);
         }
     }
     drRuler(g, HEAD, w - HEAD, RUL);
@@ -2377,7 +2544,7 @@ var drRoll = function () {
     g.fillRect(0, 0, HEAD, RUL);
     g.fillStyle = tr ? rgb(ins.c) : "rgb(141, 148, 163)";
     g.font = "600 12px system-ui, sans-serif";
-    g.fillText(tr ? tr.name : "No track", 8, RUL / 2);
+    if (HEAD > 110) { g.fillText(tr ? tr.name : "No track", 8, RUL / 2); }
     g.fillStyle = "rgb(48, 53, 64)";
     g.fillRect(0, RUL - 1, HEAD, 1);
     g.fillRect(HEAD - 1, 0, 1, h);
@@ -2417,6 +2584,10 @@ var instOpts = core.insts.map(function (ins, i) {
 }).join("") + "</optgroup>";
 
 var nameBar = function () {
+    $("trackSel").innerHTML = song.tracks.map(function (tr, i) {
+        return '<option value="' + i + '">' + (i + 1) + ". " + tr.name.replace(/</g, "&lt;") + "</option>";
+    }).join("");
+    $("trackSel").value = ui.cur;
     $("rollName").textContent = cur() ? cur().name + " · " + insOf(cur()).n : "No track";
     $("lyrBtn").style.display = isVox(cur()) ? "" : "none";
 };
@@ -2780,6 +2951,11 @@ cv.lanes.addEventListener("mousedown", function (e) {
 });
 
 cv.lanes.addEventListener("dblclick", function (e) {
+    var row = Math.floor((e.clientY - cv.lanes.getBoundingClientRect().top) / LANE);
+    if (single() && row < song.tracks.length) {
+        setView("notes");
+        return;
+    }
     if (Math.floor((e.clientY - cv.lanes.getBoundingClientRect().top) / LANE) >= song.tracks.length) { addTrack(ui.brush); }
 });
 
@@ -3368,6 +3544,63 @@ $("loopBtn").addEventListener("click", function () { setLoop(!ui.loop); });
 $("undoBtn").addEventListener("click", undo);
 $("redoBtn").addEventListener("click", redo);
 $("addBtn").addEventListener("click", function () { addTrack(ui.brush); });
+$("sideAdd").addEventListener("click", function () {
+    addTrack(ui.brush);
+    if (single()) { setView("notes"); }
+});
+
+
+/* ---------- single view and full window ---------- */
+
+var single = function () { return document.body.classList.contains("single"); };
+
+var setView = function (v) {
+    document.body.dataset.view = v;
+    $("viewSel").value = v;
+    shutLyric(true);
+    dirty = true;
+};
+
+var layout = function () {
+    var small = window.innerWidth < SMALL_W || window.innerHeight < SMALL_H;
+    document.body.classList.toggle("single", small);
+    if (!small) { document.body.classList.remove("menu"); }
+    HEAD = small ? 64 : 200;
+    dirty = true;
+};
+
+$("viewSel").addEventListener("change", function () { setView($("viewSel").value); });
+$("trackSel").addEventListener("change", function () { setCur(Number($("trackSel").value)); });
+$("menuBtn").addEventListener("click", function () { document.body.classList.toggle("menu"); });
+document.addEventListener("mousedown", function (e) {
+    if (single() && !e.target.closest("#more") && !e.target.closest("#menuBtn")) { document.body.classList.remove("menu"); }
+});
+window.addEventListener("resize", layout);
+
+/*
+* Full window: writes a fresh copy of this page into a new window, carrying the current song.
+*/
+var fullPage = function () {
+    var page = document.documentElement.cloneNode(true);
+    var body = page.querySelector("body");
+    page.querySelectorAll("[data-dyn]").forEach(function (el) { el.remove(); });
+    ["pal", "heads", "mBtns", "trackSel"].forEach(function (id) { page.querySelector("#" + id).innerHTML = ""; });
+    ["arr", "lanes"].forEach(function (id) { page.querySelector("#" + id).removeAttribute("style"); });
+    ["stage", "modal"].forEach(function (id) { page.querySelector("#" + id).className = "hide"; });
+    body.removeAttribute("class");
+    body.removeAttribute("data-view");
+    page.querySelector("#songScript").textContent = "\nvar songText = \"" + core.encode(song) + "\";\nvar popped = true;\n";
+    return "<!DOCTYPE html>" + page.outerHTML;
+};
+
+$("fullBtn").addEventListener("click", function () {
+    var html = fullPage();
+    stopPlay();
+    var w = window.open();
+    if (!w) { return; }
+    w.document.write(html);
+    w.document.close();
+});
 
 $("homeBtn").addEventListener("click", function () {
     if (play.on) { startPlay(0); }
@@ -3414,6 +3647,9 @@ $("vel").addEventListener("change", function () {
 
 (function () {
     var text = typeof songText === "string" ? songText : "";
+    document.body.dataset.view = "tracks";
+    layout();
+    if (window.popped) { $("fullBtn").style.display = "none"; }
     var blank = { title: "", bpm: 120, res: core.res, vis: 1, tracks: [{ inst: 0, name: "Piano", vol: 75, pan: 0, mute: false, solo: false, notes: [] }] };
     core.setup(sfx);
     try {
@@ -3427,7 +3663,7 @@ $("vel").addEventListener("change", function () {
     var ro = new ResizeObserver(function () { dirty = true; });
     [cv.roll, cv.ruler, $("arrBody")].forEach(function (el) { ro.observe(el); });
     requestAnimationFrame(frame);
-    if (text && song.vis) {
+    if (text && song.vis && !window.popped) {
         voiceReady(function () { openStage(text, false); });
     }
 })();
