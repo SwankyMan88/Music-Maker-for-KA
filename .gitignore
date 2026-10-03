@@ -1,0 +1,6 @@
+# Never publish the original blocked word list. The page only carries hashes of it.
+censor_list.b64
+
+# Local tool settings and personal backups
+.claude/
+songs/my-song-backup.txt
