@@ -1,8 +1,6 @@
-/*
-* Vox: a small formant singer.
-* Words get turned into sounds (phonemes), then sung on the note's pitch
-* through a buzz source and three vocal tract filters. No downloads needed.
-*/
+// Vox: a small formant singer.
+// Words get turned into sounds (phonemes), then sung on the note's pitch through a buzz source and three vocal tract filters.
+// No downloads needed.
 var voice = {
     ph: {
         IY: { f: [270, 2290, 3010] },
@@ -48,11 +46,7 @@ var voice = {
         JH: { k: "aff", f: [280, 1900, 2400], v: 1 }
     },
 
-    /*
-    * Voice settings: fs formant scale (bigger = smaller, brighter head),
-    * op / cl glottal open and closing time, br breath, tl tone (1 = bright),
-    * vr / vd vibrato rate and depth in semitones.
-    */
+    // Voice settings: fs formant scale (bigger = smaller, brighter head), op / cl glottal open and closing time, br breath, tl tone (1 = bright), vr / vd vibrato rate and depth in semitones.
     norm: { fs: 1, op: 0.4, cl: 0.16, br: 0.04, tl: 0.62, vr: 5.5, vd: 0.3 },
 
     dict: {
@@ -132,10 +126,7 @@ var voice = {
         return p === "AH0" ? "AX" : String(p).replace(/0$/, "");
     },
 
-    /*
-    * HD voices: the big pronunciation dictionary (js/voice-dict.js) plus stress,
-    * and words split over several notes ("sil-" "ver") are read as one word.
-    */
+    // HD voices: the big pronunciation dictionary (js/voice-dict.js) plus stress, and words split over several notes ("sil-" "ver") are read as one word.
     big: null,
 
     addDict: function (names, marks, data) {

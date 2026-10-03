@@ -1,13 +1,7 @@
-/*
-* HD singer: a Klatt style formant synthesizer used by the HD voices.
-* Voicing and breath go through a chain of vocal tract filters (cascade), while hiss
-* and bursts go through their own bank of filters (parallel) so each consonant gets
-* its own shape. Sounds glide into each other the way they do in speech.
-*
-* Sound settings:
-* f formants, b bandwidths, av voice, ah breath, af hiss, p hiss shape [F2, F3, F4, F5, F6, flat],
-* nz nasal zero, d length, rel how long the next sound takes to glide out of this one.
-*/
+// HD singer: a Klatt style formant synthesizer used by the HD voices.
+// Voicing and breath go through a chain of vocal tract filters (cascade), while hiss and bursts go through their own bank of filters (parallel) so each consonant gets its own shape.
+// Sounds glide into each other the way they do in speech.
+// Sound settings: f formants, b bandwidths, av voice, ah breath, af hiss, p hiss shape [F2, F3, F4, F5, F6, flat], nz nasal zero, d length, rel how long the next sound takes to glide out of this one.
 voice.hd = {
     vow: {
         IY: [270, 2290, 3010], IH: [390, 1990, 2550], EH: [530, 1840, 2480], AE: [660, 1720, 2410],
@@ -272,8 +266,7 @@ voice.hd = {
         return y;
     },
 
-    // tuning: speak (falling speech pitch instead of singing), op / cl voice pulse shape,
-    // nas nasal loudness, tilt source brightness, pre and air extra treble, fric and mix hiss level
+    // Tuning: speak (falling speech pitch instead of singing), op / cl voice pulse shape, nas nasal loudness, tilt source brightness, pre and air extra treble, fric and mix hiss level.
     speak: false,
     op: 0.45,
     cl: 0.08,

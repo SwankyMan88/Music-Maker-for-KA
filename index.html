@@ -129,10 +129,8 @@
                 font-size: 12px;
             }
 
-            /*
-            * Single view: small screens (like a Khan Academy page) show one pane at a time.
-            * The top bar picks the pane and track, the rest of the controls live in the menu.
-            */
+            /* Single view: small screens (like a Khan Academy page) show one pane at a time. */
+            /* The top bar picks the pane and track, the rest of the controls live in the menu. */
             body.single #top {
                 position: relative;
                 flex-wrap: nowrap;
@@ -969,23 +967,16 @@ var sfx = sfxSrc();
 sfxDefs();
         </script>
         <script>
-/*
-* coreSrc is everything a song needs to play. It also gets copied into the
-* Khan Academy export, so it stays ES5 and avoids window, eval and Function.
-* coreEdit adds the parts only the editor needs (writing song text).
-*/
+// coreSrc is everything a song needs to play.
+// It also gets copied into the Khan Academy export, so it stays ES5 and avoids window, eval and Function.
+// coreEdit adds the parts only the editor needs (writing song text).
 var coreSrc = function () {
     var core = { ver: 2, res: 12 };
     var abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    /*
-    * Instrument ids are their spot in this list, so only add to the end.
-    * Layer keys: w wave (sin tri saw sqr pls noi ks), m freq multiple, f fixed freq, dt detune cents,
-    * g gain, a d s r envelope, pw pulse width, pe [semitones, time] pitch drop, vb [rate, cents, delay] vibrato,
-    * ft filter (lp hp bp), fc / fe start and end cutoff, fd cutoff time, fk cutoff follows the note,
-    * fq resonance, fl [rate, octaves] cutoff wobble, qz crush steps, nr noise rate, bu clap bursts,
-    * br / dm pluck brightness and damping. Voices use vx instead.
-    */
+    // Instrument ids are their spot in this list, so only add to the end.
+    // Layer keys: w wave (sin tri saw sqr pls noi ks), m freq multiple, f fixed freq, dt detune cents, g gain, a d s r envelope, pw pulse width, pe [semitones, time] pitch drop, vb [rate, cents, delay] vibrato, ft filter (lp hp bp), fc / fe start and end cutoff, fd cutoff time, fk cutoff follows the note, fq resonance, fl [rate, octaves] cutoff wobble, qz crush steps, nr noise rate, bu clap bursts, br / dm pluck brightness and damping.
+    // Voices use vx instead.
     core.insts = [
         { n: "Piano", g: "Keys", c: [236, 213, 141], l: [{ w: "tri", g: 0.42, a: 0.003, d: 0.9, s: 0, r: 0.25, ft: "lp", fc: 9, fe: 2.5, fk: 1, fd: 0.5 }, { w: "sin", m: 2, g: 0.14, a: 0.003, d: 0.5, s: 0, r: 0.2 }, { w: "saw", g: 0.07, a: 0.002, d: 0.2, s: 0, r: 0.2, ft: "lp", fc: 7, fe: 1.5, fk: 1, fd: 0.12 }] },
         { n: "E.Piano", g: "Keys", c: [227, 181, 99], l: [{ w: "sin", g: 0.45, a: 0.003, d: 1.4, s: 0.05, r: 0.3 }, { w: "sin", dt: 6, g: 0.18, a: 0.003, d: 1.1, s: 0, r: 0.3 }, { w: "sin", m: 14, g: 0.09, a: 0.001, d: 0.06, s: 0, r: 0.05 }] },
@@ -1236,10 +1227,8 @@ var coreSrc = function () {
         return core.scrubSong(song);
     };
 
-    /*
-    * Family friendly filter. The blocked list is only stored as salted one way hashes,
-    * so the words themselves never appear in the code.
-    */
+    // Family friendly filter.
+    // The blocked list is only stored as salted one way hashes, so the words themselves never appear in the code.
     core.bad = "107jhhh.107rsy8.10waom7.112hsmb.1172ikv.11fpj3m.11ju5d4.11p2bdc.11urwl8.12f2kpg.12hqpqd.12i5580.12szyde.12tovkk.12u5kst.12vr8y3.133xteh.13apgup.13b1dem.13jd5md.13oofxt.146yz8k.1492re3.14s396c.151dk3l.155as7r.1592vuy.15hdxb1.15jzvsm.15muqqb.15nyaht.15pf3vp.15te2yh.15z0mdk.162rg5q.164m6rs.16k6h0c.16kvtvp.16w5pqu.16zrpsd.170i6eh.1721ub4.172xcc3.1737df2.176c9on.178g884.17bsuiz.17fyo34.17kiht.17p98j4.17sgpiu.17v8asg.17yc18d.185fz52.18g2433.18gsltn.18h2btd.18hphur.18i5ilq.18ikhwx.18jiv5r.18lwbi9.18pth0q.18sgw7y.191tgrr.19877ev.19bu3l6.19jah75.19l4ml1.19mq3kb.19ua0gf.19zvd0l.1a5whbx.1a97h00.1abv700.1al9fyb.1ap00hb.1aqa68w.1axrg2x.1b29fqy.1b59cek.1b8er1q.1bi5687.1bixwm8.1bltint.1bww2sq.1c5aqad.1ceiknh.1cik77i.1cmqo98.1cqmt20.1d3nuxf.1d55v6n.1d5geml.1d5lvym.1d6wapq.1d7hk5z.1d9ndv4.1dbnhhm.1dcjhel.1denpd9.1di95q2.1dob5ky.1domlmu.1dr3pff.1duk6cs.1dul8ad.1e3e35r.1einnix.1eqg3to.1euu98y.1f26gde.1f4a70h.1f6phzh.1f72kkr.1f807jn.1f8lpjj.1fdwk1o.1fj5aik.1fq7tuv.1fus052.1fz0gy2.1fzfx10.1g0i1w0.1g1lh9u.1g4ficb.1g5ubpe.1ghci7k.1gl0iqq.1gswi5a.1gue6i3.1gx1cbg.1h3u0ui.1h837n3.1hcbcs0.1hcnyvg.1hgd66q.1hpa1ju.1i1m89v.1i4ry1h.1i6yx4m.1i8ggyx.1id4871.1ii7hdn.1ij94dr.1ijcair.1iofwiv.1ixie7o.1j23jdz.1j7xwb0.1jde7ye.1jk4flt.1jx5pew.1k27s6v.1kinay0.1kko0sq.1knvf6q.1kv9x42.1l54spn.1l6sep7.1l7j6ev.1lbyfg7.1lrq1lx.1m3dq2h.1mi8fzd.1mra301.1mv0gaa.1n2oaiv.1nch3pn.1ncv1w1.1ndj3vx.1ne7f4i.1nm0c0x.1noi5fp.1o7x2m.1oc2yb9.1odocrb.1ok2ny9.1on8mc0.1osjr5h.1ov1mt2.1oxh42.1oxxczb.1p1xpn0.1p2jlzb.1p3xymt.1p655ce.1p9g2cp.1pa6tii.1pd8nj7.1pf6brn.1pp2a7j.1pu3oao.1q88zdt.1qb2rcd.1qg2wos.1r6fmy3.1ra7fem.1rdwwz7.1rprjpk.1rr1tv3.1ryftn6.1sdb0qe.1slclk2.1ssurko.1t3mnpt.1t4gpw1.1t9s3df.1tg2c7z.1tiw1l1.1twy4wi.1tx7zjn.1tyjf4t.1u5zhyx.1ua7epq.1ud04oq.1ut1fxf.1uuid8l.1uv3u8a.1v15mw8.1v7wxly.1v9n1m4.1vbyeri.1vdq821.1vezp6r.1vfoexp.1vh3izn.1vhmt0q.1vjer53.1vkst03.1w023a8.1w19dvj.1w4x5di.1wldqtj.1wr1fa2.1wxc8kd.1x3d1sm.1x5qeq4.1x6njys.1x7crwi.1x88zkv.1xa06tw.1xbrwjg.1xe066m.1xjo543.1xsrzhy.1y1twbx.1y33gh9.1y58z5x.1y6gdjh.1y862fw.1ydkjpj.1yfjnxl.1yhfn8z.1yxdoot.2370gs.28j37d.2bnvjc.2bon8l.2fe19c.2fyr6c.2g7og7.2mmg68.2nu0y5.2rrpq3.2usybl.2xekcn.2xvm4t.301ulb.30z26m.34v0vl.35th8s.3jyd4s.3nbn6o.3p227i.44ei3t.47vng.4b8cgr.4bzeto.4jeqml.4lfoze.4pokc0.4tufag.4wglb9.51ljc5.54d6zb.54s9ej.563zq9.5i3gv3.5puqgj.5vdji5.65rrx5.66nfv3.6fnkq9.6ifsgj.6ijj3w.6jw8dg.6scrvh.7510m6.7ab6mj.7m0xbc.7na9wt.7ujy6d.7vfe4r.89704n.8al0kl.8bh5lc.8cpx7q.8g43xb.8gsein.8p6iwn.8s4nsv.911zfg.93e97y.9agk1z.9i0gl4.9iwrm5.9w2feu.9y530h.agnmz0.ainwr6.apobnb.aq3qm3.b6k5dr.b8wxs.ba1tsc.bbt3wv.bis58l.bs865u.bsqd6i.bwt4vg.c4py20.c6rdvk.c8hfa4.ct1bv0.d0odpm.d2j7al.d32icz.d3ff1k.dld66l.dq0tm8.du6u5f.dvtly9.e33iio.eitcli.eqt7uz.erpjbo.etjk71.exf6yq.f83d3n.fa2edc.fe0kzl.fis1yt.fng5ve.frfc11.fyybrz.g1c2u4.g1uz9x.g2qie1.g666mz.g78mlf.g9pc91.gfiyp3.gol2nf.gsd79i.gv2zxe.gv6okf.gw9p15.gwgjjh.h20mxn.he518w.her12x.hfixyk.hn8uya.hs9efq.hubb1w.i06gk8.i2xdjj.i3zuzs.i4gn4e.i5mwme.iieimc.ikb409.inv7cz.io9zxc.izbw35.jafpuc.jiobok.jk7e1r.jmogj2.jqm35a.jslb6a.jzj1zm.khabx5.kninjd.l4uofv.lbcxuv.leozy3.lfsgss.li2akc.li87ti.lndm8u.lns0wq.lohxj0.loprma.m3yfij.m4mggh.mcjcq1.me9zd8.mhldmc.mmv0im.mw8peg.n309i3.nebb7f.nfnixo.nicrlu.nmgfs7.nnrz4w.nuyuhw.nwogmw.nypbtf.o9mogn.oarvw7.odc2n3.ofudeg.ofw2ce.ohfmkx.oj3vy0.oo0vh1.orsuxp.ot085a.oxhd8v.p93p0i.phy0p.pjdoe3.pjmmbu.q85hix.qcw0dr.qf1pse.r4tzvx.r5lrj7.r6hm5m.rna8kp.rp6oz2.rt9w4k.s1npx3.s44jk0.s8afuz.sbno01.sbp3wx.sfcoam.sjaobi.slpsy1.srzdxe.sua42r.sz441d.t47cyv.tc7awc.tck1iz.tfqhhc.u0qae0.u7c76c.u911y7.ud0o7x.ueqhyo.ujcxlj.uuqt52.v8bptk.vavt10.vbvl0d.vjorto.vn9i1t.vx65bx.vxaiiq.vyxlph.w1637m.w1uxol.w6837n.w8r4iv.wj07af.wju1io.wnps5q.wqk7yg.x1lb4g.x1uwsg.x5npvf.x85t53.xdrq72.xouvsz.xp0kvt.xtgafz.y1zqw9.y56odr.y6izwn.y7fpf9.y7hrn7.y9imcn.yh1e5n.ymp8ym.z27xie.zc7fxd.zdlwnf.zf3jkn.zl80xr.zmnvau.znvjvm.zrljof.ztihu7.zwo2rc";
     core.badN = 6;
 
@@ -1371,12 +1360,8 @@ var coreEdit = function (core) {
         return o.join("");
     };
 
-    /*
-    * Song text before packing: version, bpm, res, visual, title, track count, then per track:
-    * instrument, name, volume, pan, flags (1 mute, 2 solo, 4 lyrics), note count, then per note:
-    * time step, length - 1, pitch step (+ velocity flag), [velocity], [lyric].
-    * Words go after a | and are referenced by number.
-    */
+    // Song text before packing: version, bpm, res, visual, title, track count, then per track: instrument, name, volume, pan, flags (1 mute, 2 solo, 4 lyrics), note count, then per note: time step, length - 1, pitch step (+ velocity flag), [velocity], [lyric].
+    // Words go after a | and are referenced by number.
     core.encode = function (song) {
         var o = [];
         var strs = [];
@@ -1425,10 +1410,8 @@ var coreEdit = function (core) {
 var core = coreEdit(coreSrc());
         </script>
         <script>
-/*
-* playerSrc is Processing.js code. It is copied into the Khan Academy export as is,
-* and the HTML player runs the same code through pjsLite below.
-*/
+// playerSrc is Processing.js code.
+// It is copied into the Khan Academy export as is, and the HTML player runs the same code through pjsLite below.
 var playerSrc = function () {
     var list = typeof songs !== "undefined" ? songs : [song];
     var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
@@ -1729,9 +1712,7 @@ var playerSrc = function () {
     };
 };
 
-/*
-* pjsLite: just enough of Processing.js on a canvas to run playerSrc in the page.
-*/
+// pjsLite: just enough of Processing.js on a canvas to run playerSrc in the page.
 var pjsLite = function (cv, text) {
     var g = cv.getContext("2d");
     var st = { fill: true, stroke: false, align: "left", size: 12 };
@@ -1833,12 +1814,7 @@ var pjs = {
         return keep ? out : pjs.fold(out);
     },
 
-    /*
-    * Folds short blocks onto one line for the export, like
-    * if (a) {      ->   if (a) { b(); }
-    *     b();
-    * }
-    */
+    // Folds short blocks onto one line for the export, so a block with one or two simple lines becomes "if (a) { b(); }".
     fold: function (ls) {
         var out = [];
         for (var i = 0; i < ls.length; i++) {
@@ -1907,9 +1883,8 @@ var pjs = {
         ].join("\n");
     },
 
-    /*
-    * Runs the player on a canvas in the page. Returns a stop function.
-    */
+    // Runs the player on a canvas in the page.
+    // Returns a stop function.
     run: function (cv, text) {
         var P = pjsLite(cv, text);
         var live = true;
@@ -1954,11 +1929,9 @@ var pjs = {
 };
         </script>
         <script>
-            /*
-            * The singing voice is the one big piece, so it is the only part kept on GitHub.
-            * The page tries the copy next to it first (works offline), then jsDelivr (online).
-            * If neither loads, everything still works and Vox tracks stay quiet.
-            */
+            // The singing voice is the one big piece, so it is the only part kept on GitHub.
+            // The page tries the copy next to it first (works offline), then jsDelivr (online).
+            // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
                 "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v2/js/"
@@ -2052,7 +2025,7 @@ var ui = {
 var play = { on: false, segs: [], sched: 0, start: 0, timer: 0 };
 
 
-/* ---------- helpers ---------- */
+// Helpers
 
 var rgb = function (c, a) {
     return a === undefined ? "rgb(" + c.join(", ") + ")" : "rgba(" + c.join(", ") + ", " + a + ")";
@@ -2109,10 +2082,8 @@ var clampPy = function (v) {
     return clamp(v, 0, Math.max(0, 128 * ui.zy - (cv.roll.clientHeight - RUL)));
 };
 
-/*
-* Live typing filter. Finished words (followed by a space or hyphen) are checked
-* right away, the word still being typed is checked once it is done.
-*/
+// Live typing filter.
+// Finished words (followed by a space or hyphen) are checked right away, the word still being typed is checked once it is done.
 var liveScrub = function (el, all) {
     var v = el.value;
     var tail = all ? "" : v.match(/[^\s-]*$/)[0];
@@ -2128,7 +2099,7 @@ var liveScrub = function (el, all) {
 };
 
 
-/* ---------- history ---------- */
+// History
 
 var commit = function () {
     core.scrubSong(song);
@@ -2210,7 +2181,7 @@ var redo = function () {
 };
 
 
-/* ---------- audio ---------- */
+// Audio
 
 var bus = function (tr) {
     var b = buses.get(tr);
@@ -2274,10 +2245,8 @@ var getBuf = function (tr, n, sec, peek) {
     }, peek);
 };
 
-/*
-* Sounds are built a little at a time. Khan Academy stops any script that keeps
-* looping for too long in one go, so nothing here runs for more than ~25ms at once.
-*/
+// Sounds are built a little at a time.
+// Khan Academy stops any script that keeps looping for too long in one go, so nothing here runs for more than ~25ms at once.
 var warm = { list: [], at: 0, timer: 0, wait: null };
 
 var warmUp = function (from, ready) {
@@ -2430,7 +2399,7 @@ var setLoop = function (on) {
 };
 
 
-/* ---------- drawing ---------- */
+// Drawing
 
 var drRuler = function (g, x0, w, h) {
     g.fillStyle = "rgb(31, 34, 41)";
@@ -2665,7 +2634,7 @@ var frame = function () {
 };
 
 
-/* ---------- tracks ---------- */
+// Tracks
 
 var instOpts = core.insts.map(function (ins, i) {
     var head = i === 0 || core.insts[i - 1].g !== ins.g;
@@ -2766,7 +2735,7 @@ var delTrack = function (i) {
 };
 
 
-/* ---------- palette and drag and drop ---------- */
+// Palette and drag and drop
 
 core.insts.forEach(function (ins, i) {
     if (i === 0 || core.insts[i - 1].g !== ins.g) {
@@ -2825,7 +2794,7 @@ $("arrBody").addEventListener("drop", function (e) {
 });
 
 
-/* ---------- track header events ---------- */
+// Track header events
 
 var headOf = function (el) {
     var d = el.closest(".hd");
@@ -2887,7 +2856,7 @@ $("heads").addEventListener("dblclick", function (e) {
 });
 
 
-/* ---------- note editing ---------- */
+// Note editing
 
 var rollPos = function (e) {
     var r = cv.roll.getBoundingClientRect();
@@ -3181,7 +3150,7 @@ cv.lanes.addEventListener("wheel", function (e) { wheel(e, 0, false); }, { passi
 cv.ruler.addEventListener("wheel", function (e) { wheel(e, 0, false); }, { passive: false });
 
 
-/* ---------- lyrics ---------- */
+// Lyrics
 
 var lyr = { el: $("lyric"), n: null };
 
@@ -3248,7 +3217,7 @@ lyr.el.addEventListener("keydown", function (e) {
 });
 
 
-/* ---------- copy, paste and sections ---------- */
+// Copy, paste and sections
 
 var copy = function () {
     if (sel.length) {
@@ -3319,7 +3288,7 @@ $("dupBtn").addEventListener("click", dup);
 $("delBtn").addEventListener("click", wipe);
 
 
-/* ---------- keyboard ---------- */
+// Keyboard
 
 window.addEventListener("keydown", function (e) {
     var a = document.activeElement;
@@ -3381,7 +3350,7 @@ document.addEventListener("click", function (e) {
 });
 
 
-/* ---------- dialogs ---------- */
+// Dialogs
 
 var modal = function (o) {
     var area = $("mArea");
@@ -3431,9 +3400,8 @@ var size = function (n) {
     return n < 1024 ? n + " characters" : (n / 1024).toFixed(1) + "k characters";
 };
 
-/*
-* Text and PJS exports share this dialog. Changing the visual updates the song and the text.
-*/
+// Text and PJS exports share this dialog.
+// Changing the visual updates the song and the text.
 var exportBox = function (kind) {
     var make = function () {
         var txt = core.encode(song);
@@ -3642,7 +3610,7 @@ $("songDel").addEventListener("click", function () {
 });
 
 
-/* ---------- player stage ---------- */
+// Player stage
 
 var openStage = function (i, back) {
     stopPlay();
@@ -3670,7 +3638,7 @@ $("stageBtn").addEventListener("click", function () {
 });
 
 
-/* ---------- top bar ---------- */
+// Top bar
 
 $("playBtn").addEventListener("click", toggle);
 $("loopBtn").addEventListener("click", function () { setLoop(!ui.loop); });
@@ -3683,7 +3651,7 @@ $("sideAdd").addEventListener("click", function () {
 });
 
 
-/* ---------- single view and full window ---------- */
+// Single view and full window
 
 var single = function () { return document.body.classList.contains("single"); };
 
@@ -3710,9 +3678,7 @@ document.addEventListener("mousedown", function (e) {
 });
 window.addEventListener("resize", layout);
 
-/*
-* Full window: writes a fresh copy of this page into a new window, carrying the current song.
-*/
+// Full window: writes a fresh copy of this page into a new window, carrying the current song.
 var fullPage = function () {
     var page = document.documentElement.cloneNode(true);
     var body = page.querySelector("body");
@@ -3776,7 +3742,7 @@ $("vel").addEventListener("change", function () {
 });
 
 
-/* ---------- start up ---------- */
+// Start up
 
 (function () {
     var texts = window.songs || (typeof songText === "string" ? [songText] : []);

@@ -1,10 +1,7 @@
-/*
-* Packs CMUdict into js/voice-dict.js for the HD voices.
-* Run with: node tools/build-dict.js path/to/cmudict.dict path/to/LICENSE
-*
-* Each word keeps its first pronunciation. Every sound becomes one character,
-* vowels come in a stressed and an unstressed form (secondary stress counts as stressed).
-*/
+// Packs CMUdict into js/voice-dict.js for the HD voices.
+// Run with: node tools/build-dict.js path/to/cmudict.dict path/to/LICENSE
+// Each word keeps its first pronunciation.
+// Every sound becomes one character, vowels come in a stressed and an unstressed form (secondary stress counts as stressed).
 var fs = require("fs");
 
 var cons = "B CH D DH F G HH JH K L M N NG P R S SH T TH V W Y Z ZH".split(" ");
