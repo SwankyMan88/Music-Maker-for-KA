@@ -178,6 +178,8 @@ look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1; evs = []
 var seen = {}; lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0; state = "load"; var solo = false;
 for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; } for (var ti = 0; ti < data.tracks.length; ti++) {
 var tr = data.tracks[ti], ins = core.insOf(tr), prev = "", ly = [], own = tr.x && tr.x.ins ? "c" + ti : "";
+var vx = ins && ins.vx, mine = tr.x && tr.x.vx ? JSON.stringify(tr.x.vx) : ""; if (mine) { vx = {}; for (var vk in ins.vx) { vx[vk] = ins.vx[vk]; }
+for (var vk2 in tr.x.vx) { vx[vk2] = tr.x.vx[vk2]; } }
 var on = !tr.mute && (!solo || tr.solo), dest = tr.x && tr.x.fx && core.fx ? core.fx(sfx, tr.x.fx, tr.pan / 50) : null;
 if (ins && ins.k !== "kit") { core.chain(tr.notes, ins.k === "vox"); } for (var ni = 0; ins && ni < tr.notes.length; ni++) {
 var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox", b = nt._bend;
@@ -185,9 +187,9 @@ var d = b ? b.len * spt : e - s, gl = b && b.gl ? core.secs(b.gl, spt) : null; t
 notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti, v: nt.v / 127, pan: tr.pan / 50 });
 lo = ins.k === "kit" ? lo : min(lo, nt.p); hi = ins.k === "kit" ? hi : max(hi, nt.p);
 if (vox && !seen[round(s * 100) + nt.w]) { ly.push({ s: s, e: e, w: nt.w }); }
-var k = (vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round(d * 1000) : own + core.key(tr.inst, nt.p, d, ins)) + (gl ? JSON.stringify(gl) : "");
+var k = (vox ? "v" + tr.inst + mine + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round(d * 1000) : own + core.key(tr.inst, nt.p, d, ins)) + (gl ? JSON.stringify(gl) : "");
 var pw = prev; if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; } if (!on || nt._skip || (vox && !core.vox)) { continue; }
-if (bufs[k] === undefined) { bufs[k] = null; jobs.push({ k: k, ins: ins, p: nt.p, d: d, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: gl }); }
+if (bufs[k] === undefined) { bufs[k] = null; jobs.push({ k: k, ins: ins, vx: vx, p: nt.p, d: d, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: gl }); }
 evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50, to: dest }); }
 for (var sl = 0; sl < ly.length; sl++) { seen[round(ly[sl].s * 100) + ly[sl].w] = true; }
 if (ly.length && sing.length < 3) { sing.push({ l: ly, c: ins.c }); } } foot = 104 + max(0, sing.length - 1) * 22; evs.sort(bySt); notes.sort(bySt);
@@ -248,7 +250,7 @@ for (var m = 0; m < list.length; m++) { fill(m === at ? 252 : 226, m === at ? 16
 text(names[m], 22 * U, 54 * U + m * 24 * U); } }; var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () { background(21, 23, 29);
 noStroke(); if (named < list.length) { names[named] = core.decode(list[named]).title || names[named]; named++; } if (state === "load") {
 var t0 = millis(); while (done < jobs.length && millis() - t0 < 12) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
-bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt, j.gl); done++; continue; }
+bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, j.vx, j.tl, j.nt, j.gl); done++; continue; }
 j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl); if (j.r.step(3000)) { bufs[j.k] = { buf: j.r.buf, pre: 0 }; done++; } }
 state = done >= jobs.length ? "stop" : state; fill(226, 228, 235); textSize(15 * U); textAlign(CENTER, CENTER);
 text("Building sounds...", width / 2, height / 2 - 20 * U); fill(46, 51, 63); rect(width / 2 - 100 * U, height / 2, 200 * U, 8 * U, 4);

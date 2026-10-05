@@ -4,7 +4,7 @@
 **/
 // Each line in songs is one song: paste in text from Songboard's Export Text to add one, delete a line to remove one.
 var songs = [
-    "EkEMBBLiBC1CAE6EgeKQDMKoCEMKMFMKMGMiBkBHkBEAIGEAJGKAKMKoCLMKMMMKMNMuBUOwBKAPMKgCGMKEQMKMR~XASwBKgCTMKAEMKMUMKUGMuBQVwBKkCWMKoCXMKMYMKMZMuBkBawBKAb~+DEcMKMdMiBUekBKAfMKAgBMKgChBMKEiBMKMjBMKoBkBMKAl~FAm~FAJMKQn~eAEMKMoBMKUpBMWMqBYW4BrBYKUsBMKAtBMWAWYKA~OOYtBMQ0BUSEQGG~wFDIrBMKAfMQAgBSEAhBGKAiBMKEj~YAkBM~/IJMLMKAMMKQNMWMOYWoBu~5D+CYKMKA~3MDUNMuBMOwBKwB~vHoHQgBsBSQYtBSZ0BUMmCgBVPHMGEA8BTA4DAK5FrCMKAMWAYKI~JAQASEAGKQ~MAKMMKUMWMYW4BYKV1~qBFA~JHYMQ0BSEQGuBQwB~lCJAMKE~PAEAG~PDM~3CBQ~0CBoBYKU~yC6BY~mFGuBMwxBKxB8B~mF7EBQhBmCSQYSZ0B~0MBPHMFvBtBYA9EgGK5F3~kG8EZKhBy~pL9EKxB~qK8EgGvBBmCGpBgBGjBYGdoBAA3BJAgMsGHlB3BAHgBAHYYH0~LoCsCAHYAHoBYH8~SA~LCk~sBYwBYHk~LG0~3BG~iCH~lFpC~wFzB~hBH~6E1D~LSs~hBc~wFtG1B8~iW7K~iCS~gLkKbAtBeAgCgeVxGyBYVUYVY~GHIYVkBYVoB~IC4~ID~QE~IA~yBL~4BmB4YVpBt~iCb4~gBCQYVs~oCL~2BfY~uBHVAoBXA2EgevB5BjBAvBg~FAYwBvB0~PZsC~KAAvBoB~PA8~ZB~PFs~PK~eL~6Ca~4DlD1Bt~pEmCk~eTw~6DG~hIxC~4DL~yHalBy~yHnHgG/C1HmCA/CgD~FFBA/CYA/CoBaAtBQArC07BJ5BmCAJgBAJYgGJ8~IAAJoBgGJ0B~YG~MFMKF~s4CekBJdr~2CEMKN~yBC~1zCjBMJ9BrC~nEDMKV~vDqC~y0CKkBJ~sDB~6BBWwBmBAAmDg2BvB5E~kZuH3~kZtHyB~kZUJxBmCAAlGAtBlE8BwBtB0~GBQ~FAoBwBJB1CYJ5BrCYJ1~MftD~MG~XHl~jBTN~+ChC9C~yCTwCMJgBMJYMJsBMJE~OTkD~cW~OAI~cTU~bW~vDhDF6~sHBw~sHB~MetD~MG~XHl~jBTN~+ChC9C~yCRlB/~8MiB~7JYE~xIM~OG~pBK~pNhC~uDJ0C~gDX8EvBF1CeyB3BkBAkfABtB8BGBBoBAAhEeGB9D~QIAC5CjBGB1G~mBuDrCGBB3~WBtBGB9D~RJAC5Cy~oB5rBh~XAt~XBj~oBB~RJAC5Co~oB5mBw~XA8~XBy~oBB~RJAC5C3~oB5mB1~XAhC~XA~RA9D~RJAC5C8~oB5mBm~XAyB~XAo~oBB~RJAC5Ct~oB1D2B~puBEs~FAo~FAk~FAg~suBCGBB4~FA0~FAw~FAs~FAo~FAk~FAg~FAcGBBYGBBUczB8BAAjIgGB9FmCMBJ3BMB~KzJh~KAy~K2JwCADoDMB1C~UANwCMBR~KtJ1CADpD~QA1Cm~RCMBR~KqJ8ED5CwC|Jingle Bells|Singer|dash-|ing|through|the|snow|in|a|one|horse|o-|pen|sleigh|ore|fields|we|go|laugh-|all|way|b~lDBon|bob-|tail|ring|mak-|spir-|its|bright|what|fun|it|is|to|ride|and|sing~1DD-|song|to-|n~3BBoh|jin-|gle|hey|Celesta|Choir|Bass|S~6BB~0HDDrums"
+    "EkEMBBLiBC6CAM6EDgeKsCEMKoCFMKMGMKMHMiBkBIkBEAJGEAKGKALMKoCMMKMNMKMOMuBUPwBKAQMKgCHMKERMKMS~XATwBKgCUMKAFMKMVMKUHMuBQWwBKkCXMKoCYMKMZMKMaMuBkBbwBKAc~+DEdMKMeMiBUfkBKAgBMKAhBMKgCiBMKEjBMKMkBMKoBl~bAm~FAn~FAKMKQo~eAFMKMpBMKUqBMWMrBYW4BsBYKUtBMKAuBMWAXYKA~OOYuBMQ0BVSEQHG~xFDIsBM~mEBQAhBSEAiBGKAjBMKEk~ZAlBM~hJJMMMKANMKQOMWMPYWoBv~6D/CYLMKA~6MDUOMuBMPwBKwB~xHqHQgBtBSQYuBSZ0BVbHQHJmCQWEA8BTA4DAK5FrCMKAMWAYKI~JAQASEAGKQ~MAKMMKUMWMYW4BYKV1~qBFA~JHYMQ0BSEQGuBQwB~lCJAMKE~PAEAG~PDM~3CBQ~0CBoBYKU~yC6BY~mFGuBMwxBKxB8B~mF7EBQhBmCSQYSZ0BbHQJmCQFwBtBYA9EgGK5F3~jG8EZKhBy~oL9EKxB~qK8EgGvBBmCGpBgBGjBYGdoBAA3BJAgMsGHlB3BAHgBAHYYH0~LoCsCAHYAHoBYH8~SA~LCk~sBYwBYHk~LG0~3BG~iCH~lFpC~wFzB~hBH~6E1D~LSs~hBc~wFtG1B8~iW7K~iCS~gLkKbAtBeAgCgeVxGyBYVUYVY~GHIYVkBYVoB~IC4~ID~QE~IA~yBL~4BmB4YVpBt~iCb4~gBCQYVs~oCL~2BfY~uBHVAoBXA2EgevB5BjBAvBg~FAYwBvB0~PZsC~KAAvBoB~PA8~ZB~PFs~PK~eL~6Ca~4DlD1Bt~pEmCk~eTw~6DG~hIxC~4DL~yHalBy~yHnHgG/C1HmCA/CgD~FFBA/CYA/CoBaAtBQArC07BJ5BmCAJgBAJYgGJ8~IAAJoBgGJ0B~YG~MFMKF~s4CekBJdr~2CEMKN~yBC~1zCjBMJ9BrC~nEDMKV~vDqC~y0CKkBJ~sDB~6BBWxBmBAAmDg2BvB5E~kZuH3~kZtHyB~kZUJyBmCAAlGAtBlE8BwBtB0~GBQ~FAoBwBJB1CYJ5BrCYJ1~MftD~MG~XHl~jBTN~+ChC9C~yCTwCMJgBMJYMJsBMJE~OTkD~cW~OAI~cTU~bW~vDhDF6~sHBw~sHB~MetD~MG~XHl~jBTN~+ChC9C~yCRlB/~8MiB~7JYE~xIM~OG~pBK~pNhC~uDJ0C~gDX8EvBF1CezB3BkBAyfABtB8BGBBoBAAhEeGB9D~QIAC5CjBGB1G~mBuDrCGBB3~WBtBGB9D~RJAC5Cy~oB5rBh~XAt~XBj~oBB~RJAC5Co~oB5mBw~XA8~XBy~oBB~RJAC5C3~oB5mB1~XAhC~XA~RA9D~RJAC5C8~oB5mBm~XAyB~XAo~oBB~RJAC5Ct~oBpB~g1CsC~ssFoCwCGBBs~FAo~FAk~FAg~3wBCGBB4~FA0~FAw~FAs~jCCGBBk~FAg~FAcGBBYGBBUc0B8BAAjIgGB9FmCMBJ3BMB~KzJh~KAy~K2JwCADoDMB1C~UANwCMBR~KtJ1CADpD~QA1Cm~RCMBR~KqJ8ED5CwC|Jingle Bells|Singer|{'vx':{'fs':0.9}}|dash-|ing|through|the|snow|in|a|one|horse|o-|pen|sleigh|ore|fields|we|go|laugh-|all|way|b~3DBon|bob-|tail|ring|mak-|spir-|its|bright|what|fun|it|is|to|ride|and|sing~1DD-|song|to-|n~3BBoh|jin-|gle|hey|Celesta|Choir|Bass|S~6BB~mIDDrums"
 ];
 
 
@@ -184,6 +184,8 @@ look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1; evs = []
 var seen = {}; lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0; state = "load"; var solo = false;
 for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; } for (var ti = 0; ti < data.tracks.length; ti++) {
 var tr = data.tracks[ti], ins = core.insOf(tr), prev = "", ly = [], own = tr.x && tr.x.ins ? "c" + ti : "";
+var vx = ins && ins.vx, mine = tr.x && tr.x.vx ? JSON.stringify(tr.x.vx) : ""; if (mine) { vx = {}; for (var vk in ins.vx) { vx[vk] = ins.vx[vk]; }
+for (var vk2 in tr.x.vx) { vx[vk2] = tr.x.vx[vk2]; } }
 var on = !tr.mute && (!solo || tr.solo), dest = tr.x && tr.x.fx && core.fx ? core.fx(sfx, tr.x.fx, tr.pan / 50) : null;
 if (ins && ins.k !== "kit") { core.chain(tr.notes, ins.k === "vox"); } for (var ni = 0; ins && ni < tr.notes.length; ni++) {
 var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox", b = nt._bend;
@@ -191,9 +193,9 @@ var d = b ? b.len * spt : e - s, gl = b && b.gl ? core.secs(b.gl, spt) : null; t
 notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti, v: nt.v / 127, pan: tr.pan / 50 });
 lo = ins.k === "kit" ? lo : min(lo, nt.p); hi = ins.k === "kit" ? hi : max(hi, nt.p);
 if (vox && !seen[round(s * 100) + nt.w]) { ly.push({ s: s, e: e, w: nt.w }); }
-var k = (vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round(d * 1000) : own + core.key(tr.inst, nt.p, d, ins)) + (gl ? JSON.stringify(gl) : "");
+var k = (vox ? "v" + tr.inst + mine + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round(d * 1000) : own + core.key(tr.inst, nt.p, d, ins)) + (gl ? JSON.stringify(gl) : "");
 var pw = prev; if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; } if (!on || nt._skip || (vox && !core.vox)) { continue; }
-if (bufs[k] === undefined) { bufs[k] = null; jobs.push({ k: k, ins: ins, p: nt.p, d: d, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: gl }); }
+if (bufs[k] === undefined) { bufs[k] = null; jobs.push({ k: k, ins: ins, vx: vx, p: nt.p, d: d, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: gl }); }
 evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50, to: dest }); }
 for (var sl = 0; sl < ly.length; sl++) { seen[round(ly[sl].s * 100) + ly[sl].w] = true; }
 if (ly.length && sing.length < 3) { sing.push({ l: ly, c: ins.c }); } } foot = 104 + max(0, sing.length - 1) * 22; evs.sort(bySt); notes.sort(bySt);
@@ -254,7 +256,7 @@ for (var m = 0; m < list.length; m++) { fill(m === at ? 252 : 226, m === at ? 16
 text(names[m], 22 * U, 54 * U + m * 24 * U); } }; var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () { background(21, 23, 29);
 noStroke(); if (named < list.length) { names[named] = core.decode(list[named]).title || names[named]; named++; } if (state === "load") {
 var t0 = millis(); while (done < jobs.length && millis() - t0 < 12) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
-bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt, j.gl); done++; continue; }
+bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, j.vx, j.tl, j.nt, j.gl); done++; continue; }
 j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl); if (j.r.step(3000)) { bufs[j.k] = { buf: j.r.buf, pre: 0 }; done++; } }
 state = done >= jobs.length ? "stop" : state; fill(226, 228, 235); textSize(15 * U); textAlign(CENTER, CENTER);
 text("Building sounds...", width / 2, height / 2 - 20 * U); fill(46, 51, 63); rect(width / 2 - 100 * U, height / 2, 200 * U, 8 * U, 4);
