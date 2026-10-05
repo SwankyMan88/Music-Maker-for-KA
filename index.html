@@ -1341,7 +1341,9 @@ var coreSrc = function () {
         }
     };
 
-    core.layer = function (ctx, out, L, base, hold, gl) {
+    // Builds one layer of a note into out. run(n) adds up to n more samples and says when the layer is finished,
+    // so long notes can be spread over several frames.
+    core.layerJob = function (ctx, out, L, base, hold, gl) {
         var sr = ctx.sampleRate, w = L.w || "sin", pw = L.pw || 0.5, step = L.nr ? sr / L.nr : 0;
         var g = L.g === undefined ? 0.3 : L.g, s = L.s === undefined ? 1 : L.s;
         var a = L.a || 0.002, d = L.d || 0.2, r = L.r || 0.05, damp = 1.4 - (L.fq || 0) * 1.25;
@@ -1354,77 +1356,101 @@ var coreSrc = function () {
             dl = sr / f0 - 0.5;
             burst = Math.round(sr / f0);
         }
-
-        for (var i = 0; i < out.length; i++) {
-            var t = i / sr;
-            var e = t < a ? t / a : s + (1 - s) * Math.exp((a - t) / d);
-            if (t > hold && (t - hold) / r >= 1) { break; }
-            if (t > hold) { e = e * (1 - (t - hold) / r); }
-            if (L.bu && t < L.bu * 0.011) { e = e * (1 - (t / 0.011) % 1); }
-
-            var f = gl ? f0 * Math.pow(2, core.bend(gl, t) / 12) : f0;
-            if (L.pe) { f = f * Math.pow(2, L.pe[0] * Math.exp(-t / L.pe[1]) / 12); }
-            if (L.vb && t > L.vb[2]) {
-                var vr = Math.min(1, (t - L.vb[2]) / 0.3);
-                f = f * Math.pow(2, L.vb[1] * vr * Math.sin(6.2832 * L.vb[0] * t) / 1200);
-            }
-            var dp = f / sr, v = 0;
-            if (w === "sin") {
-                v = Math.sin(6.2832 * ph);
-            } else if (w === "tri") {
-                v = 4 * Math.abs(ph - 0.5) - 1;
-            } else if (w === "saw") {
-                v = 2 * ph - 1 - core.blep(ph, dp);
-            } else if (w === "sqr" || w === "pls") {
-                v = (ph < pw ? 1 : -1) + core.blep(ph, dp) - core.blep((ph + 1 - pw) % 1, dp);
-            } else if (w === "noi") {
-                if (!step) {
-                    v = Math.random() * 2 - 1;
-                } else {
-                    cnt--;
-                    if (cnt <= 0) { held = Math.random() * 2 - 1; cnt += step; }
-                    v = held;
+        var i = 0;
+        var run = function (n) {
+            var end = Math.min(out.length, i + n);
+            for (; i < end; i++) {
+                var t = i / sr;
+                var e = t < a ? t / a : s + (1 - s) * Math.exp((a - t) / d);
+                if (t > hold && (t - hold) / r >= 1) {
+                    i = out.length;
+                    break;
                 }
-            } else if (w === "ks") {
-                if (i < burst) { nz += (L.br || 0.5) * (Math.random() * 2 - 1 - nz); v = nz; }
-                var at = i - dl;
-                if (at >= 1) {
-                    var i0 = Math.floor(at), fr = at - i0;
-                    v += (L.dm || 0.996) * 0.5 * (y[i0] + (y[i0 + 1] - y[i0]) * fr + y[i0 - 1] + (y[i0] - y[i0 - 1]) * fr);
-                }
-                y[i] = v;
-            }
-            ph += dp;
-            if (ph >= 1) { ph -= Math.floor(ph); }
-            if (L.qz) { v = Math.round(v * L.qz) / L.qz; }
+                if (t > hold) { e = e * (1 - (t - hold) / r); }
+                if (L.bu && t < L.bu * 0.011) { e = e * (1 - (t / 0.011) % 1); }
 
-            if (L.ft) {
-                if (i % 32 === 0) {
-                    var c = fe + (fc - fe) * Math.exp(-t / (L.fd || 0.2));
-                    if (L.fl) { c = c * Math.pow(2, L.fl[1] * Math.sin(6.2832 * L.fl[0] * t)); }
-                    c = Math.max(20, Math.min(c, sr * 0.16));
-                    cf = 2 * Math.sin(3.1416 * c / sr);
+                var f = gl ? f0 * Math.pow(2, core.bend(gl, t) / 12) : f0;
+                if (L.pe) { f = f * Math.pow(2, L.pe[0] * Math.exp(-t / L.pe[1]) / 12); }
+                if (L.vb && t > L.vb[2]) {
+                    var vr = Math.min(1, (t - L.vb[2]) / 0.3);
+                    f = f * Math.pow(2, L.vb[1] * vr * Math.sin(6.2832 * L.vb[0] * t) / 1200);
                 }
-                lo += cf * band;
-                var hi = v - lo - damp * band;
-                band += cf * hi;
-                v = L.ft === "lp" ? lo : (L.ft === "hp" ? hi : band);
+                var dp = f / sr, v = 0;
+                if (w === "sin") {
+                    v = Math.sin(6.2832 * ph);
+                } else if (w === "tri") {
+                    v = 4 * Math.abs(ph - 0.5) - 1;
+                } else if (w === "saw") {
+                    v = 2 * ph - 1 - core.blep(ph, dp);
+                } else if (w === "sqr" || w === "pls") {
+                    v = (ph < pw ? 1 : -1) + core.blep(ph, dp) - core.blep((ph + 1 - pw) % 1, dp);
+                } else if (w === "noi") {
+                    if (!step) {
+                        v = Math.random() * 2 - 1;
+                    } else {
+                        cnt--;
+                        if (cnt <= 0) { held = Math.random() * 2 - 1; cnt += step; }
+                        v = held;
+                    }
+                } else if (w === "ks") {
+                    if (i < burst) { nz += (L.br || 0.5) * (Math.random() * 2 - 1 - nz); v = nz; }
+                    var at = i - dl;
+                    if (at >= 1) {
+                        var i0 = Math.floor(at), fr = at - i0;
+                        v += (L.dm || 0.996) * 0.5 * (y[i0] + (y[i0 + 1] - y[i0]) * fr + y[i0 - 1] + (y[i0] - y[i0 - 1]) * fr);
+                    }
+                    y[i] = v;
+                }
+                ph += dp;
+                if (ph >= 1) { ph -= Math.floor(ph); }
+                if (L.qz) { v = Math.round(v * L.qz) / L.qz; }
+
+                if (L.ft) {
+                    if (i % 32 === 0) {
+                        var c = fe + (fc - fe) * Math.exp(-t / (L.fd || 0.2));
+                        if (L.fl) { c = c * Math.pow(2, L.fl[1] * Math.sin(6.2832 * L.fl[0] * t)); }
+                        c = Math.max(20, Math.min(c, sr * 0.16));
+                        cf = 2 * Math.sin(3.1416 * c / sr);
+                    }
+                    lo += cf * band;
+                    var hi = v - lo - damp * band;
+                    band += cf * hi;
+                    v = L.ft === "lp" ? lo : (L.ft === "hp" ? hi : band);
+                }
+                out[i] += v * e * g;
             }
-            out[i] += v * e * g;
-        }
+            return i >= out.length;
+        };
+        return { run: run };
+    };
+
+    core.layer = function (ctx, out, L, base, hold, gl) {
+        core.layerJob(ctx, out, L, base, hold, gl).run(out.length);
+    };
+
+    // A note that is built a piece at a time: step(n) adds up to n samples and says when the whole note is done.
+    core.job = function (ctx, ins, midi, sec, gl) {
+        var pc = !ins || ins.k === "vox" ? null : (ins.k === "kit" ? ins.kit[midi] : ins);
+        if (!pc) { return { buf: null, step: function () { return true; } }; }
+        var ls = pc.l, hold = pc.len || Math.min(sec, 30), tail = 0, k = 0, cur = null;
+        for (var i = 0; i < ls.length; i++) { tail = Math.max(tail, ls[i].r || 0.05); }
+        var buf = ctx.createBuffer(1, Math.ceil((hold + tail) * ctx.sampleRate) + 1, ctx.sampleRate);
+        var step = function (n) {
+            while (k < ls.length) {
+                cur = cur || core.layerJob(ctx, buf.getChannelData(0), ls[k], core.freq(midi), hold, gl);
+                if (!cur.run(n)) { return false; }
+                cur = null;
+                k++;
+            }
+            return true;
+        };
+        return { buf: buf, step: step };
     };
 
     core.render = function (ctx, ins, midi, sec, gl) {
-        if (!ins || ins.k === "vox") { return null; }
-        var pc = ins.k === "kit" ? ins.kit[midi] : ins;
-        if (!pc) { return null; }
-        var ls = pc.l, hold = pc.len || Math.min(sec, 30), tail = 0;
-        for (var i = 0; i < ls.length; i++) { tail = Math.max(tail, ls[i].r || 0.05); }
-        var buf = ctx.createBuffer(1, Math.ceil((hold + tail) * ctx.sampleRate) + 1, ctx.sampleRate);
-        for (var j = 0; j < ls.length; j++) {
-            core.layer(ctx, buf.getChannelData(0), ls[j], core.freq(midi), hold, gl);
-        }
-        return buf;
+        var j = core.job(ctx, ins, midi, sec, gl);
+        j.step(1e9);
+        return j.buf;
     };
 
     core.key = function (id, p, sec, ins) {
@@ -1560,17 +1586,26 @@ var coreSrc = function () {
             for (var i = 0; i < hs.length; i++) { core.badSet[hs[i]] = true; }
         }
         s = core.norm(s);
-        return !!s && !!(core.badSet[core.hash(s)] || core.badSet[core.hash(s.replace(/ /g, ""))]);
+        if (core.badSeen[s] === undefined) { core.badSeen[s] = !!s && !!(core.badSet[core.hash(s)] || core.badSet[core.hash(s.replace(/ /g, ""))]); }
+        return core.badSeen[s];
     };
+    core.badSeen = {};
 
+    // Notes without words are skipped, so long instrument tracks cost almost nothing to check.
     core.badRuns = function (words) {
-        var hit = [];
-        for (var i = 0; i < words.length; i++) {
+        var hit = [], at = [], ws = [];
+        for (var a = 0; a < words.length; a++) {
+            if (words[a]) {
+                at.push(a);
+                ws.push(String(words[a]));
+            }
+        }
+        for (var i = 0; i < ws.length; i++) {
             var run = "";
-            for (var k = 0; k < core.badN + 2 && i + k < words.length; k++) {
-                run += (k && !/-$/.test(words[i + k - 1]) ? " " : "") + String(words[i + k] || "");
+            for (var k = 0; k < core.badN + 2 && i + k < ws.length; k++) {
+                run += (k && !/-$/.test(ws[i + k - 1]) ? " " : "") + ws[i + k];
                 if (!core.isBad(run)) { continue; }
-                for (var j = i; j <= i + k; j++) { hit[j] = true; }
+                for (var j = i; j <= i + k; j++) { hit[at[j]] = true; }
             }
         }
         return hit;
@@ -1795,7 +1830,9 @@ var playerSrc = function () {
     var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot;
     var bySt = function (x, y) { return x.s - y.s; };
     core.setup(sfx);
-    for (var q = 0; q < list.length; q++) { names.push(core.decode(list[q]).title || "Song " + (q + 1)); }
+    // Titles for the song menu are read one per frame while the first song loads, decoding them all at once is slow.
+    for (var q = 0; q < list.length; q++) { names.push("Song " + (q + 1)); }
+    var named = 0;
 
     // gets one song from the list ready to play, sounds already built for other songs are kept
     var prep = function (n) {
@@ -1803,7 +1840,7 @@ var playerSrc = function () {
         at = n;
         data = core.decode(list[n]);
         spt = 60 / (data.bpm * data.res);
-        look = data.vis || 1;
+        look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1;
         evs = []; notes = []; sing = []; jobs = []; parts = []; lev = []; tint = [];
         var seen = {};
         lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0;
@@ -2032,12 +2069,24 @@ var playerSrc = function () {
     draw = function () {
         background(21, 23, 29);
         noStroke();
+        if (named < list.length) {
+            names[named] = core.decode(list[named]).title || names[named];
+            named++;
+        }
         if (state === "load") {
             var t0 = millis();
             while (done < jobs.length && millis() - t0 < 12) {
                 var j = jobs[done], ji = j.ins;
-                bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt, j.gl) : { buf: core.render(sfx.context, ji, j.p, j.d, j.gl), pre: 0 };
-                done++;
+                if (ji.k === "vox") {
+                    bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt, j.gl);
+                    done++;
+                    continue;
+                }
+                j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl);
+                if (j.r.step(3000)) {
+                    bufs[j.k] = { buf: j.r.buf, pre: 0 };
+                    done++;
+                }
             }
             state = done >= jobs.length ? "stop" : state;
             fill(226, 228, 235);
@@ -2360,10 +2409,23 @@ var pjs = {
         return out.length < ls.length ? pjs.fold(out) : out;
     },
 
+    // What exports need to know about a song, worked out once per song text because decoding a big song is slow.
+    seen: {},
+    info: function (t) {
+        if (!pjs.seen[t]) {
+            var d = core.decode(t);
+            pjs.seen[t] = { s: d, title: d.title || "", vox: pjs.hasVox(d), fx: d.tracks.some(function (tr) { return tr.x && tr.x.fx; }) };
+        }
+        return pjs.seen[t];
+    },
+
     usesFx: function (texts) {
-        return texts.some(function (t) {
-            return core.decode(t).tracks.some(function (tr) { return tr.x && tr.x.fx; });
-        });
+        return texts.some(function (t) { return pjs.info(t).fx; });
+    },
+
+    // A line that gives each song its own visual without changing the song texts.
+    visLine: function (looks) {
+        return looks ? "var visuals = [" + looks.join(", ") + "];" : "";
     },
 
     hasVox: function (s) {
@@ -2374,13 +2436,14 @@ var pjs = {
     },
 
     // A page that only plays the songs with their visuals, like the PJS export but in HTML so voices can sing.
-    page: function (texts) {
+    page: function (texts, looks) {
         var cdn = window.voiceFrom ? voiceFrom[voiceFrom.length - 1] : "";
-        var title = (core.decode(texts[0]).title || "Songboard").replace(/</g, "&lt;");
+        var title = (pjs.info(texts[0]).title || "Songboard").replace(/</g, "&lt;");
         var js = [
             "var songs = [",
             texts.map(function (t) { return "    \"" + t + "\""; }).join(",\n"),
             "];",
+            pjs.visLine(looks),
             "",
             "// The SFX engine expects Processing's random(), which a plain page does not have.",
             "var random = function () { return Math.random(); };",
@@ -2452,9 +2515,9 @@ var pjs = {
     },
 
     // texts: the song texts to put in the program, the first one plays first
-    build: function (texts) {
+    build: function (texts, looks) {
         var defs = pjs.lines("sfxDefs").join("\n");
-        var title = core.decode(texts[0]).title || "Untitled";
+        var title = pjs.info(texts[0]).title || "Untitled";
         return [
             "/**",
             " * " + title + (texts.length > 1 ? " and " + (texts.length - 1) + " more" : "") + " - made with Songboard.",
@@ -2464,7 +2527,7 @@ var pjs = {
             "var songs = [",
             texts.map(function (t) { return "    \"" + t + "\""; }).join(",\n"),
             "];",
-            "",
+            pjs.visLine(looks),
             "var sfx = (" + pjs.src("sfxSrc").split("\n").filter(function (l) { return l.trim(); }).join("\n") + ")(); // SFX IIFE",
             defs,
             "",
@@ -2489,7 +2552,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v10/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v11/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -2678,12 +2741,17 @@ var commit = function () {
     dirty = true;
 };
 
+// Titles are remembered per song text, so big songs are not decoded again every time the list is drawn.
+var titles = {};
 var titleOf = function (text, i) {
-    try {
-        return core.decode(text).title || "Untitled " + (i + 1);
-    } catch (er) {
-        return "Song " + (i + 1);
+    if (titles[text] === undefined) {
+        try {
+            titles[text] = core.decode(text).title || "";
+        } catch (er) {
+            titles[text] = null;
+        }
     }
+    return titles[text] === null ? "Song " + (i + 1) : titles[text] || "Untitled " + (i + 1);
 };
 
 var songMenu = function () {
@@ -2934,9 +3002,18 @@ var getBuf = function (tr, n, sec, peek) {
             return voice.render(ctx, n.w, p, sec, pw, vx, list, n);
         }, peek);
     }
-    return keep(insKey(tr) + core.key(tr.inst, n.p, sec, ins) + (gl ? JSON.stringify(gl) : ""), function () {
-        return { buf: core.render(ctx, ins, n.p, sec, gl), pre: 0 };
+    var sk = synthOf(tr, n, sec);
+    return keep(sk.key, function () {
+        return { buf: core.render(ctx, ins, n.p, sk.sec, gl), pre: 0 };
     }, peek);
+};
+
+// Everything needed to build an instrument note (not a voice): its key in the sound store and how to make it.
+var synthOf = function (tr, n, sec) {
+    var ins = insOf(tr), bent = bendOf(tr, n), gl = bent && bent.gl;
+    if (ins.k === "vox") { return null; }
+    if (bent) { sec = bent.len * spt(); }
+    return { key: insKey(tr) + core.key(tr.inst, n.p, sec, ins) + (gl ? JSON.stringify(gl) : ""), ins: ins, sec: sec, gl: gl };
 };
 
 // Sounds are built a little at a time.
@@ -2954,6 +3031,7 @@ var warmUp = function (from, ready) {
     clearTimeout(warm.timer);
     warm.list = list;
     warm.at = 0;
+    warm.job = null;
     warm.wait = { until: from + 2 / spt(), fn: ready };
     warmStep();
 };
@@ -2962,8 +3040,22 @@ var warmStep = function () {
     var t0 = performance.now();
     while (warm.at < warm.list.length && performance.now() - t0 < 25) {
         var w = warm.list[warm.at];
-        getBuf(w.tr, w.n, w.n.l * spt());
-        warm.at++;
+        if (!warm.job) {
+            var sk = synthOf(w.tr, w.n, w.n.l * spt());
+            if (!sk || bufs[sk.key] !== undefined) {
+                getBuf(w.tr, w.n, w.n.l * spt());
+                warm.at++;
+                continue;
+            }
+            warm.job = { key: sk.key, r: core.job(ctx, sk.ins, w.n.p, sk.sec, sk.gl) };
+        }
+        // long notes are built a piece at a time and carry on in the next step
+        if (warm.job.r.step(3000)) {
+            var made = warm.job.r.buf;
+            keep(warm.job.key, function () { return { buf: made, pre: 0 }; });
+            warm.job = null;
+            warm.at++;
+        }
     }
     var w2 = warm.list[warm.at];
     if (warm.wait && (!w2 || w2.n.t > warm.wait.until)) {
@@ -4492,36 +4584,47 @@ var exportBox = function (kind) {
     commit();
     if (!expPick || expPick.length !== book.list.length) { expPick = book.list.map(function () { return true; }); }
     var mode = "own", same = 1;
-    // The ticked songs, each with the visual it should use in the export.
+    // The ticked songs, and the visual for each one when it should not keep its own.
+    var looks = null;
     var chosen = function () {
         var out = [];
+        looks = mode === "own" ? null : [];
         book.list.forEach(function (t, i) {
             if (!expPick[i]) { return; }
-            if (mode === "own") {
-                out.push(t);
-                return;
-            }
-            var sg = core.decode(t);
-            sg.vis = mode === "auto" ? autoVis(sg) : same;
-            out.push(core.encode(sg));
+            out.push(t);
+            if (!looks) { return; }
+            var inf = pjs.info(t);
+            if (inf.auto === undefined) { inf.auto = autoVis(inf.s); }
+            looks.push(mode === "auto" ? inf.auto : same);
         });
         return out;
     };
+    // Song text has to carry its visual inside it, so the song list re-encodes changed songs (remembered per song).
+    var withVis = function (t, v) {
+        var inf = pjs.info(t);
+        inf.as = inf.as || {};
+        if (inf.as[v] === undefined) {
+            var sg = core.decode(t);
+            sg.vis = v;
+            inf.as[v] = core.encode(sg);
+        }
+        return inf.as[v];
+    };
     var make = function () {
-        var txt = core.encode(song);
         var all = $("whatSel") && $("whatSel").value === "all";
+        var txt = all ? "" : book.list[book.at];
         var list = chosen();
         if (!list.length && (kind !== "text" || all)) { return { code: "", info: '<span class="warn">Tick at least one song.</span>' }; }
         var n = list.length + (list.length === 1 ? " song" : " songs");
-        var listLine = "var songs = [\n" + list.map(function (t) { return '    "' + t + '"'; }).join(",\n") + "\n];";
-        var code = kind === "pjs" ? pjs.build(list) : (kind === "page" ? pjs.page(list) : (all ? listLine : txt));
+        var listLine = "var songs = [\n" + list.map(function (t, i) { return '    "' + (looks ? withVis(t, looks[i]) : t) + '"'; }).join(",\n") + "\n];";
+        var code = kind === "pjs" ? pjs.build(list, looks) : (kind === "page" ? pjs.page(list, looks) : (all ? listLine : txt));
         var info = kind === "page" ?
             "A page that only plays your songs with their visuals (" + n + "). Paste it into a new Khan Academy webpage, or save it as an .html file. Vox tracks sing here, the voice loads from GitHub." :
             kind === "pjs" ?
             "Paste into a new Processing.js program on Khan Academy. <b>" + code.split("\n").length + " lines</b> with " + n + ". Click the title in the program to switch songs." :
             (all ? "Replace <b>var songs</b> in the HTML page or a PJS program with this (" + n + ")." :
                 "<b>" + size(txt.length) + "</b>, lossless. Add it as a line in <b>var songs</b> in the HTML page or a PJS program, or Import it.");
-        if (kind === "pjs" && list.some(function (t) { return pjs.hasVox(core.decode(t)); })) { info += '<br><span class="warn">Vox tracks are not sung in the PJS version. Their lyrics still show as karaoke text.</span>'; }
+        if (kind === "pjs" && list.some(function (t) { return pjs.info(t).vox; })) { info += '<br><span class="warn">Vox tracks are not sung in the PJS version. Their lyrics still show as karaoke text.</span>'; }
         return { code: code, info: info };
     };
     var opts = function (cur) {
@@ -5352,7 +5455,8 @@ $("vel").addEventListener("change", function () {
     core.setup(sfx);
     book.list = texts.filter(function (t) {
         try {
-            return !!core.decode(t);
+            titles[t] = core.decode(t).title || "";
+            return true;
         } catch (er) {
             console.warn("A song in the page could not be read", er);
             return false;

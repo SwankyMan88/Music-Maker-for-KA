@@ -327,7 +327,7 @@ var core = (function () {
             }
         }
     };
-    core.layer = function (ctx, out, L, base, hold, gl) {
+    core.layerJob = function (ctx, out, L, base, hold, gl) {
         var sr = ctx.sampleRate, w = L.w || "sin", pw = L.pw || 0.5, step = L.nr ? sr / L.nr : 0;
         var g = L.g === undefined ? 0.3 : L.g, s = L.s === undefined ? 1 : L.s;
         var a = L.a || 0.002, d = L.d || 0.2, r = L.r || 0.05, damp = 1.4 - (L.fq || 0) * 1.25;
@@ -335,62 +335,78 @@ var core = (function () {
         var ph = 0, lo = 0, band = 0, cf = 0, held = 0, cnt = 0, nz = 0, y = null, dl = 0, burst = 0;
         var fc = (L.fc || 1000) * (L.fk ? f0 : 1); var fe = (L.fe || L.fc || 1000) * (L.fk ? f0 : 1);
         if (w === "ks") { y = core.arr(ctx, out.length); dl = sr / f0 - 0.5; burst = Math.round(sr / f0); }
-        for (var i = 0; i < out.length; i++) {
-            var t = i / sr; var e = t < a ? t / a : s + (1 - s) * Math.exp((a - t) / d);
-            if (t > hold && (t - hold) / r >= 1) { break; }
-            if (t > hold) { e = e * (1 - (t - hold) / r); }
-            if (L.bu && t < L.bu * 0.011) { e = e * (1 - (t / 0.011) % 1); }
-            var f = gl ? f0 * Math.pow(2, core.bend(gl, t) / 12) : f0;
-            if (L.pe) { f = f * Math.pow(2, L.pe[0] * Math.exp(-t / L.pe[1]) / 12); }
-            if (L.vb && t > L.vb[2]) {
-                var vr = Math.min(1, (t - L.vb[2]) / 0.3);
-                f = f * Math.pow(2, L.vb[1] * vr * Math.sin(6.2832 * L.vb[0] * t) / 1200);
-            }
-            var dp = f / sr, v = 0;
-            if (w === "sin") { v = Math.sin(6.2832 * ph); } else if (w === "tri") { v = 4 * Math.abs(ph - 0.5) - 1; }
-            else if (w === "saw") { v = 2 * ph - 1 - core.blep(ph, dp); }
-            else if (w === "sqr" || w === "pls") {
-                v = (ph < pw ? 1 : -1) + core.blep(ph, dp) - core.blep((ph + 1 - pw) % 1, dp);
-            } else if (w === "noi") {
-                if (!step) { v = Math.random() * 2 - 1; }
-                else {
-                    cnt--;
-                    if (cnt <= 0) { held = Math.random() * 2 - 1; cnt += step; }
-                    v = held;
+        var i = 0;
+        var run = function (n) {
+            var end = Math.min(out.length, i + n);
+            for (; i < end; i++) {
+                var t = i / sr; var e = t < a ? t / a : s + (1 - s) * Math.exp((a - t) / d);
+                if (t > hold && (t - hold) / r >= 1) { i = out.length; break; }
+                if (t > hold) { e = e * (1 - (t - hold) / r); }
+                if (L.bu && t < L.bu * 0.011) { e = e * (1 - (t / 0.011) % 1); }
+                var f = gl ? f0 * Math.pow(2, core.bend(gl, t) / 12) : f0;
+                if (L.pe) { f = f * Math.pow(2, L.pe[0] * Math.exp(-t / L.pe[1]) / 12); }
+                if (L.vb && t > L.vb[2]) {
+                    var vr = Math.min(1, (t - L.vb[2]) / 0.3);
+                    f = f * Math.pow(2, L.vb[1] * vr * Math.sin(6.2832 * L.vb[0] * t) / 1200);
                 }
-            } else if (w === "ks") {
-                if (i < burst) { nz += (L.br || 0.5) * (Math.random() * 2 - 1 - nz); v = nz; }
-                var at = i - dl;
-                if (at >= 1) {
-                    var i0 = Math.floor(at), fr = at - i0;
-                    v += (L.dm || 0.996) * 0.5 * (y[i0] + (y[i0 + 1] - y[i0]) * fr + y[i0 - 1] + (y[i0] - y[i0 - 1]) * fr);
+                var dp = f / sr, v = 0;
+                if (w === "sin") { v = Math.sin(6.2832 * ph); } else if (w === "tri") { v = 4 * Math.abs(ph - 0.5) - 1; }
+                else if (w === "saw") { v = 2 * ph - 1 - core.blep(ph, dp); }
+                else if (w === "sqr" || w === "pls") {
+                    v = (ph < pw ? 1 : -1) + core.blep(ph, dp) - core.blep((ph + 1 - pw) % 1, dp);
+                } else if (w === "noi") {
+                    if (!step) { v = Math.random() * 2 - 1; }
+                    else {
+                        cnt--;
+                        if (cnt <= 0) { held = Math.random() * 2 - 1; cnt += step; }
+                        v = held;
+                    }
+                } else if (w === "ks") {
+                    if (i < burst) { nz += (L.br || 0.5) * (Math.random() * 2 - 1 - nz); v = nz; }
+                    var at = i - dl;
+                    if (at >= 1) {
+                        var i0 = Math.floor(at), fr = at - i0;
+                        v += (L.dm || 0.996) * 0.5 * (y[i0] + (y[i0 + 1] - y[i0]) * fr + y[i0 - 1] + (y[i0] - y[i0 - 1]) * fr);
+                    }
+                    y[i] = v;
                 }
-                y[i] = v;
-            }
-            ph += dp;
-            if (ph >= 1) { ph -= Math.floor(ph); }
-            if (L.qz) { v = Math.round(v * L.qz) / L.qz; }
-            if (L.ft) {
-                if (i % 32 === 0) {
-                    var c = fe + (fc - fe) * Math.exp(-t / (L.fd || 0.2));
-                    if (L.fl) { c = c * Math.pow(2, L.fl[1] * Math.sin(6.2832 * L.fl[0] * t)); }
-                    c = Math.max(20, Math.min(c, sr * 0.16)); cf = 2 * Math.sin(3.1416 * c / sr);
+                ph += dp;
+                if (ph >= 1) { ph -= Math.floor(ph); }
+                if (L.qz) { v = Math.round(v * L.qz) / L.qz; }
+                if (L.ft) {
+                    if (i % 32 === 0) {
+                        var c = fe + (fc - fe) * Math.exp(-t / (L.fd || 0.2));
+                        if (L.fl) { c = c * Math.pow(2, L.fl[1] * Math.sin(6.2832 * L.fl[0] * t)); }
+                        c = Math.max(20, Math.min(c, sr * 0.16)); cf = 2 * Math.sin(3.1416 * c / sr);
+                    }
+                    lo += cf * band; var hi = v - lo - damp * band; band += cf * hi;
+                    v = L.ft === "lp" ? lo : (L.ft === "hp" ? hi : band);
                 }
-                lo += cf * band; var hi = v - lo - damp * band; band += cf * hi;
-                v = L.ft === "lp" ? lo : (L.ft === "hp" ? hi : band);
+                out[i] += v * e * g;
             }
-            out[i] += v * e * g;
-        }
+            return i >= out.length;
+        };
+        return { run: run };
     };
-    core.render = function (ctx, ins, midi, sec, gl) {
-        if (!ins || ins.k === "vox") { return null; }
-        var pc = ins.k === "kit" ? ins.kit[midi] : ins;
-        if (!pc) { return null; }
-        var ls = pc.l, hold = pc.len || Math.min(sec, 30), tail = 0;
+    core.layer = function (ctx, out, L, base, hold, gl) { core.layerJob(ctx, out, L, base, hold, gl).run(out.length); };
+    core.job = function (ctx, ins, midi, sec, gl) {
+        var pc = !ins || ins.k === "vox" ? null : (ins.k === "kit" ? ins.kit[midi] : ins);
+        if (!pc) { return { buf: null, step: function () { return true; } }; }
+        var ls = pc.l, hold = pc.len || Math.min(sec, 30), tail = 0, k = 0, cur = null;
         for (var i = 0; i < ls.length; i++) { tail = Math.max(tail, ls[i].r || 0.05); }
         var buf = ctx.createBuffer(1, Math.ceil((hold + tail) * ctx.sampleRate) + 1, ctx.sampleRate);
-        for (var j = 0; j < ls.length; j++) { core.layer(ctx, buf.getChannelData(0), ls[j], core.freq(midi), hold, gl); }
-        return buf;
+        var step = function (n) {
+            while (k < ls.length) {
+                cur = cur || core.layerJob(ctx, buf.getChannelData(0), ls[k], core.freq(midi), hold, gl);
+                if (!cur.run(n)) { return false; }
+                cur = null; k++;
+            }
+            return true;
+        };
+        return { buf: buf, step: step };
+    };
+    core.render = function (ctx, ins, midi, sec, gl) {
+        var j = core.job(ctx, ins, midi, sec, gl); j.step(1e9); return j.buf;
     };
     core.key = function (id, p, sec, ins) {
         ins = ins || core.insts[id];
@@ -485,16 +501,21 @@ var core = (function () {
             for (var i = 0; i < hs.length; i++) { core.badSet[hs[i]] = true; }
         }
         s = core.norm(s);
-        return !!s && !!(core.badSet[core.hash(s)] || core.badSet[core.hash(s.replace(/ /g, ""))]);
+        if (core.badSeen[s] === undefined) { core.badSeen[s] = !!s && !!(core.badSet[core.hash(s)] || core.badSet[core.hash(s.replace(/ /g, ""))]); }
+        return core.badSeen[s];
     };
+    core.badSeen = {};
     core.badRuns = function (words) {
-        var hit = [];
-        for (var i = 0; i < words.length; i++) {
+        var hit = [], at = [], ws = [];
+        for (var a = 0; a < words.length; a++) {
+            if (words[a]) { at.push(a); ws.push(String(words[a])); }
+        }
+        for (var i = 0; i < ws.length; i++) {
             var run = "";
-            for (var k = 0; k < core.badN + 2 && i + k < words.length; k++) {
-                run += (k && !/-$/.test(words[i + k - 1]) ? " " : "") + String(words[i + k] || "");
+            for (var k = 0; k < core.badN + 2 && i + k < ws.length; k++) {
+                run += (k && !/-$/.test(ws[i + k - 1]) ? " " : "") + ws[i + k];
                 if (!core.isBad(run)) { continue; }
-                for (var j = i; j <= i + k; j++) { hit[j] = true; }
+                for (var j = i; j <= i + k; j++) { hit[at[j]] = true; }
             }
         }
         return hit;
@@ -527,10 +548,11 @@ var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
 var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot;
 var bySt = function (x, y) { return x.s - y.s; };
 core.setup(sfx);
-for (var q = 0; q < list.length; q++) { names.push(core.decode(list[q]).title || "Song " + (q + 1)); }
+for (var q = 0; q < list.length; q++) { names.push("Song " + (q + 1)); }
+var named = 0;
 var prep = function (n) {
     sfx.stop(); at = n; data = core.decode(list[n]); spt = 60 / (data.bpm * data.res);
-    look = data.vis || 1;
+    look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1;
     evs = []; notes = []; sing = []; jobs = []; parts = []; lev = []; tint = [];
     var seen = {};
     lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0;
@@ -544,7 +566,7 @@ var prep = function (n) {
             var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox", b = nt._bend;
             var d = b ? b.len * spt : e - s, gl = b && b.gl ? core.secs(b.gl, spt) : null;
             total = max(total, e);
-            notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti });
+            notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti, v: nt.v / 127, pan: tr.pan / 50 });
             lo = ins.k === "kit" ? lo : min(lo, nt.p); hi = ins.k === "kit" ? hi : max(hi, nt.p);
             if (vox && !seen[round(s * 100) + nt.w]) { ly.push({ s: s, e: e, w: nt.w }); }
             var k = (vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round(d * 1000) : own + core.key(tr.inst, nt.p, d, ins)) + (gl ? JSON.stringify(gl) : "");
@@ -589,8 +611,10 @@ var drRoll = function () {
         var n = notes[i]; var x1 = cx + (n.s - pos) * 110 * U; var x2 = cx + (n.e - pos) * 110 * U;
         if (x2 < 0 || x1 > width) { continue; }
         col(n.c, lit(n) ? 255 : 140);
-        if (n.kit) { rect(x1, bot - 16 * U, max(3, min(x2 - x1, 7 * U)), 10 * U, 2); }
-        else { rect(x1, top + 6 * U + (hi - n.p) * rh, max(2, x2 - x1 - 1), max(2, rh - 1), 2); }
+        if (n.kit) {
+            var lane = n.p < 37 ? 0 : n.p < 41 ? 1 : n.p < 49 && n.p !== 42 && n.p !== 44 && n.p !== 46 ? 2 : 3;
+            rect(x1, bot - (14 + lane * 7) * U, max(3, min(x2 - x1, 7 * U)), 5 * U, 2);
+        } else { rect(x1, top + 6 * U + (hi - n.p) * rh, max(2, x2 - x1 - 1), max(2, rh - 1), 2); }
     }
     stroke(255, 255, 255, 110); line(cx, top, cx, bot); noStroke();
 };
@@ -599,8 +623,9 @@ var drBars = function () {
     for (var i = 0; i < notes.length && notes[i].s <= pos; i++) {
         var n = notes[i];
         if (!lit(n)) { continue; }
-        var b = n.kit ? floor(random(0, 4)) : floor((n.p - lo) / (hi - lo + 1) * (nb - 4)) + 4;
-        lev[b] = max(lev[b] || 0, n.kit ? 0.6 : 1 - (pos - n.s) * 0.4); tint[b] = n.c;
+        var b = n.kit ? (n.p < 37 ? 0 : n.p < 41 ? 1 : n.p === 42 || n.p === 44 || n.p === 46 ? 3 : 2) : floor((n.p - lo) / (hi - lo + 1) * (nb - 4)) + 4;
+        lev[b] = max(lev[b] || 0, (n.kit ? 0.9 : 1 - (pos - n.s) * 0.4) * (0.45 + 0.55 * n.v));
+        tint[b] = n.c;
     }
     for (var j = 0; j < nb; j++) {
         var h = (lev[j] || 0) * tall + 3 * U; col(tint[j] || [96, 183, 247], 230);
@@ -618,7 +643,7 @@ var drOrbit = function () {
         var n = notes[i];
         if (n.s < st || n.s >= st + bar) { continue; }
         var ang = (n.s - st) / bar * TWO_PI - PI / 2; var r = R * (0.3 + 0.7 * (n.tr + 1) / nt);
-        var sz = (lit(n) ? 16 : 7) * U; col(n.c, lit(n) ? 255 : 150);
+        var sz = (lit(n) ? 8 + 10 * n.v : 7) * U; col(n.c, lit(n) ? 255 : 150);
         ellipse(cx + cos(ang) * r, cy + sin(ang) * r, sz, sz);
     }
     var hand = (pos - st) / bar * TWO_PI - PI / 2; stroke(252, 214, 105); strokeWeight(2);
@@ -627,21 +652,22 @@ var drOrbit = function () {
 var drStars = function () {
     var cx = width / 2, cy = height / 2 - 34 * U;
     while (state === "play" && vi < notes.length && notes[vi].s <= pos) {
-        var n = notes[vi];
-        var ang = n.kit ? random(0, TWO_PI) : (n.p - lo) / (hi - lo + 1) * TWO_PI;
-        if (n.kit) { kick = 1; }
-        for (var j = 0; j < (n.kit ? 3 : 6) && parts.length < 500; j++) {
-            var sp = random(1.5, 3.5) * U; var a2 = ang + random(-0.25, 0.25);
-            parts.push({ x: cx, y: cy, vx: cos(a2) * sp, vy: sin(a2) * sp, c: n.c, life: 1 });
+        var n = notes[vi]; var hiP = (n.p - lo) / (hi - lo + 1), boom = n.kit && n.p < 37;
+        var ang = n.kit ? random(0, TWO_PI) : hiP * TWO_PI;
+        if (boom) { kick = max(kick, n.v); }
+        for (var j = 0; j < (boom ? 0 : n.kit ? 2 : 2 + round(n.v * 5)) && parts.length < 500; j++) {
+            var sp = (n.kit ? random(3, 5) : random(0.8, 1.6) + hiP * 2.6) * U;
+            var a2 = ang + random(-0.25, 0.25);
+            parts.push({ x: cx, y: cy, vx: cos(a2) * sp + n.pan * U, vy: sin(a2) * sp, c: n.c, life: 1, z: n.kit ? 3 : 4 + (1 - hiP) * 8 });
         }
         vi++;
     }
-    col([96, 183, 247], 40 + kick * 60);
-    ellipse(cx, cy, (40 + kick * 30) * U, (40 + kick * 30) * U); kick *= 0.9;
+    col([96, 183, 247], 40 + kick * 90);
+    ellipse(cx, cy, (40 + kick * 45) * U, (40 + kick * 45) * U); kick *= 0.88;
     for (var i = parts.length - 1; i >= 0; i--) {
         var q = parts[i]; q.x += q.vx; q.y += q.vy; q.life -= 0.012;
         if (q.life <= 0) { parts.splice(i, 1); continue; }
-        col(q.c, q.life * 255); ellipse(q.x, q.y, 6 * U * q.life + 2, 6 * U * q.life + 2);
+        col(q.c, q.life * 255); ellipse(q.x, q.y, q.z * U * q.life + 2, q.z * U * q.life + 2);
     }
 };
 var drLyrics = function () {
@@ -686,12 +712,20 @@ var drUi = function () {
 var looks = [drRoll, drRoll, drBars, drOrbit, drStars];
 draw = function () {
     background(21, 23, 29); noStroke();
+    if (named < list.length) { names[named] = core.decode(list[named]).title || names[named]; named++; }
     if (state === "load") {
         var t0 = millis();
         while (done < jobs.length && millis() - t0 < 12) {
             var j = jobs[done], ji = j.ins;
-            bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt, j.gl) : { buf: core.render(sfx.context, ji, j.p, j.d, j.gl), pre: 0 };
-            done++;
+            if (ji.k === "vox") {
+                bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt, j.gl);
+                done++; continue;
+            }
+            j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl);
+            if (j.r.step(3000)) {
+                bufs[j.k] = { buf: j.r.buf, pre: 0 };
+                done++;
+            }
         }
         state = done >= jobs.length ? "stop" : state; fill(226, 228, 235); textSize(15 * U);
         textAlign(CENTER, CENTER); text("Building sounds...", width / 2, height / 2 - 20 * U);
