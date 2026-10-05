@@ -200,7 +200,7 @@ voice.hd = {
             var semi = -0.25 * Math.exp(-Math.max(0, rt) / 0.05) + jit * 0.08;
             semi += Math.min(1, Math.max(0, rt - 0.35) / 0.35) * (o.vd || 0.3) * 0.7 * Math.sin(6.2832 * (o.vr || 5.5) * t);
             if (this.speak) { semi = 3 - 6 * t / total; }
-            if (o.gl) { semi += o.gl.s * core.slide(o.gl, Math.max(0, rt)); }
+            if (o.gl) { semi += core.bend(o.gl, Math.max(0, rt)); }
             var dp = f0 * Math.pow(2, semi / 12) / sr;
             ph += dp;
             if (ph >= 1) { ph -= 1; }

@@ -116,6 +116,41 @@
             #more {
                 display: contents;
             }
+            .grp2 {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                padding-left: 9px;
+                border-left: 1px solid rgb(55, 61, 73);
+            }
+            .cap {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: rgb(121, 128, 143);
+            }
+            #helpBtn {
+                width: 30px;
+                border-radius: 50%;
+                padding: 4px 0;
+            }
+            body.single .grp2 {
+                border-left: none;
+                padding-left: 0;
+                flex-wrap: wrap;
+            }
+            .help h3 {
+                font-size: 13px;
+                margin: 12px 0 4px;
+                color: rgb(221, 224, 231);
+            }
+            .help ul {
+                margin: 0;
+                padding-left: 18px;
+            }
+            .help li {
+                margin: 3px 0;
+            }
             .small {
                 display: none;
             }
@@ -177,7 +212,7 @@
             body.single #side,
             body.single .corner,
             body.single #heads {
-                width: 150px;
+                width: 196px;
             }
             body.single #split {
                 display: none;
@@ -226,7 +261,7 @@
                 min-height: 0;
             }
             #side {
-                width: 172px;
+                width: 184px;
                 background: rgb(27, 30, 37);
                 border-right: 1px solid rgb(48, 53, 64);
                 overflow-y: auto;
@@ -287,7 +322,7 @@
                 flex: none;
             }
             .corner {
-                width: 200px;
+                width: 250px;
                 flex: none;
                 background: rgb(31, 34, 41);
                 border-right: 1px solid rgb(48, 53, 64);
@@ -314,7 +349,7 @@
                 align-items: flex-start;
             }
             #heads {
-                width: 200px;
+                width: 250px;
                 flex: none;
                 background: rgb(29, 32, 39);
                 border-right: 1px solid rgb(48, 53, 64);
@@ -375,7 +410,7 @@
                 border-color: rgb(244, 203, 87);
             }
             .is {
-                width: 86px;
+                width: 118px;
                 padding: 1px 3px !important;
                 font-size: 12px;
             }
@@ -734,13 +769,16 @@
             <button id="menuBtn" class="small" title="Song menu">☰</button>
             <button id="fullBtn" title="Open in a full window">⛶</button>
             <div id="more">
-                <button id="homeBtn" title="Back to start (Home)">⏮</button>
-                <button id="loopBtn" title="Loop (L). Drag on the ruler to pick a section, otherwise the whole song loops.">Loop</button>
-                <button id="followBtn" class="on" title="Scroll with the playhead">Follow</button>
-                <span id="voiceTag" class="tag">Voice...</span>
-                <div id="clock">1.1.1 · 0:00.0</div>
-                <label>BPM <input id="bpm" type="number" min="20" max="400" value="120"></label>
-                <label>Snap
+                <div class="grp2">
+                    <button id="homeBtn" title="Back to the start (Home)">⏮</button>
+                    <button id="loopBtn" title="Loop (L). Drag on the ruler to pick a section, otherwise the whole song loops.">Loop</button>
+                    <button id="followBtn" class="on" title="Scroll along with the playhead">Follow</button>
+                    <div id="clock" title="Bar.beat.step and time">1.1.1 · 0:00.0</div>
+                    <span id="voiceTag" class="tag">Voice...</span>
+                </div>
+                <div class="grp2">
+                    <label title="Speed in beats per minute">BPM <input id="bpm" type="number" min="20" max="400" value="120"></label>
+                    <label title="What notes and the ruler snap to">Snap
                     <select id="snap">
                         <option value="48">Bar</option>
                         <option value="12">1/4</option>
@@ -750,19 +788,31 @@
                         <option value="2">1/16 T</option>
                         <option value="1">Off</option>
                     </select>
-                </label>
-                <select id="songSel" title="Songs in this page"></select>
-                <button id="songDel" title="Remove this song from the list">✕</button>
-                <input id="title" type="text" placeholder="Song title" maxlength="60">
+                    </label>
+                </div>
+                <div class="grp2" title="The song you are editing">
+                    <span class="cap">Song</span>
+                    <select id="songSel" title="Songs in this page"></select>
+                    <input id="title" type="text" placeholder="Song title" maxlength="60">
+                    <button id="songDel" title="Remove this song from the list">✕</button>
+                </div>
                 <div class="grow"></div>
-                <button id="undoBtn" title="Ctrl+Z">Undo</button>
-                <button id="redoBtn" title="Ctrl+Y">Redo</button>
-                <button id="newBtn">New</button>
-                <button id="saveBtn" title="Save or load one song in this browser">Save</button>
-                <button id="impBtn">Import</button>
-                <button id="expBtn">Export Text</button>
-                <button id="pageBtn" title="A page that only plays your songs with their visuals">Export Player</button>
-                <button id="pjsBtn" class="hi">Export PJS</button>
+                <div class="grp2">
+                    <button id="undoBtn" title="Undo (Ctrl+Z)">↶</button>
+                    <button id="redoBtn" title="Redo (Ctrl+Y)">↷</button>
+                </div>
+                <div class="grp2">
+                    <button id="newBtn" title="Start a new song in the list">New</button>
+                    <button id="saveBtn" title="Save songs in this browser">Save</button>
+                    <button id="impBtn" title="Bring in song text">Import</button>
+                </div>
+                <div class="grp2">
+                    <span class="cap">Export</span>
+                    <button id="expBtn" title="Song text to keep or share">Text</button>
+                    <button id="pageBtn" title="A page that only plays your songs with their visuals">Player</button>
+                    <button id="pjsBtn" class="hi" title="A Processing.js program for Khan Academy">PJS</button>
+                </div>
+                <button id="helpBtn" title="How everything works">?</button>
             </div>
         </div>
 
@@ -849,7 +899,8 @@
             // The songs this page plays.
             // Add lines from Export Text, or swap in a whole list from Export Text > The whole song list.
             var songs = [
-                "CkDMBBHcAyCAA8IACnC0CGCB8BGCB~K3BPmCACR~PAP6~KA~UAXkDACZ6CGCBg~ZA~PAR~PF~eGXuCACZ~jBZ~hClNVgDACF~oBIACNgDGCLg~/CBDGCvB~zBDACd8C~aBGCf~2CFR~PAn~kBE~3CDp~sDB~lBGLwCACd~qBL~6BB~pCxO~2SBV~pBI~2SDX~yCDACJ~7SQb~zZ7D~nE/B0BIAkCAA1DAtBvBgDwBtBSwBJVoDMEAGEAGJA~JES~SNI~SNO~SNc~oCfG~6CfU~SNK~+Df~oCoD~JOa~SMvBdgDAA8BTA7CAtBBy~GAQAtBMwBtBe~JAAtBU~NAa~aVmB~ODQ~oBE~bFS~1Be~OBW~NGVb4CAVQAVMYVbs~LFnB~XAMAVQ~XD~LD~WDUYVf~WDUYVX~WR~5C0CtBb~4JK~rJJ~pHIvBT6CAvBQAvBMAvBUEAyBkBAZAFxB8CGFRoCGFN~KAL~KAP~UPT~KAN~KAV~KAT~KAL~UNmb~pBjBGvBxB6CVAmBAAegP~jFEUAvBQwBvBuB~OIy~OJa~NIO~2BuBEvBq~bJG~NEgBA0CAE8BgDEQCGEADGKMEMEAFGEIGGKGHMuBKIwBEGJGEAKGKILMEEMGECNGKGOMuBGPwBEQQGEARGKMSMEATGEIUGKAV~eAWwBEGXGEAYGKCZMEGaGEIbGKGcMuBAdwBKceMKGeMEGfGEIYG6BAgB8BEK~zCCEMhBGEAiBGKUjBMKCkBMuBGlBwBKA~6BEmBGEIFG6BQnB8BEOaGEAoBGKIpBMEGqBGEKrBGKGMMuBGsBwBEc~jBbgDdB6CehBtB0BYEgBgPKwBeMKC~qFOO~qFDQ~qFKG~qFL~6BB~qFFM~qFBK~nEEEpBMECqBGEO~nEFC~qFK~jBT~qFD|Silver Boats|sil-|ver|b~PBon|mor-|ning|rain|sail-|~PAdown|the|win-~OA|pane|ev-|ry|drop|be-|comes|a|song|hum|it|as|we|float|a-|l~bAoh|let|shine|lit-|tle|star|is|m~WAhold|tight|will|sing|in-|to|n~XBHarmony"
+                "CkDMBBHcAyCAA8IACnC0CGCB8BGCB~K3BPmCACR~PAP6~KA~UAXkDACZ6CGCBg~ZA~PAR~PF~eGXuCACZ~jBZ~hClNVgDACF~oBIACNgDGCLg~/CBDGCvB~zBDACd8C~aBGCf~2CFR~PAn~kBE~3CDp~sDB~lBGLwCACd~qBL~6BB~pCxO~2SBV~pBI~2SDX~yCDACJ~7SQb~zZ7D~nE/B0BIAkCAA1DAtBvBgDwBtBSwBJVoDMEAGEAGJA~JES~SNI~SNO~SNc~oCfG~6CfU~SNK~+Df~oCoD~JOa~SMvBdgDAA8BTA7CAtBBy~GAQAtBMwBtBe~JAAtBU~NAa~aVmB~ODQ~oBE~bFS~1Be~OBW~NGVb4CAVQAVMYVbs~LFnB~XAMAVQ~XD~LD~WDUYVf~WDUYVX~WR~5C0CtBb~4JK~rJJ~pHIvBT6CAvBQAvBMAvBUEAyBkBAZAFxB8CGFRoCGFN~KAL~KAP~UPT~KAN~KAV~KAT~KAL~UNmb~pBjBGvBxB6CVAmBAAegP~jFEUAvBQwBvBuB~OIy~OJa~NIO~2BuBEvBq~bJG~NEgBA0CAE8BgDEQCGEADGKMEMEAFGEIGGKGHMuBKIwBEGJGEAKGKILMEEMGECNGKGOMuBGPwBEQQGEARGKMSMEATGEIUGKAV~eAWwBEGXGEAYGKCZMEGaGEIbGKGcMuBAdwBKceMKGeMEGfGEIYG6BAgB8BEK~zCCEMhBGEAiBGKUjBMKCkBMuBGlBwBKA~6BEmBGEIFG6BQnB8BEOaGEAoBGKIpBMEGqBGEKrBGKGMMuBGsBwBEc~jBbgDdB6CehBtB0BYEgBgPKwBeMKC~qFOO~qFDQ~qFKG~qFL~6BB~qFFM~qFBK~nEEEpBMECqBGEO~nEFC~qFK~jBT~qFD|Silver Boats|sil-|ver|b~PBon|mor-|ning|rain|sail-|~PAdown|the|win-~OA|pane|ev-|ry|drop|be-|comes|a|song|hum|it|as|we|float|a-|l~bAoh|let|shine|lit-|tle|star|is|m~WAhold|tight|will|sing|in-|to|n~XBHarmony",
+                "EuDMEBJJCwCAA5JACkDGCQGCI~GBQGCcGGgBMCE~KPkB~rBMCgBGCoBGCMGCU~REMYYCsC~2CvCBsCEBQEBI~GBQEBcEDgBIBE~KPkB~rBMBgBEBoBEBMEBU~REIYQ~NA~1CuCkEDBQDBI~GBQDBcDCgBGBE~KPkB~rBMBgBDBoBDBMDBU~REGYM~NA~1CtCAkECAQCAI~GBQCAcCBgBEAE~KPkB~rBMAgBCAoBCAMCAU~REDYI~NA~1CuCkEBAQBAI~GBQBAcB~rBBE~KPkB~rBPBAoBBAMBAU~REBYE~NA~1CuC~rFmFjBlHuDXD+BdAkIgMBF6~obwaMEyBeAwGgUB5C1C~3VkVRAqBAAgFgaB5CwCCBQCBI~GBQCBcCDgBEBE~KPkB~rBMBgBCBoBCBMCBU~REHYI~NA~1CtC~hLP~aA~iIC~KL~sIjBD~hLQ~1CgC~rFmFdlH6CAdYAdgBAdoBVAtBAAcgU/ClDwCA/CYA/CgBgD/CA~OIBsDA/BYA/BgBgC/BA~OHfsDAfYAfgBgBfA~LG~XSvBtDkDAvBYAvBgBAvBoBcFyCAAiQAB9FwCM~3FB~D1CBkDIBAABR/CIBN~NhGDAxBmCDBtBkD~WBDAh~RF~dvNC~dBAAhB8BCBtC~jBDC~jBB~XI~pBjTABpD6CBA1~YFB~vBGB~vBH~XCB~4CH~pBZ~4C/oBDtCuDADoDiBG1CAEaAFEHGFQIGFIJGFQKGFQLGFcMGLgBNMFEOGFcP~NAQMFERGFcS~NATMFkBUGFQVGFI~IDQWGFcXGFgBYGFoBZGFMaGFUbGFcc~WAbGXYcjBdwCAEEoLL5C6CeMLAb4WLlBkDbMdccfA8BAAGweDhGwCgBD4BgBD0~FA4BQFrBkDSvB6CBSX8F|Mountain King Speedrun|Bassoon|Pizzicato|Chip Lead|Drums|Singer|I|am|try-|ing|to|be|calm|but|the|song|keeps|get-|ting|fast-|er|ev-|ry|sin-|gle|bar|oh|no|Panic|uh"
             ];
         </script>
         <script>
@@ -1198,21 +1249,17 @@ var coreSrc = function () {
         { n: "Brass", g: "Wind", c: [233, 167, 66], l: [{ w: "saw", g: 0.24, a: 0.035, d: 0.3, s: 0.85, r: 0.12, ft: "lp", fc: 1.2, fe: 7, fk: 1, fd: 0.07, vb: [5.2, 10, 0.35] }, { w: "saw", dt: 6, g: 0.12, a: 0.04, d: 0.3, s: 0.85, r: 0.12, ft: "lp", fc: 1.2, fe: 7, fk: 1, fd: 0.07, vb: [5.2, 10, 0.35] }] },
         { n: "Flute", g: "Wind", c: [242, 211, 106], l: [{ w: "sin", g: 0.38, a: 0.07, d: 0.3, s: 0.9, r: 0.12, vb: [5, 16, 0.3] }, { w: "tri", m: 2, g: 0.05, a: 0.07, d: 0.3, s: 0.8, r: 0.12 }, { w: "noi", g: 0.06, a: 0.03, d: 0.15, s: 0.5, r: 0.1, ft: "bp", fc: 1, fk: 1, fq: 0.75 }] },
         { n: "Drum Kit", g: "Drums", c: [228, 93, 82], k: "kit", kit: {
-            35: { n: "Deep Kick", len: 0.6, l: [{ w: "sin", f: 45, g: 0.9, a: 0.001, d: 0.3, s: 0, r: 0.05, pe: [24, 0.05] }] }, 36: { n: "Kick", len: 0.45, l: [{ w: "sin", f: 50, g: 0.95, a: 0.001, d: 0.16, s: 0, r: 0.04, pe: [30, 0.03] }, { w: "noi", g: 0.2, a: 0.001, d: 0.008, s: 0, r: 0.01, ft: "lp", fc: 4000 }] }, 37: { n: "Rim", len: 0.08, l: [{ w: "tri", f: 820, g: 0.5, a: 0.001, d: 0.012, s: 0, r: 0.02 }, { w: "noi", g: 0.2, a: 0.001, d: 0.006, s: 0, r: 0.01, ft: "hp", fc: 3000 }] },
-            38: { n: "Snare", len: 0.3, l: [{ w: "tri", f: 185, g: 0.5, a: 0.001, d: 0.05, s: 0, r: 0.04, pe: [8, 0.015] }, { w: "noi", g: 0.55, a: 0.001, d: 0.085, s: 0, r: 0.05, ft: "hp", fc: 1400 }] }, 39: { n: "Clap", len: 0.35, l: [{ w: "noi", g: 0.6, a: 0.001, d: 0.11, s: 0, r: 0.05, ft: "bp", fc: 1250, fq: 0.4, bu: 3 }] }, 41: { n: "Low Tom", len: 0.5, l: [{ w: "sin", f: 92, g: 0.75, a: 0.001, d: 0.22, s: 0, r: 0.05, pe: [7, 0.04] }] },
-            42: { n: "Closed Hat", len: 0.1, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.022, s: 0, r: 0.02, ft: "hp", fc: 7500 }] }, 44: { n: "Pedal Hat", len: 0.1, l: [{ w: "noi", g: 0.25, a: 0.004, d: 0.015, s: 0, r: 0.02, ft: "hp", fc: 6000 }] }, 45: { n: "Mid Tom", len: 0.45, l: [{ w: "sin", f: 128, g: 0.7, a: 0.001, d: 0.2, s: 0, r: 0.05, pe: [7, 0.04] }] },
-            46: { n: "Open Hat", len: 0.45, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.16, s: 0, r: 0.06, ft: "hp", fc: 7000 }] }, 48: { n: "High Tom", len: 0.4, l: [{ w: "sin", f: 170, g: 0.65, a: 0.001, d: 0.18, s: 0, r: 0.05, pe: [7, 0.04] }] }, 49: { n: "Crash", len: 1.8, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.6, s: 0, r: 0.2, ft: "hp", fc: 4500 }, { w: "sqr", f: 410, g: 0.04, a: 0.001, d: 0.3, s: 0, r: 0.1, ft: "hp", fc: 3000 }] },
-            51: { n: "Ride", len: 1.2, l: [{ w: "noi", g: 0.15, a: 0.001, d: 0.35, s: 0, r: 0.1, ft: "hp", fc: 8500 }, { w: "sin", f: 3150, g: 0.07, a: 0.001, d: 0.45, s: 0, r: 0.1 }] }
+            35: { n: "Deep Kick", len: 0.6, l: [{ w: "sin", f: 45, g: 0.9, a: 0.001, d: 0.3, s: 0, r: 0.05, pe: [24, 0.05] }] }, 36: { n: "Kick", len: 0.45, l: [{ w: "sin", f: 50, g: 0.95, a: 0.001, d: 0.16, s: 0, r: 0.04, pe: [30, 0.03] }, { w: "noi", g: 0.2, a: 0.001, d: 0.008, s: 0, r: 0.01, ft: "lp", fc: 4000 }] }, 37: { n: "Rim", len: 0.08, l: [{ w: "tri", f: 820, g: 0.5, a: 0.001, d: 0.012, s: 0, r: 0.02 }, { w: "noi", g: 0.2, a: 0.001, d: 0.006, s: 0, r: 0.01, ft: "hp", fc: 3000 }] }, 38: { n: "Snare", len: 0.3, l: [{ w: "tri", f: 185, g: 0.5, a: 0.001, d: 0.05, s: 0, r: 0.04, pe: [8, 0.015] }, { w: "noi", g: 0.55, a: 0.001, d: 0.085, s: 0, r: 0.05, ft: "hp", fc: 1400 }] }, 39: { n: "Clap", len: 0.35, l: [{ w: "noi", g: 0.6, a: 0.001, d: 0.11, s: 0, r: 0.05, ft: "bp", fc: 1250, fq: 0.4, bu: 3 }] },
+            41: { n: "Low Tom", len: 0.5, l: [{ w: "sin", f: 92, g: 0.75, a: 0.001, d: 0.22, s: 0, r: 0.05, pe: [7, 0.04] }] }, 42: { n: "Closed Hat", len: 0.1, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.022, s: 0, r: 0.02, ft: "hp", fc: 7500 }] }, 44: { n: "Pedal Hat", len: 0.1, l: [{ w: "noi", g: 0.25, a: 0.004, d: 0.015, s: 0, r: 0.02, ft: "hp", fc: 6000 }] }, 45: { n: "Mid Tom", len: 0.45, l: [{ w: "sin", f: 128, g: 0.7, a: 0.001, d: 0.2, s: 0, r: 0.05, pe: [7, 0.04] }] }, 46: { n: "Open Hat", len: 0.45, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.16, s: 0, r: 0.06, ft: "hp", fc: 7000 }] },
+            48: { n: "High Tom", len: 0.4, l: [{ w: "sin", f: 170, g: 0.65, a: 0.001, d: 0.18, s: 0, r: 0.05, pe: [7, 0.04] }] }, 49: { n: "Crash", len: 1.8, l: [{ w: "noi", g: 0.35, a: 0.001, d: 0.6, s: 0, r: 0.2, ft: "hp", fc: 4500 }, { w: "sqr", f: 410, g: 0.04, a: 0.001, d: 0.3, s: 0, r: 0.1, ft: "hp", fc: 3000 }] }, 51: { n: "Ride", len: 1.2, l: [{ w: "noi", g: 0.15, a: 0.001, d: 0.35, s: 0, r: 0.1, ft: "hp", fc: 8500 }, { w: "sin", f: 3150, g: 0.07, a: 0.001, d: 0.45, s: 0, r: 0.1 }] }
         } },
         { n: "8-Bit Kit", g: "Drums", c: [241, 118, 73], k: "kit", kit: {
-            36: { n: "Kick", len: 0.3, l: [{ w: "tri", f: 60, g: 0.8, a: 0.001, d: 0.14, s: 0, r: 0.03, pe: [30, 0.03], qz: 8 }] }, 38: { n: "Snare", len: 0.25, l: [{ w: "noi", nr: 9000, g: 0.45, a: 0.001, d: 0.08, s: 0, r: 0.04 }, { w: "tri", f: 220, g: 0.3, a: 0.001, d: 0.04, s: 0, r: 0.03, pe: [12, 0.02], qz: 8 }] }, 39: { n: "Clap", len: 0.25, l: [{ w: "noi", nr: 7000, g: 0.5, a: 0.001, d: 0.08, s: 0, r: 0.04, bu: 3 }] },
-            42: { n: "Hat", len: 0.08, l: [{ w: "noi", nr: 22000, g: 0.25, a: 0.001, d: 0.02, s: 0, r: 0.02, ft: "hp", fc: 5000 }] }, 45: { n: "Tom", len: 0.35, l: [{ w: "tri", f: 140, g: 0.6, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [12, 0.05], qz: 8 }] }, 46: { n: "Open Hat", len: 0.3, l: [{ w: "noi", nr: 22000, g: 0.22, a: 0.001, d: 0.12, s: 0, r: 0.04, ft: "hp", fc: 5000 }] },
-            49: { n: "Crash", len: 1, l: [{ w: "noi", nr: 14000, g: 0.25, a: 0.001, d: 0.5, s: 0, r: 0.1 }] }, 50: { n: "Blip", len: 0.12, l: [{ w: "sqr", f: 880, g: 0.15, a: 0.001, d: 0.05, s: 0, r: 0.02, pe: [12, 0.01] }] }
+            36: { n: "Kick", len: 0.3, l: [{ w: "tri", f: 60, g: 0.8, a: 0.001, d: 0.14, s: 0, r: 0.03, pe: [30, 0.03], qz: 8 }] }, 38: { n: "Snare", len: 0.25, l: [{ w: "noi", nr: 9000, g: 0.45, a: 0.001, d: 0.08, s: 0, r: 0.04 }, { w: "tri", f: 220, g: 0.3, a: 0.001, d: 0.04, s: 0, r: 0.03, pe: [12, 0.02], qz: 8 }] }, 39: { n: "Clap", len: 0.25, l: [{ w: "noi", nr: 7000, g: 0.5, a: 0.001, d: 0.08, s: 0, r: 0.04, bu: 3 }] }, 42: { n: "Hat", len: 0.08, l: [{ w: "noi", nr: 22000, g: 0.25, a: 0.001, d: 0.02, s: 0, r: 0.02, ft: "hp", fc: 5000 }] }, 45: { n: "Tom", len: 0.35, l: [{ w: "tri", f: 140, g: 0.6, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [12, 0.05], qz: 8 }] },
+            46: { n: "Open Hat", len: 0.3, l: [{ w: "noi", nr: 22000, g: 0.22, a: 0.001, d: 0.12, s: 0, r: 0.04, ft: "hp", fc: 5000 }] }, 49: { n: "Crash", len: 1, l: [{ w: "noi", nr: 14000, g: 0.25, a: 0.001, d: 0.5, s: 0, r: 0.1 }] }, 50: { n: "Blip", len: 0.12, l: [{ w: "sqr", f: 880, g: 0.15, a: 0.001, d: 0.05, s: 0, r: 0.02, pe: [12, 0.01] }] }
         } },
         { n: "Percussion", g: "Drums", c: [212, 121, 94], k: "kit", kit: {
-            54: { n: "Tambourine", len: 0.3, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "hp", fc: 6500, bu: 2 }, { w: "sin", f: 5200, g: 0.05, a: 0.001, d: 0.1, s: 0, r: 0.05 }] }, 56: { n: "Cowbell", len: 0.4, l: [{ w: "sqr", f: 562, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }, { w: "sqr", f: 845, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }] }, 60: { n: "Hi Bongo", len: 0.25, l: [{ w: "sin", f: 420, g: 0.6, a: 0.001, d: 0.08, s: 0, r: 0.03, pe: [4, 0.01] }] },
-            61: { n: "Lo Bongo", len: 0.3, l: [{ w: "sin", f: 300, g: 0.6, a: 0.001, d: 0.1, s: 0, r: 0.03, pe: [4, 0.01] }] }, 63: { n: "Conga", len: 0.4, l: [{ w: "sin", f: 220, g: 0.65, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [5, 0.02] }] }, 70: { n: "Shaker", len: 0.12, l: [{ w: "noi", g: 0.3, a: 0.015, d: 0.04, s: 0, r: 0.03, ft: "hp", fc: 6000 }] },
-            75: { n: "Claves", len: 0.12, l: [{ w: "sin", f: 2500, g: 0.5, a: 0.001, d: 0.03, s: 0, r: 0.02 }] }, 76: { n: "Woodblock", len: 0.12, l: [{ w: "sin", f: 1050, g: 0.5, a: 0.001, d: 0.035, s: 0, r: 0.02 }, { w: "tri", f: 2600, g: 0.1, a: 0.001, d: 0.01, s: 0, r: 0.01 }] }, 81: { n: "Triangle", len: 1.4, l: [{ w: "sin", f: 4200, g: 0.12, a: 0.001, d: 0.8, s: 0, r: 0.2 }, { w: "sin", f: 6300, g: 0.04, a: 0.001, d: 0.5, s: 0, r: 0.2 }] }
+            54: { n: "Tambourine", len: 0.3, l: [{ w: "noi", g: 0.3, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "hp", fc: 6500, bu: 2 }, { w: "sin", f: 5200, g: 0.05, a: 0.001, d: 0.1, s: 0, r: 0.05 }] }, 56: { n: "Cowbell", len: 0.4, l: [{ w: "sqr", f: 562, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }, { w: "sqr", f: 845, g: 0.15, a: 0.001, d: 0.12, s: 0, r: 0.05, ft: "bp", fc: 1200, fq: 0.3 }] }, 60: { n: "Hi Bongo", len: 0.25, l: [{ w: "sin", f: 420, g: 0.6, a: 0.001, d: 0.08, s: 0, r: 0.03, pe: [4, 0.01] }] }, 61: { n: "Lo Bongo", len: 0.3, l: [{ w: "sin", f: 300, g: 0.6, a: 0.001, d: 0.1, s: 0, r: 0.03, pe: [4, 0.01] }] }, 63: { n: "Conga", len: 0.4, l: [{ w: "sin", f: 220, g: 0.65, a: 0.001, d: 0.15, s: 0, r: 0.04, pe: [5, 0.02] }] },
+            70: { n: "Shaker", len: 0.12, l: [{ w: "noi", g: 0.3, a: 0.015, d: 0.04, s: 0, r: 0.03, ft: "hp", fc: 6000 }] }, 75: { n: "Claves", len: 0.12, l: [{ w: "sin", f: 2500, g: 0.5, a: 0.001, d: 0.03, s: 0, r: 0.02 }] }, 76: { n: "Woodblock", len: 0.12, l: [{ w: "sin", f: 1050, g: 0.5, a: 0.001, d: 0.035, s: 0, r: 0.02 }, { w: "tri", f: 2600, g: 0.1, a: 0.001, d: 0.01, s: 0, r: 0.01 }] }, 81: { n: "Triangle", len: 1.4, l: [{ w: "sin", f: 4200, g: 0.12, a: 0.001, d: 0.8, s: 0, r: 0.2 }, { w: "sin", f: 6300, g: 0.04, a: 0.001, d: 0.5, s: 0, r: 0.2 }] }
         } },
         { n: "Laser", g: "FX", c: [143, 233, 64], l: [{ w: "sqr", g: 0.17, a: 0.001, d: 0.25, s: 0, r: 0.05, pe: [24, 0.06] }, { w: "saw", dt: 12, g: 0.08, a: 0.001, d: 0.2, s: 0, r: 0.05, pe: [30, 0.05] }] },
         { n: "Vox", g: "Voice", c: [252, 141, 211], k: "vox", vx: { fs: 1, op: 0.4, cl: 0.16, br: 0.04, tl: 0.62, vr: 5.5, vd: 0.3 } },
@@ -1236,8 +1283,49 @@ var coreSrc = function () {
     };
 
     // How far along a slide is: 1 at the start down to 0, straight or eased (cubic).
-    core.slide = function (gl, t, u) {
-        return gl.c ? 1 - (u = Math.min(1, t / gl.t)) * u * (3 - 2 * u) : 1 - Math.min(1, t / gl.t);
+    // Pitch offset in semitones at time t: start at s0, then each step glides to its offset (straight or smooth).
+    core.bend = function (gl, t) {
+        var off = gl.s0;
+        for (var i = 0; i < gl.p.length && t >= gl.p[i].at; i++) {
+            var u = Math.min(1, (t - gl.p[i].at) / gl.p[i].t);
+            off += (gl.p[i].s - off) * (gl.p[i].c ? u * u * (3 - 2 * u) : u);
+        }
+        return off;
+    };
+
+    // Bend step times are kept in ticks on the notes, this turns them into seconds.
+    core.secs = function (gl, sp) {
+        var p = [];
+        for (var i = 0; i < gl.p.length; i++) { p.push({ at: gl.p[i].at * sp, s: gl.p[i].s, t: gl.p[i].t, c: gl.p[i].c }); }
+        return { s0: gl.s0, p: p };
+    };
+
+    // Joined notes (sorted by time). An instrument keeps the chain's first note sounding and bends it into each
+    // joined note, which stays quiet. A voice sings every joined note, sliding in from the one before, and the
+    // earlier note holds until the next one starts so there is no gap.
+    core.chain = function (notes, vox) {
+        var spot = {}, i, n, to, h;
+        for (i = 0; i < notes.length; i++) {
+            n = notes[i];
+            n._bend = n._skip = n._in = n._head = null;
+            spot[n.t + ":" + n.p] = n;
+        }
+        for (i = 0; i < notes.length; i++) {
+            n = notes[i];
+            to = n.g && spot[(n.t + n.g.dt) + ":" + (n.p + n.g.dp)];
+            if (!to || to.t <= n.t || to._in) { continue; }
+            to._in = n;
+            h = vox ? n : n._head || n;
+            h._bend = h._bend || { len: h.l, gl: vox ? null : { s0: 0, p: [] } };
+            if (vox) {
+                h._bend.len = Math.max(h._bend.len, to.t - n.t);
+                to._bend = { len: to.l, gl: { s0: n.p - to.p, p: [{ at: 0, s: 0, t: n.g.ms / 1000, c: n.g.c }] } };
+            } else {
+                h._bend.gl.p.push({ at: to.t - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c });
+                h._bend.len = to.t + to.l - h.t;
+                to._skip = to._head = h;
+            }
+        }
     };
 
     core.layer = function (ctx, out, L, base, hold, gl) {
@@ -1261,7 +1349,7 @@ var coreSrc = function () {
             if (t > hold) { e = e * (1 - (t - hold) / r); }
             if (L.bu && t < L.bu * 0.011) { e = e * (1 - (t / 0.011) % 1); }
 
-            var f = gl ? f0 * Math.pow(2, gl.s * core.slide(gl, t) / 12) : f0;
+            var f = gl ? f0 * Math.pow(2, core.bend(gl, t) / 12) : f0;
             if (L.pe) { f = f * Math.pow(2, L.pe[0] * Math.exp(-t / L.pe[1]) / 12); }
             if (L.vb && t > L.vb[2]) {
                 var vr = Math.min(1, (t - L.vb[2]) / 0.3);
@@ -1711,24 +1799,23 @@ var playerSrc = function () {
         for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; }
         for (var ti = 0; ti < data.tracks.length; ti++) {
             var tr = data.tracks[ti], ins = core.insOf(tr), prev = "", ly = [], own = tr.x && tr.x.ins ? "c" + ti : "";
-            var on = !tr.mute && (!solo || tr.solo), dest = tr.x && tr.x.fx && core.fx ? core.fx(sfx, tr.x.fx, tr.pan / 50) : null, spot = {};
-            for (var a2 = 0; a2 < tr.notes.length; a2++) { spot[tr.notes[a2].t + ":" + tr.notes[a2].p] = tr.notes[a2]; }
+            var on = !tr.mute && (!solo || tr.solo), dest = tr.x && tr.x.fx && core.fx ? core.fx(sfx, tr.x.fx, tr.pan / 50) : null;
+            if (ins && ins.k !== "kit") { core.chain(tr.notes, ins.k === "vox"); }
             for (var ni = 0; ins && ni < tr.notes.length; ni++) {
-                var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox", to = nt.g && spot[(nt.t + nt.g.dt) + ":" + (nt.p + nt.g.dp)];
-                // notes come in time order, so a slide is set on its later note before that note is reached
-                if (to && to.t > nt.t) { to.gl = { s: -nt.g.dp, t: nt.g.ms / 1000, c: nt.g.c }; }
+                var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox", b = nt._bend;
+                var d = b ? b.len * spt : e - s, gl = b && b.gl ? core.secs(b.gl, spt) : null;
                 total = max(total, e);
                 notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti });
                 lo = ins.k === "kit" ? lo : min(lo, nt.p);
                 hi = ins.k === "kit" ? hi : max(hi, nt.p);
                 if (vox && !seen[round(s * 100) + nt.w]) { ly.push({ s: s, e: e, w: nt.w }); }
-                var k = (vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round((e - s) * 1000) : own + core.key(tr.inst, nt.p, e - s, ins)) + (nt.gl ? "g" + nt.gl.s + ":" + nt.gl.t + ":" + nt.gl.c : "");
+                var k = (vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round(d * 1000) : own + core.key(tr.inst, nt.p, d, ins)) + (gl ? JSON.stringify(gl) : "");
                 var pw = prev;
                 if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
-                if (!on || (vox && !core.vox)) { continue; }
+                if (!on || nt._skip || (vox && !core.vox)) { continue; }
                 if (bufs[k] === undefined) {
                     bufs[k] = null;
-                    jobs.push({ k: k, ins: ins, p: nt.p, d: e - s, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: nt.gl });
+                    jobs.push({ k: k, ins: ins, p: nt.p, d: d, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: gl });
                 }
                 evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50, to: dest });
             }
@@ -1933,7 +2020,7 @@ var playerSrc = function () {
             var t0 = millis();
             while (done < jobs.length && millis() - t0 < 12) {
                 var j = jobs[done], ji = j.ins;
-                bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt) : { buf: core.render(sfx.context, ji, j.p, j.d, j.gl), pre: 0 };
+                bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt, j.gl) : { buf: core.render(sfx.context, ji, j.p, j.d, j.gl), pre: 0 };
                 done++;
             }
             state = done >= jobs.length ? "stop" : state;
@@ -2196,7 +2283,26 @@ var pjs = {
             }
             out.push(l.replace(/^ {4}/, ""));
         });
-        return keep ? out : pjs.fold(out);
+        return keep ? out : pjs.pair(pjs.fold(out));
+    },
+
+    // For the export only: short simple statements in a row share a line, keeping the program under 800 lines.
+    pair: function (ls) {
+        var out = [];
+        var simple = function (l) {
+            var t = l.trim();
+            return /;$/.test(t) && !/[{}]/.test(t) && t.indexOf("//") !== 0 && t.indexOf("/*") < 0;
+        };
+        ls.forEach(function (l) {
+            var last = out[out.length - 1];
+            var pad = l.match(/^ */)[0];
+            if (last !== undefined && simple(l) && simple(last) && last.match(/^ */)[0] === pad && (last + " " + l.trim()).length <= 100) {
+                out[out.length - 1] = last + " " + l.trim();
+            } else {
+                out.push(l);
+            }
+        });
+        return out;
     },
 
     // Folds short blocks onto one line for the export, so a block with one or two simple lines becomes "if (a) { b(); }".
@@ -2211,17 +2317,16 @@ var pjs = {
             var shut = c.trim();
             var simple = /;$/.test(one) && !/[{}]/.test(one) && one.indexOf("//") < 0;
             var ends = c.indexOf(pad + "}") === 0;
-            if (/\{$/.test(a) && simple && ends && /^\}[;,)]*$/.test(shut) && (a + one + shut).length < 118) {
-                out.push(a + " " + one + " " + shut);
-                i += 2;
-                continue;
+            // a block of up to four simple lines folds onto its opening line when it stays short
+            var body = [], j = i + 1;
+            while (/\{$/.test(a) && body.length < 5 && j < ls.length && /;$/.test(ls[j].trim()) && !/[{}]/.test(ls[j]) && ls[j].indexOf("//") < 0) {
+                body.push(ls[j].trim());
+                j++;
             }
-            var d3 = ls[i + 3] || "";
-            var two = c.trim();
-            var simple2 = /;$/.test(two) && !/[{}]/.test(two) && two.indexOf("//") < 0;
-            if (/\{$/.test(a) && simple && simple2 && /^\}[;,)]*$/.test(d3.trim()) && d3.indexOf(pad + "}") === 0 && (a + one + two).length < 112) {
-                out.push(a + " " + one + " " + two + " " + d3.trim());
-                i += 3;
+            var close = (ls[j] || "").trim();
+            if (body.length && body.length <= 4 && (ls[j] || "").indexOf(pad + "}") === 0 && /^\}[;,)]*$/.test(close) && (a + body.join(" ") + close).length < 118) {
+                out.push(a + " " + body.join(" ") + " " + close);
+                i = j;
                 continue;
             }
             if (/\{$/.test(a) && simple && ends && /^\} else/.test(shut) && (a + one).length < 118) {
@@ -2368,7 +2473,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v5/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v6/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -2425,7 +2530,7 @@ var pjs = {
             getVoice(0);
         </script>
         <script>
-var HEAD = 200;
+var HEAD = 250;
 var SMALL_W = 900;
 var SMALL_H = 560;
 var LANE = 56;
@@ -2640,6 +2745,8 @@ var ord = function (tr) {
     list.sorted = true;
     var spot = {};
     list.forEach(function (n) { spot[n.t + ":" + n.p] = n; });
+    var kind = (core.insOf(tr) || {}).k;
+    if (kind !== "kit") { core.chain(list, kind === "vox"); }
     tr._in = new Map();
     list.forEach(function (n) {
         var to = n.g && spot[(n.t + n.g.dt) + ":" + (n.p + n.g.dp)];
@@ -2724,11 +2831,11 @@ var mixAll = function () {
     });
 };
 
-// The slide into a note, if another note's output is joined to it.
-var glideOf = function (tr, n) {
+// How a note bends and how long it sounds once joined notes are taken into account.
+var bendOf = function (tr, n) {
     ord(tr);
-    var gi = tr._in.get(n);
-    return gi ? { s: gi.s, t: gi.t, c: gi.c } : null;
+    var b = n._bend;
+    return b ? { len: b.len, gl: b.gl ? core.secs(b.gl, spt()) : null } : null;
 };
 
 // Every joined pair on a track, as [from, to].
@@ -2790,10 +2897,11 @@ var voxOf = function (tr) {
 };
 
 var getBuf = function (tr, n, sec, peek) {
-    var ins = insOf(tr);
+    var ins = insOf(tr), bent = bendOf(tr, n), gl = bent && bent.gl;
+    if (bent) { sec = bent.len * spt(); }
     if (ins.k === "vox") {
         if (!window.voice) { return null; }
-        var vx = voxOf(tr), list = ord(tr), p = n.p, gl = glideOf(tr, n);
+        var vx = voxOf(tr), list = ord(tr), p = n.p;
         if (gl) { vx.gl = gl; }
         var pw = voice.held(n.w) ? prevWord(tr, n) : "";
         var ch = vx.hd ? voice.chain(list, n) : null;
@@ -2802,9 +2910,8 @@ var getBuf = function (tr, n, sec, peek) {
             return voice.render(ctx, n.w, p, sec, pw, vx, list, n);
         }, peek);
     }
-    var slide = glideOf(tr, n);
-    return keep(insKey(tr) + core.key(tr.inst, n.p, sec, ins) + (slide ? JSON.stringify(slide) : ""), function () {
-        return { buf: core.render(ctx, ins, n.p, sec, slide), pre: 0 };
+    return keep(insKey(tr) + core.key(tr.inst, n.p, sec, ins) + (gl ? JSON.stringify(gl) : ""), function () {
+        return { buf: core.render(ctx, ins, n.p, sec, gl), pre: 0 };
     }, peek);
 };
 
@@ -2871,6 +2978,7 @@ var schedule = function (a, b, sg) {
         var list = ord(tr);
         for (var i = seek(list, a); i < list.length && list[i].t < b; i++) {
             var n = list[i];
+            if (n._skip) { continue; }
             var r = getBuf(tr, n, n.l * sp, performance.now() - t0 > 120);
             if (r && r.buf) { core.fire(sfx, r.buf, sg.base + (n.t - sg.from) * sp - r.pre, n.v / 127, 0, bus(tr).g); }
         }
@@ -3092,7 +3200,7 @@ var drNote = function (g, n, x, y, w, color, on, label) {
 
 // Where a join's line runs, as points along it (straight, or an S curve for smooth slides).
 var linkPath = function (a, b) {
-    var x1 = tx(a.t, HEAD) + Math.max(3, a.l * ui.zx - 1) + 3, y1 = rollY(a.p) + ui.zy / 2;
+    var x1 = tx(a.t, HEAD) + Math.max(3, a.l * ui.zx - 1) + 7, y1 = rollY(a.p) + ui.zy / 2;
     var x2 = tx(b.t, HEAD) - 3, y2 = rollY(b.p) + ui.zy / 2, pts = [];
     for (var i = 0; i <= 16; i++) {
         var u = i / 16, k = a.g.c ? u * u * (3 - 2 * u) : u;
@@ -3130,7 +3238,7 @@ var drLinks = function (g, tr, w, h) {
         g.fill();
         g.fillStyle = n.g ? "rgb(252, 214, 105)" : "rgba(220, 224, 232, 0.55)";
         g.beginPath();
-        g.arc(x + nw + 3, y, 2.5, 0, Math.PI * 2);
+        g.arc(x + nw + 7, y, 3, 0, Math.PI * 2);
         g.fill();
     }
 };
@@ -3190,6 +3298,13 @@ var drRoll = function () {
         g.lineTo(ui.wire.x2, ui.wire.y2);
         g.stroke();
         g.lineWidth = 1;
+    }
+    if (tr && !tr.notes.length) {
+        g.fillStyle = "rgba(200, 206, 220, 0.55)";
+        g.font = "14px system-ui, sans-serif";
+        g.textAlign = "center";
+        g.fillText("Click here to add notes. Drag a note's right edge to make it longer, right click to delete.", HEAD + (w - HEAD) / 2, RUL + 40);
+        g.textAlign = "left";
     }
     if (ui.box) {
         var b = ui.box;
@@ -3358,7 +3473,7 @@ var setInst = function (tr, inst) {
 
 var delTrack = function (i) {
     var b = buses.get(song.tracks[i]);
-    if (b) { b.p.disconnect(); }
+    if (b) { b.g.disconnect(); }
     song.tracks.splice(i, 1);
     sel = [];
     ui.cur = clamp(ui.cur >= i ? ui.cur - 1 : ui.cur, 0, Math.max(0, song.tracks.length - 1));
@@ -3577,8 +3692,8 @@ var outAt = function (tr, m) {
     if (!tr || ui.zy < 10) { return null; }
     var list = ord(tr), best = null;
     for (var k = seek(list, ui.x - tr._m); k < list.length && tx(list[k].t, HEAD) <= m.x + 10; k++) {
-        var n = list[k], ox = tx(n.t, HEAD) + Math.max(3, n.l * ui.zx - 1) + 3, oy = rollY(n.p) + ui.zy / 2;
-        if (Math.hypot(m.x - ox, m.y - oy) <= 6) { best = n; }
+        var n = list[k], ox = tx(n.t, HEAD) + Math.max(3, n.l * ui.zx - 1) + 7, oy = rollY(n.p) + ui.zy / 2;
+        if (m.x > ox - 4 && Math.hypot(m.x - ox, m.y - oy) <= 6) { best = n; }
     }
     return best;
 };
@@ -3716,7 +3831,7 @@ cv.roll.addEventListener("pointerdown", function (e) {
     var tk = rollT(m.x), p = clamp(rollP(m.y), 0, 127);
     var hit = hitNote(tr, m.x, m.y);
     var now = performance.now();
-    var out = outAt(tr, m), wire = !out && linkAt(tr, m);
+    var out = !hit && outAt(tr, m), wire = !hit && !out && linkAt(tr, m);
     dirty = true;
     if (wire && (e.button === 2 || ui.trash)) {
         delete wire.g;
@@ -3730,7 +3845,7 @@ cv.roll.addEventListener("pointerdown", function (e) {
     if (out && e.button === 0 && !ui.trash) {
         var oy = rollY(out.p) + ui.zy / 2;
         drag = { k: "link", from: out };
-        ui.wire = { x1: tx(out.t, HEAD) + Math.max(3, out.l * ui.zx - 1) + 3, y1: oy, x2: m.x, y2: m.y };
+        ui.wire = { x1: tx(out.t, HEAD) + Math.max(3, out.l * ui.zx - 1) + 7, y1: oy, x2: m.x, y2: m.y };
         return;
     }
     if (e.button === 2 || (ui.trash && e.button === 0)) {
@@ -4497,6 +4612,45 @@ var saveSongs = function (texts) {
 
 $("saveBtn").addEventListener("click", function () { saveBox(""); });
 
+$("helpBtn").addEventListener("click", function () {
+    var list = function (head, items) { return "<h3>" + head + "</h3><ul><li>" + items.join("</li><li>") + "</li></ul>"; };
+    modal({
+        title: "How Songboard works",
+        html: '<div class="help">' +
+            list("Making music", [
+                "Pick an instrument on the left and press <b>+ Track</b> (or drag it onto the track list).",
+                "Click a track, then click in the notes area below to add notes. Drag a note to move it, drag its right edge to make it longer.",
+                "Click a note a second time to edit it: words for Vox voices, loudness for everything else.",
+                "Right click deletes notes and slide lines."
+            ]) +
+            list("Moving around", [
+                "Mouse wheel zooms in and out. Hold the middle button (the wheel) and drag to move around.",
+                "Click the ruler (the numbered strip) to move the playhead, drag on it to pick a section.",
+                "On phones: one finger edits, two fingers move and pinch to zoom, Delete mode removes notes."
+            ]) +
+            list("Tracks", [
+                "✎ edits a track's sound: effects, the singer's voice, and the instrument's raw settings.",
+                "M mutes, S plays only that track, ✕ deletes it. Drag ⠿ to move a track up or down.",
+                "Click a track's name area to pick it, then Ctrl+C and Ctrl+V copy the whole track."
+            ]) +
+            list("Slides", [
+                "Every note has a dot on each end. Drag from a note's right dot to a later note to slide into it.",
+                "Click the line to change how long the slide takes and its shape, right click it to remove it."
+            ]) +
+            list("Copy, paste and keys", [
+                "Space plays and stops, Home goes back to the start, L loops, Ctrl+Z undoes.",
+                "Ctrl+C, Ctrl+V and Ctrl+D copy, paste and duplicate selected notes, a section or whole tracks.",
+                "Shift and drag on empty space selects several notes. Arrow keys move selected notes."
+            ]) +
+            list("Sharing", [
+                "Export Text gives song text you can Import later or paste into the page's song list.",
+                "Export PJS makes a Khan Academy program, Export Player makes a page that only plays your songs.",
+                "Save keeps songs in this browser. Export Text is the safe copy."
+            ]) + "</div>",
+        btns: [{ t: "Got it", hi: true, fn: closeModal }]
+    });
+});
+
 $("lyrBtn").addEventListener("click", function () {
     var tr = cur();
     if (!isVox(tr)) { return; }
@@ -4981,7 +5135,7 @@ var layout = function () {
     var small = window.innerWidth < SMALL_W || window.innerHeight < SMALL_H;
     document.body.classList.toggle("single", small);
     if (!small) { document.body.classList.remove("menu"); }
-    HEAD = small ? 64 : 200;
+    HEAD = small ? 64 : 250;
     dirty = true;
 };
 

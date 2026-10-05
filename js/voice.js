@@ -630,7 +630,7 @@ var voice = {
             var semi = -0.3 * Math.exp(-Math.max(0, rt) / 0.05);
             var vd = Math.min(1, Math.max(0, rt - 0.3) / 0.35);
             semi += vd * vdep * Math.sin(6.2832 * vr * t) + jit * 0.1;
-            if (o.gl) { semi += o.gl.s * core.slide(o.gl, Math.max(0, rt)); }
+            if (o.gl) { semi += core.bend(o.gl, Math.max(0, rt)); }
             var dp = f0 * Math.pow(2, semi / 12) / sr;
             ph += dp;
             if (ph >= 1) {
@@ -706,11 +706,11 @@ var voice = {
     mix: 0.68
 };
 
-core.vox = function (ctx, w, p, sec, prev, vx, notes, note) {
-    if (note && note.gl) {
+core.vox = function (ctx, w, p, sec, prev, vx, notes, note, gl) {
+    if (gl) {
         var own = {};
         Object.keys(vx || {}).forEach(function (k) { own[k] = vx[k]; });
-        own.gl = note.gl;
+        own.gl = gl;
         vx = own;
     }
     return voice.render(ctx, w, p, sec, prev, vx, notes, note);

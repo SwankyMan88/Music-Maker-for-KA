@@ -14,15 +14,15 @@ Processing.js program.
 - `tools/voice-test.html` - sing any text with all four voices side by side.
 - `tools/build-dict.js` - rebuilds `voice-dict.js` from a fresh copy of CMUdict.
 - `js/page.js` - `index.html` published as a script, made with `tools/build-page.js`. Copies running on Khan Academy load it for exports and the full window. Rebuild it before tagging a release.
-- `songs/` - example song text and a ready-made Khan Academy program.
+- `songs/` - song text and ready-made Khan Academy programs: Silver Boats, and Mountain King Speedrun (Grieg's In the Hall of the Mountain King, public domain).
 
 ## Hosting the voice
 
 In `index.html`, the voice loads from this repo through jsDelivr:
 
-    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v5/js/voice.js
+    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v6/js/voice.js
 
-It points at the `v5` tag. After changing the voice files, push a new tag (`v2`, ...) and update the
+It points at the `v6` tag. After changing the voice files, push a new tag (`v2`, ...) and update the
 link in `index.html`, since jsDelivr caches files for a while.
 
 ## Credits
