@@ -805,6 +805,7 @@
                     <span class="cap">Song</span>
                     <select id="songSel" title="Songs in this page"></select>
                     <input id="title" type="text" placeholder="Song title" maxlength="60">
+                    <label title="The song plays again from the start when it ends, in the player and the exports"><input id="repeat" type="checkbox"> Repeat</label>
                     <button id="songDel" title="Remove this song from the list">✕</button>
                 </div>
                 <div class="grow"></div>
@@ -919,7 +920,7 @@
                 "EkEMBBLiBC6CAM6EDgeKsCEMKoCFMKMGMKMHMiBkBIkBEAJGEAKGKALMKoCMMKMNMKMOMuBUPwBKAQMKgCHMKERMKMS~XATwBKgCUMKAFMKMVMKUHMuBQWwBKkCXMKoCYMKMZMKMaMuBkBbwBKAc~+DEdMKMeMiBUfkBKAgBMKAhBMKgCiBMKEjBMKMkBMKoBl~bAm~FAn~FAKMKQo~eAFMKMpBMKUqBMWMrBYW4BsBYKUtBMKAuBMWAXYKA~OOYuBMQ0BVSEQHG~xFDIsBM~mEBQAhBSEAiBGKAjBMKEk~ZAlBM~hJJMMMKANMKQOMWMPYWoBv~6D/CYLMKA~6MDUOMuBMPwBKwB~xHqHQgBtBSQYuBSZ0BVbHQHJmCQWEA8BTA4DAK5FrCMKAMWAYKI~JAQASEAGKQ~MAKMMKUMWMYW4BYKV1~qBFA~JHYMQ0BSEQGuBQwB~lCJAMKE~PAEAG~PDM~3CBQ~0CBoBYKU~yC6BY~mFGuBMwxBKxB8B~mF7EBQhBmCSQYSZ0BbHQJmCQFwBtBYA9EgGK5F3~jG8EZKhBy~oL9EKxB~qK8EgGvBBmCGpBgBGjBYGdoBAA3BJAgMsGHlB3BAHgBAHYYH0~LoCsCAHYAHoBYH8~SA~LCk~sBYwBYHk~LG0~3BG~iCH~lFpC~wFzB~hBH~6E1D~LSs~hBc~wFtG1B8~iW7K~iCS~gLkKbAtBeAgCgeVxGyBYVUYVY~GHIYVkBYVoB~IC4~ID~QE~IA~yBL~4BmB4YVpBt~iCb4~gBCQYVs~oCL~2BfY~uBHVAoBXA2EgevB5BjBAvBg~FAYwBvB0~PZsC~KAAvBoB~PA8~ZB~PFs~PK~eL~6Ca~4DlD1Bt~pEmCk~eTw~6DG~hIxC~4DL~yHalBy~yHnHgG/C1HmCA/CgD~FFBA/CYA/CoBaAtBQArC07BJ5BmCAJgBAJYgGJ8~IAAJoBgGJ0B~YG~MFMKF~s4CekBJdr~2CEMKN~yBC~1zCjBMJ9BrC~nEDMKV~vDqC~y0CKkBJ~sDB~6BBWxBmBAAmDg2BvB5E~kZuH3~kZtHyB~kZUJyBmCAAlGAtBlE8BwBtB0~GBQ~FAoBwBJB1CYJ5BrCYJ1~MftD~MG~XHl~jBTN~+ChC9C~yCTwCMJgBMJYMJsBMJE~OTkD~cW~OAI~cTU~bW~vDhDF6~sHBw~sHB~MetD~MG~XHl~jBTN~+ChC9C~yCRlB/~8MiB~7JYE~xIM~OG~pBK~pNhC~uDJ0C~gDX8EvBF1CezB3BkBAyfABtB8BGBBoBAAhEeGB9D~QIAC5CjBGB1G~mBuDrCGBB3~WBtBGB9D~RJAC5Cy~oB5rBh~XAt~XBj~oBB~RJAC5Co~oB5mBw~XA8~XBy~oBB~RJAC5C3~oB5mB1~XAhC~XA~RA9D~RJAC5C8~oB5mBm~XAyB~XAo~oBB~RJAC5Ct~oBpB~g1CsC~ssFoCwCGBBs~FAo~FAk~FAg~3wBCGBB4~FA0~FAw~FAs~jCCGBBk~FAg~FAcGBBYGBBUc0B8BAAjIgGB9FmCMBJ3BMB~KzJh~KAy~K2JwCADoDMB1C~UANwCMBR~KtJ1CADpD~QA1Cm~RCMBR~KqJ8ED5CwC|Jingle Bells|Singer|{'vx':{'fs':0.9}}|dash-|ing|through|the|snow|in|a|one|horse|o-|pen|sleigh|ore|fields|we|go|laugh-|all|way|b~3DBon|bob-|tail|ring|mak-|spir-|its|bright|what|fun|it|is|to|ride|and|sing~1DD-|song|to-|n~3BBoh|jin-|gle|hey|Celesta|Choir|Bass|S~6BB~mIDDrums",
                 "E2EMCBOMCyBJAuHgGKhE/CMEkBGEIGKQMEMGEEGKMMEAGEYGKgB~TBMGQES~iBC~DAcMKUMWAYQoBS~mBNc~QHKE~pCB~5BNK4B~1DuDW5B6CYWcYWQYWUYWI~GBEYWYYWoB~ZGKIMKgBM~UAuBEwBKhCo~vFvD~kJwD4YGlB/CICkBECIEGQICMECEEGMICAECYEGgB~TBMEKEM~iBC~DAcIGUIOAQKoBM~mBNc~QHGE~pCB~5BNG5E3B~3DtDODmBUA+HgSKhDmCMEc~uLKU~lJBgBGKYMEE~uLKIMKUMKc~uLBw~uLC~lBFMSEU~PG~sLJ~3BHW5BhC~kUB~wUFc~wUBgB~EC~aEKIMKY~wUHd3B~rFrD~sUB~yD7G~vM0BGdmCICc~5VKU~wTBgBEGYICE~5VKIIGUIGc~5VBw~5VC~lBFMMCU~PG~3VJ~3BHG4B~yDqDOEeXAvEgeWhC3~rpBC~+pBCQ~lJEYYWw~ZHKQ~kqBCg~lJCNKNt~umBGYMEU~umBOEGEU~xOEY~6MB~umBF~xOG~pQBQM~tmBF~1BB~yOG~4BJ4MWxB~uFwBBGM~rkBFYICU~rkBOEECU~gLEY~pJB~rkBF~gLG~4MBKM~qkBF~1BB~hLG~4BKG5B8~hoBG~2DjDPF3BAAjNAE1DyBGEgDGE8C~ISkE~gBa0~gC7B1B8~iCb~Ic~iF8B0~gCbk~iJ7C~I8B~gI8F9C3~kU7D~gC6DmY~jR9B~jQ6FmMC9C8BECgDEC8C~IyBkE~gBa0~gDb0~gCbk~gCb~gE8B~I8B~gI7FF9CwCIFAIFAdG3BAA8SwBB9FmCAAxBoBGAAGBtBmCABQAAh~SJ~hBW2B~iBc~jCd~SAr~hBBt~PH~hBC~SI~hBoPw~hBBy~PH~hBC~SI~hBkPmkBBtB8BAAxBe~iBD8B~iBD~RH~fmOuLAd8BCAB+BBABgCCABiCBABk~KAm~KAo~KAq~KAs~KAu~KAw~KAy~KA0~KA2~KA4~KA6CBBN~j0BEEAAE~j0BK~SG~hB0fcHhCAA8RgeD1CwCgMBlD1~z0BDAD5B/CGA1ByBGBtB1~91BN~qBE~PG~hB5O6~hBB3~PH~hBC~SI~hBlPD5B/~whBC~zmDCo~whBHoB~8mDJ~s3DL~PI~hB5O~hSEAD5BuDEA1B3BE~qSK~10BD~qBE~PG~hB5O/~hBB8~5QH8~5QB/~qBE8~qBM~PG~hB5OuDACpD6CIBlD~MQNIoBKAkFgqB~mjJnH4M~njJ0BGhC~j4IvDQGlBkD~3DtDaAyBYAjJ~9QBDh~77IsD~+yIuDE9EmCGEhD3BAEYAEgBGE1~TgE9F~TBE~TDo~T4B~4EoCtG~TA5~/CBo~XAGE1~T0B~8LoC~wJyEmMGhC8~2gJrDQG5Bh~8nJsDF9EkDAFgDAFYAFgBAFoBIF8F~TeVAqBTAkF~mmJDAWgBYW8BA~2sBCAWwBYWkC~ICc~WC~PA~IAs~mBDM~eCA~8BYKcAKoBMKEAKgBMWA~kBBuBsBAuBoBwBvB1BoBAvBYAvBg~RB0~PK8~PE~vBC~eL~PB~hCC~tBJ~8BgB1Bt~6DwDNW9~fA~xLzDf~2HBfYAfgBgBf0~MH8~MCo~YM~MAo~QA~kBG~wBZ1By~iD4C4BnC1EmCAnCYAnCgBAnCoBWJqBAAsDgevBpC~5OL~qOa~ekCN~tW1DNWd8BAWhBmCYW1~+SBZ~LAF~KFt~VGN~KF~qBC~2BCl~MH~sBGJ~3ClBKN8BAKZmCMK~UAKhBmCM~gCHuB~iDBuB~OAwJf1C~nU5C~lRBByB~lRKCAqBdA9BgiCKhE1~m8CvDvB9C~jRL~9UhDEAtBkBAoHAEpFmCGEYGEgBGEcGEU~NIc~NBoB~+mJC~bC~OEM~2BvBmMENtB~5BV~NW~pEyBU~lBCY~KBkB~OM~sDnCm8BCVoBECYECgBECcECU~NiBc~NBoB~+hJC~bC~OEM~jCY~uDDU~rBC~OK~sDpCVt~4GwGcCpCrCDCkBDCcDCU~KKIK8BAAhKgqBE1Gw~+zK9H1~iI5HmME9C~lQc~h8K6GGC1B1~/rK6HC9C6~iI5HcvB9C1CeLtBoBAgDmiCBtBmCMBA~D2CqMBB8BIBA~D4CBhC~iD5C|Korobeiniki|Lead|Harmony|Low ~METriangle Bass|Chip Drums|~GCSaw|Choir|~gBBTambourine",
                 "EoFMEBLMCwBLA5lBABhHwCDBFx~FFy~FFz~FF0~FF1~FF2~FF3~FF4~FF5~FF6~FF7~FF8~FF9~FF+~FF/~FFgDDB5E6CDBE~DHoB~KEI~ZKI~DH~xB4E~MU~DL~8BI~DU~tBFY~kJjSg~tbkSM~kJ9IjJ~ykBmS~iEG~qS8Rc~kJ/I~82B+IDBkC~xBiB~DbbCJmCbAoBUA4WABhKy~qnBL~DrCjJB5E~uqBhJZt~mJ+IjJBhC~uShJN~uSiJZ~tS/IjbBhC~nxBM~omC1RlC3B~zBiB~DbNDmBQA4PglCBhBm~skD+FjDBxBr~oGhG~osEgGxB8~0nBgJ~g3DrUDAoBkBAgYgDDpCyBDB5DoBDD9~MBhE~MGpB~MG~kBC1D~wBqK9~wBNp~wBHh~gDf~wB6Dt~wQrK~gSuHt~MBj~YB~MAhE~MGpB~MG~kBC1~wBrK9~wBNp~wBHh~gDf~wB4DjS~hS7RDB1Bw~j9G+IjbDh~0PI~obuRDlF~gS6R1E~gS4RJErCAA0ToCF9E6CMFAMDpB1CGDgDGD8~IzDkE~gC6B1B6~iG7F0B~gG6FM~/L6L9C/~je9Fm~lkB9L~le7FlB~lY8F~hM7FtDkD~iG6F~I8D~gG6BuCF0EMFAHFtBAAfgwBvB1G8B~IAA~FKk~VGpB3~iBYcvBpEhC~kCaM~fa~FQ~fEEvBpBwCVAoBXA5FgMvBVoBAvBYAvBg~lBB0~PoB8~PEo~PQ1Bt~8C1CM~5C0C~rCpB~6CpB9Cy~8CyCK~rL3CKvBB~3FzCBvBN3~7C1CsD~6C0C8C~6CxCEvB1BhCAvB4~WA~3cHaAyBYAqJgeHRmCAHYAHgBeE1B8BAEYAEgBSH1B~aoC9~aEoBeE9~aEo~aZ~iEqC~8EqC9C~8E0EySHNh~uCI3~oDI~aoC9~aE~iEC~aD~8EC~aUl~0O3ENr~tCIhC~nDH~aoC9~aE~hEC~aD~7EC~aUtDw~uCIm~oDI~aoC9~aE~iEC~aD~8EC~aVC~8E0E6CH1EkDAHgDAH4BAHoB~IAMH0H~UMWGjBAAxDgnBvBxD~jmC2C9C~46BzCT~jmC0C~x9B6CtD~y9B2C~46B4C~mOB~46BMOHgBdAgPgVBhHoBGB0BGBYGBgBGBA~OgD8~OCo~OpB~0kGC~3lK9I~yzPgJxF~2XjFmbB4~gdkFpBt~rFkF0~pFkFk~pFiFcIrCAApxBgMB9F1CAAxB3BAD5B/CDA1BoBDAB3~FAoBDBdwCAAh~QF~aHtB~8BE~bN~1BqR6~1BB8~RAt~RBr~RKd1~8BB~hBW~jCnX~ntBGt~dA~jCU~aH~/DM~1BjS~ntByY/~RBhCAD5BpDDA1By~YBw~YDDA~RBd6~qCB~QF~hBN~qCG~iBU~jC5VzHAcCAB0BBAB2BCAB4~KA6~KA8~KA+~KAgCBABiCCABk~KAm~KAo~KAq~KAs~KAu~KAw~KAy~KA0~KA2~KA4~KA6~KA8~KA+~KAgDBABiDCABk~KAm~KAo~KAq~KAs~KAu~KAwDBBN~wrCI~peC~wrCtT~iwB5W~jCnbkD~RAmCAD5BuDDA1B3~YB~stFCmCDA~RBd/~qCB~QF~hBN~qCG~iBU~jCs+B~jCyJAd8BDAB+~FAg~UAi~FAk~FA~jBBo~FAq~FAs~FAu~FAwCDABy~FA0~FA2~FA4~FA6~FA8~FA+~FAgDDABi~FAk~FAm~FAo~FAqDDBNuDACpD/CMBlD~ME|Flight of the Bumblebee|Bee|Chaser|Pizzicato Bass|Sub|Choir|Chip|Drums",
-                "EkDMEBHOCkBLAnEgGKpCwCMKYMQoBSEEGWAYKcMKUMKoB~XBgBSEMGWMY~UAcMKQ~aB~XEA~XH~kCGkBYWYYKtCy~7CzCQR1CSEMGKM~wCBAMKYMWoBYQE~WEkBMWg~nECQMKcMQo~xBBWMY~bA~lEOA~YDsG~qDB~7CwCMK1Bh~xIyCQDeUA8CgSKpB8BMKgBMWYY~yBDkB~hDCo~VCU~1DB~VAg~2DBWoBYWE~VFY~+BFkBY~oHBJ+B~oCFI~8CI~2GC~NAgBY~bAUMW4BYWc~pFEg~2DJ~UAsGWpBgC~wClCMK1B3~xHqCPEyBAApFgDKtD8BMEhDtBMKlB3BMEpB~MAtC~YS1EmC~YA3~YBhC~YA~MA9B~YS~wBUd~XSl~vBTl~/CTtD~YTC~vEUo~YB5~YBj~YB~MA9B~YS~wBUd~XSl~vBTl~/CTtD~YTC~YTFq~YB7~YBl~YB~MAd~XSlE~YTB~YS~/CrB1D~YT~/CRsGKtFr~ZB8~yOF~seCd~XSlE~YTB~YS~/CrB1D~YT~/CT1Ek~YB1~YB/~zYB~MA9B~YS~wBUd~XSl~vBTl~/CTtD~YTC~YRvB1EhCEAoBeA3KAEhDmCGEpB6BGEhB~MAd~LAl~LBpC~MAd~LAh~iBBlC~MGp~jBBl~MB~jBB~uBC~6BD~XB1~MBZ~uBMV~lCB~uBNt~9CHZ~LAV~7CF5~4BGZ6BmME1B3~1CBr~3FB~MAd~LAl~XCC~MAd~LAh~iBBlC~MGp~jBBl~MB~jBB~uBC~6BD~XB~9CCZ~8CLV~KA5~4BG~vCC~sBH~6CI~tBBh~6CNt~pEB~3FwBZ~LAV~hBF~oEC~mDB~8DB~iCC~nEqB~5CgBQxDt~lhC0CEtD+BGEZy~sEB~LAd~LAV~KA5B~LAd~LAh~LB1~hBB~sBBp~LBl~XB~tBBhC~LAl~XBp~XBtC~MG~7CH~jBD~vBB~8CHl~uBB~MCZ~LAV~hBF~oEC~mDB~8DBkBAQ5EqBGE9Dm~1BFdmBAExD~XAlEyBAK5~MB9Bm~6DCAKpC~dB~RB1B~SAh~vBCC~SAp~SB5B~1BB~SBVyBAWhF~RG~vHCp~hCBtCyBAQp~eC~nES1~nEBp~qFC~nEG~jDCV~xCBC~jDB~iBC~jDB~hHB~cBd~bA~nHD~vEEGEZ~oEEAK~jIMAKh~hHB~9FGQhG~vIC~wCDGEhBmBAE~6ICtF~gHG~jBC~sNC~hJCV~jKG1~RB~1DC~kKCd~RA9~RC~9FK~0KE1~3EB~0BB~mED~pFC~lGE~kJE9~lEC~iBC~lEB~iIK~mHE~0GF~0NJ1Bt~0EB8BGEdh~gHB~RAZ~QA1B~RAl~RAQpE~SA9~SBdt~oBBhBAE5B~XBDt~lMB~MBCh~oIBt~7BB~vBDAKhD~dAV~xCFKp~6BB~hBB~kEC~iBCl~/BB~lECh~2EB~xCCVt~zVB~RG~lEHx~oBBlEtBAW5~mCB~lEOV~jDG~nHB~lENtC~iBG~5HC~lEO~rIDF~mEX1~mEC~pFB1DhBGEZt~5HE~pIC~bB~nHC~1EC~+FC~sLG~qIJp~SB~nLD~qIGh~kEHl~nHBp~wMC~tCCF~wMM~lEK~gFD~wCFGEZhBGvBN8BErBhB5BEnBZ2BEjBpBzBEfhBwBEbZtBFFejBARgeTpIyBgDTA~EDIgDXEYXdtBYXpByBYXlB~MAh~MB~XBR~KAVtBYTpBw~8BJsPvBlBtBTGgBAA0EAvBBtBAvBo~FAgBwBvBkC~LB~VB~QA0~LAY~PFs~fFY~PA1~7BC~gCgB~fC~vCQ~+BR~/CBk~9Dbq~9D2D~jSB~9C/B~9BR8~4GF~tBB~7DNw~7D2C~4F3C1~tTmB~wNsC/C1ByBA/Co~FAg~FAYdHgBAAgOgGB9FyBAAxBUGAA~DDBtB~UoJ3~UBZ~OBdoBAAh~ND~bzM6~bBc~bCr~bB~NC~bvMm~cA8~cBe~cCt~cB~NC~bzM~OAxBP~lpBJ~UkJ|Starlit Pixel|Lead|Harmony|Triangle Bass|Bells|Pad|Chip Drums"
+                "FkDMEBBHOCkBLAnEgGKpCwCMKYMQoBSEEGWAYKcMKUMKoB~XBgBSEMGWMY~UAcMKQ~aB~XEA~XH~kCGkBYWYYKtCy~7CzCQR1CSEMGKM~wCBAMKYMWoBYQE~WEkBMWg~nECQMKcMQo~xBBWMY~bA~lEOA~YDsG~qDB~7CwCMK1Bh~xIyCQDeUA8CgSKpB8BMKgBMWYY~yBDkB~hDCo~VCU~1DB~VAg~2DBWoBYWE~VFY~+BFkBY~oHBJ+B~oCFI~8CI~2GC~NAgBY~bAUMW4BYWc~pFEg~2DJ~UAsGWpBgC~wClCMK1B3~xHqCPEyBAAoFgDKtD8BMEhDtBMKlB3BMEpB~MAtC~YS1EmC~YA3~YBhC~YA~MA9B~YS~wBUd~XSl~vBTl~/CTtD~YTC~vEUo~YB5~YBj~YB~MA9B~YS~wBUd~XSl~vBTl~/CTtD~YTC~YTFq~YB7~YBl~YB~MAd~XSlE~YTB~YS~/CrB1D~YT~/CRsGKtFr~ZB8~yOF~seCd~XSlE~YTB~YS~/CrB1D~YT~/CT1Ek~YB1~YB/~zYB~MA9B~YS~wBUd~XSl~vBTl~/CTtD~YTC~YQEAoBeAxKAEhDmCGEpB6BGEhB~MAd~LAl~LBpC~MAd~LAh~iBBlC~MGp~jBBl~MB~jBB~uBC~6BD~XB1~MBZ~uBMV~lCB~uBNt~9CHZ~LAV~7CF5~4BGZ6BmME1B3~1CBr~3FB~MAd~LAl~XCC~MAd~LAh~iBBlC~MGp~jBBl~MB~jBB~uBC~6BD~XB~9CCZ~8CLV~KA5~4BG~vCC~sBH~6CI~tBBh~6CNt~pEB~3FwBZ~LAV~hBF~oEC~mDB~8DB~iCC~nEqB~5CgBQxDt~+gC0CEtD+BGEZy~sEB~LAd~LAV~KA5B~LAd~LAh~LB1~hBB~sBBp~LBl~XB~tBBhC~LAl~XBp~XBtC~MG~7CH~jBD~vBB~8CHl~uBB~MCZ~LAV~hBF~oEC~mDB~8DBkBAQ5EqBGE9Dm~1BFdmBAExD~XAlEyBAK5~MB9Bm~6DCAKpC~dB~RB1B~SAh~vBCC~SAp~SB5B~1BB~SBVyBAWhF~RG~vHCp~hCBtCyBAQp~eC~nES1~nEBp~qFC~nEG~jDCV~xCBC~jDB~iBC~jDB~hHB~cBd~bA~nHD~vEEGEZ~oEEAK~jIMAKh~hHB~9FGQhG~vIC~wCDGEhBmBAE~6ICtF~gHG~jBC~sNC~hJCV~jKG1~RB~1DC~kKCd~RA9~RC~9FK~0KE1~3EB~0BB~mED~pFC~lGE~kJE9~lEC~iBC~lEB~iIK~mHE~0GF~0NJ1Bt~0EB8BGEdh~gHB~RAZ~QA1B~RAl~RAQpE~SA9~SBdt~oBBhBAE5B~XBDt~lMB~MBCh~oIBt~7BB~vBDAKhD~dAV~xCFKp~6BB~hBB~kEC~iBCl~/BB~lECh~2EB~xCCVt~zVB~RG~lEHx~oBBlEtBAW5~mCB~lEOV~jDG~nHB~lENtC~iBG~5HC~lEO~rIDF~mEX1~mEC~pFB1DhBGEZt~5HE~pIC~bB~nHC~1EC~+FC~sLG~qIJp~SB~nLD~qIGh~kEHl~nHBp~wMC~tCCF~wMM~lEK~gFD~wCFGEZhBFFejBAQgeTpIyBgDTA~EDIgDXEYXdtBYXpByBYXlB~MAh~MB~XBR~KAVtBYTpBw~8BJTGgBAAwEAvBBtBAvBo~FAgBwBvBkC~LB~VB~QA0~LAY~PFs~fFY~PA1~7BC~gCgB~fC~vCQ~+BR~/CBk~9Dbq~9D2D~2QB~9C/B~9BR8~4GF~tBB~7DNw~7D2C~4F3C1~tTmB~wNqCdHgBAAgOgGB9FyBAAxBUGAA~DDBtB~UoJ3~UBZ~OBdoBAAh~ND~bzM6~bBc~bCr~bB~NC~bvMm~cA8~cBe~cCt~cB~NC~bzM~OAxBP~lpBJ~UkJ|Starlit Pixel|Lead|Harmony|Triangle Bass|Bells|Pad|Chip Drums"
             ];
         </script>
         <script>
@@ -1232,7 +1233,7 @@ sfxDefs();
 // It also gets copied into the Khan Academy export, so it stays ES5 and avoids window, eval and Function.
 // coreEdit adds the parts only the editor needs (writing song text).
 var coreSrc = function () {
-    var core = { ver: 4, res: 12 };
+    var core = { ver: 5, res: 12 };
     var abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     // Instrument ids are their spot in this list, so only add to the end.
@@ -1539,6 +1540,7 @@ var coreSrc = function () {
         if (ver < 1 || ver > core.ver) { throw "Unknown song version"; }
         var song = { bpm: get(), res: get(), vis: 0, title: "", tracks: [] };
         if (ver > 1) { song.vis = get(); }
+        if (ver > 4) { song.loop = get() === 1; }
         song.title = str(get());
         var nt = get();
         for (var i = 0; i < nt; i++) {
@@ -1786,6 +1788,7 @@ var coreEdit = function (core) {
         put(song.bpm);
         put(song.res || core.res);
         put(song.vis || 0);
+        put(song.loop ? 1 : 0);
         put(sid(song.title));
         put(song.tracks.length);
         song.tracks.forEach(function (tr) {
@@ -1833,7 +1836,7 @@ var core = coreEdit(fxSrc(coreSrc()));
 var playerSrc = function () {
     var list = typeof songs !== "undefined" ? songs : [song];
     var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
-    var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot;
+    var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0;
     var bySt = function (x, y) { return x.s - y.s; };
     core.setup(sfx);
     // Titles for the song menu are read one per frame while the first song loads, decoding them all at once is slow.
@@ -1891,6 +1894,9 @@ var playerSrc = function () {
         notes.sort(bySt);
         lo = hi < lo ? 60 : lo;
         hi = hi < lo ? 72 : hi;
+        // a repeating song loops at the end of its last bar
+        var barLen = data.res * 4 * spt;
+        loopLen = data.loop && evs.length ? floor(total / barLen + 0.999) * barLen : 0;
     };
     prep(0);
 
@@ -1907,7 +1913,7 @@ var playerSrc = function () {
         sfx.stop();
         base = sfx.context.currentTime + 0.12 - p;
         pos = p;
-        idx = vi = 0;
+        idx = vi = lap = 0;
         parts = [];
         while (idx < evs.length && evs[idx].s < p) { idx++; }
         while (vi < notes.length && notes[vi].s < p) { vi++; }
@@ -2127,12 +2133,26 @@ var playerSrc = function () {
         }
         if (state === "play") {
             pos = sfx.context.currentTime - base;
-            while (idx < evs.length && evs[idx].s < pos + 0.4) {
-                var ev = evs[idx], b = bufs[ev.k];
-                if (b && b.buf && ev.s > pos - 0.03) { core.fire(sfx, b.buf, base + ev.s - b.pre, ev.g, ev.pan, ev.to); }
+            // passing the loop point starts the next pass: the visuals go back to the start
+            if (loopLen && pos >= loopLen) {
+                base += loopLen;
+                pos -= loopLen;
+                lap--;
+                vi = 0;
+                parts = [];
+            }
+            for (var sg = 0; sg < 4000; sg++) {
+                if (idx >= evs.length) {
+                    if (!loopLen) { break; }
+                    lap++;
+                    idx = 0;
+                }
+                var ev = evs[idx], b = bufs[ev.k], when = ev.s + lap * loopLen;
+                if (when >= pos + 0.4) { break; }
+                if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre, ev.g, ev.pan, ev.to); }
                 idx++;
             }
-            if (pos > total + 0.6) {
+            if (!loopLen && pos > total + 0.6) {
                 halt();
                 pos = 0;
             }
@@ -2586,7 +2606,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v15/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v16/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -2806,7 +2826,8 @@ var pickSong = function (i) {
     hist = [{ s: book.list[book.at], c: 0 }];
     hpos = 0;
     ui.head = ui.x = ui.lo = ui.hi = 0;
-    setLoop(false);
+    // a song set to Repeat loops in the editor too
+    setLoop(!!song.loop);
     songMenu();
 };
 
@@ -2842,6 +2863,7 @@ var load = function (s, c) {
     ui.cur = clamp(c || 0, 0, Math.max(0, song.tracks.length - 1));
     $("bpm").value = song.bpm;
     $("title").value = song.title || "";
+    $("repeat").checked = !!song.loop;
     renderHeads();
     mixAll();
     focusTrack();
@@ -5357,6 +5379,12 @@ $("stageBtn").addEventListener("click", function () {
 
 $("playBtn").addEventListener("click", toggle);
 $("loopBtn").addEventListener("click", function () { setLoop(!ui.loop); });
+
+$("repeat").addEventListener("change", function () {
+    song.loop = $("repeat").checked;
+    if (song.loop) { setLoop(true); }
+    commit();
+});
 $("undoBtn").addEventListener("click", undo);
 $("redoBtn").addEventListener("click", redo);
 $("sideAdd").addEventListener("click", function () {

@@ -68,7 +68,7 @@ sfx.define("released", { dur: 0.07, freq: 480, freqTo: 370, type: "sine", attack
 
 // The song engine: instruments, song text and building sounds.
 var core = (function () {
-var core = { ver: 4, res: 12 }; var abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+var core = { ver: 5, res: 12 }; var abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 core.insts = [
     0, 0,
     {"n":"Organ","g":"Keys","c":[214,139,77],"l":[{"w":"sin","g":0.26,"a":0.008,"r":0.06,"vb":[6.5,6,0]},{"w":"sin","m":2,"g":0.18,"a":0.008,"r":0.06,"vb":[6.5,6,0]},{"w":"sin","m":3,"g":0.12,"a":0.008,"r":0.06},{"w":"sin","m":4,"g":0.08,"a":0.008,"r":0.06},{"w":"sin","m":0.5,"g":0.14,"a":0.008,"r":0.06}]},
@@ -151,8 +151,8 @@ var st = a.length - core.get(r), l = core.get(r) + 4; if (st < 0) { throw "Bad s
 return a.join(""); }; core.decode = function (txt) { var parts = core.unpack(String(txt).replace(/^\s+|\s+$/g, "")).split("|");
 var r = { s: parts[0], i: 0 }; var get = function () { return core.get(r); }; var str = function (k) { return k ? parts[k] || "" : ""; };
 var ver = get(); if (ver < 1 || ver > core.ver) { throw "Unknown song version"; }
-var song = { bpm: get(), res: get(), vis: 0, title: "", tracks: [] }; if (ver > 1) { song.vis = get(); } song.title = str(get()); var nt = get();
-for (var i = 0; i < nt; i++) { var inst = get(), ins = core.insts[inst], nm = get();
+var song = { bpm: get(), res: get(), vis: 0, title: "", tracks: [] }; if (ver > 1) { song.vis = get(); } if (ver > 4) { song.loop = get() === 1; }
+song.title = str(get()); var nt = get(); for (var i = 0; i < nt; i++) { var inst = get(), ins = core.insts[inst], nm = get();
 var tr = { inst: inst, name: nm ? str(nm) : (ins ? ins.n : "Missing"), vol: get(), pan: core.uz(get()), notes: [] }; var fl = get(), nn = get();
 tr.mute = (fl & 1) > 0; tr.solo = (fl & 2) > 0; if (fl & 8) { tr.x = JSON.parse(str(get()).replace(/'/g, "\"")); }
 var pt = 0, pp = 60, pv = 100, flags = ver > 3 ? 4 : 2; for (var j = 0; j < nn; j++) {
@@ -182,7 +182,7 @@ var hit = core.badRuns(ws); for (var k = 0; k < tr.notes.length; k++) { tr.notes
 
 // The player: loading, visuals, lyrics and controls.
 var list = typeof songs !== "undefined" ? songs : [song]; var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
-var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot;
+var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0;
 var bySt = function (x, y) { return x.s - y.s; }; core.setup(sfx); for (var q = 0; q < list.length; q++) { names.push("Song " + (q + 1)); }
 var named = 0; var prep = function (n) { sfx.stop(); at = n; data = core.decode(list[n]); spt = 60 / (data.bpm * data.res);
 look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1; evs = []; notes = []; sing = []; jobs = []; parts = []; lev = []; tint = [];
@@ -204,10 +204,11 @@ if (bufs[k] === undefined) { bufs[k] = null; jobs.push({ k: k, ins: ins, vx: vx,
 evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50, to: dest }); }
 for (var sl = 0; sl < ly.length; sl++) { seen[round(ly[sl].s * 100) + ly[sl].w] = true; }
 if (ly.length && sing.length < 3) { sing.push({ l: ly, c: ins.c }); } } foot = 104 + max(0, sing.length - 1) * 22; evs.sort(bySt); notes.sort(bySt);
-lo = hi < lo ? 60 : lo; hi = hi < lo ? 72 : hi; }; prep(0); var clock = function (t) { t = max(0, t); var sc = floor(t % 60);
-return floor(t / 60) + ":" + (sc < 10 ? "0" : "") + sc; }; var col = function (c, al) { fill(c[0], c[1], c[2], al); };
+lo = hi < lo ? 60 : lo; hi = hi < lo ? 72 : hi; var barLen = data.res * 4 * spt;
+loopLen = data.loop && evs.length ? floor(total / barLen + 0.999) * barLen : 0; }; prep(0); var clock = function (t) { t = max(0, t);
+var sc = floor(t % 60); return floor(t / 60) + ":" + (sc < 10 ? "0" : "") + sc; }; var col = function (c, al) { fill(c[0], c[1], c[2], al); };
 var lit = function (n) { return state === "play" && pos >= n.s && pos < max(n.e, n.s + 0.12); }; var go = function (p) { sfx.context.resume();
-sfx.stop(); base = sfx.context.currentTime + 0.12 - p; pos = p; idx = vi = 0; parts = []; while (idx < evs.length && evs[idx].s < p) { idx++; }
+sfx.stop(); base = sfx.context.currentTime + 0.12 - p; pos = p; idx = vi = lap = 0; parts = []; while (idx < evs.length && evs[idx].s < p) { idx++; }
 while (vi < notes.length && notes[vi].s < p) { vi++; } state = "play"; }; var halt = function () { sfx.stop(); state = "stop"; };
 var toggle = function () { if (state === "play") { halt(); sfx.play("released"); } else if (state === "stop") { sfx.play("press");
 go(pos >= total ? 0 : pos); } }; var drRoll = function () { var top = 64 * U, bot = height - foot * U, cx = width * 0.3;
@@ -266,11 +267,14 @@ j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl); if (j.r.step(3000)) { bu
 state = done >= jobs.length ? "stop" : state; fill(226, 228, 235); textSize(15 * U); textAlign(CENTER, CENTER);
 text("Building sounds...", width / 2, height / 2 - 20 * U); fill(46, 51, 63); rect(width / 2 - 100 * U, height / 2, 200 * U, 8 * U, 4);
 fill(96, 183, 247); rect(width / 2 - 100 * U, height / 2, 200 * U * done / max(1, jobs.length), 8 * U, 4); return; } if (state === "play") {
-pos = sfx.context.currentTime - base; while (idx < evs.length && evs[idx].s < pos + 0.4) { var ev = evs[idx], b = bufs[ev.k];
-if (b && b.buf && ev.s > pos - 0.03) { core.fire(sfx, b.buf, base + ev.s - b.pre, ev.g, ev.pan, ev.to); } idx++; } if (pos > total + 0.6) { halt();
-pos = 0; } } (looks[look] || drRoll)(); drLyrics(); drUi(); }; mouseClicked = function () { var row = floor((mouseY - 42 * U) / (24 * U));
-if (menu || (mouseY < 36 * U && list.length > 1)) { if (menu && mouseX < 260 * U && row >= 0 && row < list.length) { prep(row); } menu = !menu;
-return; } if (state === "load") { return; } var p = constrain((mouseX - 66 * U) / (width - 86 * U), 0, 1) * total;
-var seek = mouseY > height - 56 * U && mouseX > 60 * U; if (!seek) { toggle(); } else if (state === "play") { go(p); } else { pos = p; } };
-mouseMoved = function () { var now = dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U; if (now !== over) { over = now;
-sfx.play(over ? "hover" : "unhover"); } }; keyPressed = function () { if (keyCode === 32) { toggle(); } };
+pos = sfx.context.currentTime - base; if (loopLen && pos >= loopLen) { base += loopLen; pos -= loopLen; lap--; vi = 0; parts = []; }
+for (var sg = 0; sg < 4000; sg++) { if (idx >= evs.length) { if (!loopLen) { break; } lap++; idx = 0; }
+var ev = evs[idx], b = bufs[ev.k], when = ev.s + lap * loopLen; if (when >= pos + 0.4) { break; }
+if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre, ev.g, ev.pan, ev.to); } idx++; }
+if (!loopLen && pos > total + 0.6) { halt(); pos = 0; } } (looks[look] || drRoll)(); drLyrics(); drUi(); }; mouseClicked = function () {
+var row = floor((mouseY - 42 * U) / (24 * U)); if (menu || (mouseY < 36 * U && list.length > 1)) {
+if (menu && mouseX < 260 * U && row >= 0 && row < list.length) { prep(row); } menu = !menu; return; } if (state === "load") { return; }
+var p = constrain((mouseX - 66 * U) / (width - 86 * U), 0, 1) * total; var seek = mouseY > height - 56 * U && mouseX > 60 * U;
+if (!seek) { toggle(); } else if (state === "play") { go(p); } else { pos = p; } }; mouseMoved = function () {
+var now = dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U; if (now !== over) { over = now; sfx.play(over ? "hover" : "unhover"); } };
+keyPressed = function () { if (keyCode === 32) { toggle(); } };
