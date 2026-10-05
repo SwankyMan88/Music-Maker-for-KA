@@ -155,7 +155,7 @@ var voice = {
     chain: function (notes, note) {
         var self = this;
         var joins = function (n) { return /-$/.test(n.w || "") && !self.held(n.w); };
-        var list = notes.slice().sort(function (a, b) { return a.t - b.t || a.p - b.p; });
+        var list = notes.sorted ? notes : notes.slice().sort(function (a, b) { return a.t - b.t || a.p - b.p; });
         var i = list.indexOf(note);
         if (i < 0 || this.held(note.w)) { return null; }
         var a = i, b = i;
@@ -543,7 +543,9 @@ var voice = {
         var op = o.op || dflt.op;
         var cl = o.cl || dflt.cl;
         var br = o.br === undefined ? dflt.br : o.br;
-        var tl = o.tl || dflt.tl;
+        var tb = o.tb === undefined ? 50 : o.tb;
+        var tl = Math.min(1, (o.tl || dflt.tl) * (0.35 + tb * 0.013));
+        var lift = tb > 50 ? (tb - 50) / 60 : 0;
         var vr = o.vr || dflt.vr;
         var vdep = o.vd || dflt.vd;
         if (o.hd && this.hd) {
@@ -670,8 +672,11 @@ var voice = {
 
         // consonants and breath are set against this word's own vowel level
         var vRef = vCnt ? Math.sqrt(vSum / vCnt) : 0.1;
+        var last = 0;
         for (var m = 0; m < len; m++) {
-            out[m] += nb[m] * vRef * this.mix;
+            var mixed = out[m] + nb[m] * vRef * this.mix;
+            out[m] = mixed - lift * last;
+            last = mixed;
             if (Math.abs(out[m]) > peak) {
                 peak = Math.abs(out[m]);
             }

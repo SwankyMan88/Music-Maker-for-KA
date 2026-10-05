@@ -141,6 +141,9 @@ voice.hd = {
         var f0 = core.freq(midi);
         var fs = o.fs || 1;
         var op = this.op || o.op || 0.4, cl = this.cl || o.cl || 0.16, tl = this.tilt || o.tl || 0.62, br = o.br === undefined ? 0.04 : o.br;
+        var tb = o.tb === undefined ? 50 : o.tb;
+        tl = Math.min(1, tl * (0.35 + tb * 0.013));
+        var lift = Math.max(this.pre, tb > 50 ? (tb - 50) / 60 : 0);
         var hp = 0;
         var cas = [], casN = [], par = [];
         for (var q = 0; q < 7; q++) {
@@ -240,7 +243,7 @@ voice.hd = {
         var last = 0;
         for (var n = 0; n < len; n++) {
             var v = out[n] + noisy[n] * vRef * this.mix;
-            out[n] = v - this.pre * last;
+            out[n] = v - lift * last;
             last = v;
             peak = Math.max(peak, Math.abs(out[n]));
         }

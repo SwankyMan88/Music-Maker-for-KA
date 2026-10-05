@@ -19,9 +19,9 @@ Processing.js program.
 
 In `index.html`, the voice loads from this repo through jsDelivr:
 
-    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v3/js/voice.js
+    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v4/js/voice.js
 
-It points at the `v3` tag. After changing the voice files, push a new tag (`v2`, ...) and update the
+It points at the `v4` tag. After changing the voice files, push a new tag (`v2`, ...) and update the
 link in `index.html`, since jsDelivr caches files for a while.
 
 ## Credits
@@ -30,3 +30,12 @@ SFX engine by SwankyMan, IIFE by LemonTurtle, AudioContext by Squishy.
 
 Pronunciations come from the CMU Pronouncing Dictionary (https://github.com/cmusphinx/cmudict),
 Copyright (C) 1993-2015 Carnegie Mellon University. Its license is kept at the top of `js/voice-dict.js`.
+
+## Controls
+
+- Left click adds a note, drag a note to move it, drag its right edge to stretch it, click a note twice to edit it (lyrics for voices, loudness for the rest).
+- Right click deletes. The middle button drags the view in any direction. The wheel zooms (Alt + wheel changes note height).
+- Drag on the ruler to pick a section to copy, paste, duplicate, delete or loop.
+- Click a track header (Ctrl or Shift for more) and use Ctrl+C / Ctrl+V to copy whole tracks.
+- The ✎ button on a track opens its sound effects, voice settings and the instrument's raw data.
+- On phones: one finger edits, two fingers move and pinch to zoom, and Delete mode turns taps into deletes.
