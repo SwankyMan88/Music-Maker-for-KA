@@ -1838,6 +1838,17 @@ var playerSrc = function () {
     var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
     var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0;
     var bySt = function (x, y) { return x.s - y.s; };
+    var bg = null;
+    // Khan Academy keeps the page when a program restarts, so the last run's player is stopped first.
+    // Its sound system is closed too when this run has its own, so restarts never pile up old ones.
+    var glob = (function () { return this; })();
+    if (glob.songboardStop) { glob.songboardStop(sfx); }
+    glob.songboardStop = function (next) {
+        state = "stop";
+        if (bg) { bg.disconnect(); }
+        sfx.stop();
+        if (next !== sfx && sfx.context.close) { sfx.context.close(); }
+    };
     core.setup(sfx);
     // Titles for the song menu are read one per frame while the first song loads, decoding them all at once is slow.
     for (var q = 0; q < list.length; q++) { names.push("Song " + (q + 1)); }
@@ -2126,14 +2137,16 @@ var playerSrc = function () {
 
     // A browser stops drawing in a tab you are not looking at, but keeps the sound running.
     // This silent sound node is called about every 46ms by the sound system itself, so the song keeps going in the background.
-    var bg = sfx.context.createScriptProcessor ? sfx.context.createScriptProcessor(2048, 1, 1) : null;
+    // It only steps in while the tab is hidden: when the tab is showing, drawing schedules the notes as usual.
+    var doc = glob.document;
+    bg = sfx.context.createScriptProcessor ? sfx.context.createScriptProcessor(2048, 1, 1) : null;
     if (bg) {
         var hush = sfx.context.createGain();
         hush.gain.value = 0;
         bg.connect(hush);
         hush.connect(sfx.context.destination);
         bg.onaudioprocess = function () {
-            if (state === "play") { pump(); }
+            if (state === "play" && (!doc || doc.hidden)) { pump(); }
         };
     }
     // The HTML page calls this when it closes the player, so a closed player stops scheduling notes.
@@ -2628,7 +2641,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v17/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v18/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;

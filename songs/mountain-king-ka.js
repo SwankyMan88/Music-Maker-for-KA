@@ -177,10 +177,13 @@ var hit = core.badRuns(ws); for (var k = 0; k < tr.notes.length; k++) { tr.notes
 // The player: loading, visuals, lyrics and controls.
 var list = typeof songs !== "undefined" ? songs : [song]; var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
 var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0;
-var bySt = function (x, y) { return x.s - y.s; }; core.setup(sfx); for (var q = 0; q < list.length; q++) { names.push("Song " + (q + 1)); }
-var named = 0; var prep = function (n) { sfx.stop(); at = n; data = core.decode(list[n]); spt = 60 / (data.bpm * data.res);
-look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1; evs = []; notes = []; sing = []; jobs = []; parts = []; lev = []; tint = [];
-var seen = {}; lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0; state = "load"; var solo = false;
+var bySt = function (x, y) { return x.s - y.s; }; var bg = null; var glob = (function () { return this; })();
+if (glob.songboardStop) { glob.songboardStop(sfx); } glob.songboardStop = function (next) { state = "stop"; if (bg) { bg.disconnect(); } sfx.stop();
+if (next !== sfx && sfx.context.close) { sfx.context.close(); } }; core.setup(sfx);
+for (var q = 0; q < list.length; q++) { names.push("Song " + (q + 1)); } var named = 0; var prep = function (n) { sfx.stop(); at = n;
+data = core.decode(list[n]); spt = 60 / (data.bpm * data.res); look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1;
+evs = []; notes = []; sing = []; jobs = []; parts = []; lev = []; tint = []; var seen = {};
+lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0; state = "load"; var solo = false;
 for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; } for (var ti = 0; ti < data.tracks.length; ti++) {
 var tr = data.tracks[ti], ins = core.insOf(tr), prev = "", ly = [], own = tr.x && tr.x.ins ? "c" + ti : "";
 var vx = ins && ins.vx, mine = tr.x && tr.x.vx ? JSON.stringify(tr.x.vx) : ""; if (mine) { vx = {}; for (var vk in ins.vx) { vx[vk] = ins.vx[vk]; }
@@ -257,12 +260,13 @@ text(names[m], 22 * U, 54 * U + m * 24 * U); } }; var pump = function () { pos =
 base += loopLen; pos -= loopLen; lap--; vi = 0; parts = []; } for (var sg = 0; sg < 4000; sg++) { if (idx >= evs.length) { if (!loopLen) { break; }
 lap++; idx = 0; } var ev = evs[idx], b = bufs[ev.k], when = ev.s + lap * loopLen; if (when >= pos + 0.4) { break; }
 if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre, ev.g, ev.pan, ev.to); } idx++; }
-if (!loopLen && pos > total + 0.6) { halt(); pos = 0; } };
-var bg = sfx.context.createScriptProcessor ? sfx.context.createScriptProcessor(2048, 1, 1) : null; if (bg) { var hush = sfx.context.createGain();
-hush.gain.value = 0; bg.connect(hush); hush.connect(sfx.context.destination); bg.onaudioprocess = function () { if (state === "play") { pump(); } }; }
-sfx.quit = function () { state = "stop"; if (bg) { bg.disconnect(); } }; var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () {
-background(21, 23, 29); noStroke(); if (named < list.length) { names[named] = core.decode(list[named]).title || names[named]; named++; }
-if (state === "load") { var t0 = millis(); while (done < jobs.length && millis() - t0 < 12) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
+if (!loopLen && pos > total + 0.6) { halt(); pos = 0; } }; var doc = glob.document;
+bg = sfx.context.createScriptProcessor ? sfx.context.createScriptProcessor(2048, 1, 1) : null; if (bg) { var hush = sfx.context.createGain();
+hush.gain.value = 0; bg.connect(hush); hush.connect(sfx.context.destination); bg.onaudioprocess = function () {
+if (state === "play" && (!doc || doc.hidden)) { pump(); } }; } sfx.quit = function () { state = "stop"; if (bg) { bg.disconnect(); } };
+var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () { background(21, 23, 29); noStroke(); if (named < list.length) {
+names[named] = core.decode(list[named]).title || names[named]; named++; } if (state === "load") { var t0 = millis();
+while (done < jobs.length && millis() - t0 < 12) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
 bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, j.vx, j.tl, j.nt, j.gl); done++; continue; }
 j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl); if (j.r.step(3000)) { bufs[j.k] = { buf: j.r.buf, pre: 0 }; done++; } }
 state = done >= jobs.length ? "stop" : state; fill(226, 228, 235); textSize(15 * U); textAlign(CENTER, CENTER);
