@@ -624,13 +624,23 @@ var drBars = function () {
         var n = notes[i];
         if (!lit(n)) { continue; }
         var b = n.kit ? (n.p < 37 ? 0 : n.p < 41 ? 1 : n.p === 42 || n.p === 44 || n.p === 46 ? 3 : 2) : floor((n.p - lo) / (hi - lo + 1) * (nb - 4)) + 4;
-        lev[b] = max(lev[b] || 0, (n.kit ? 0.9 : 1 - (pos - n.s) * 0.4) * (0.45 + 0.55 * n.v));
-        tint[b] = n.c;
+        lev[b] = lev[b] || {};
+        lev[b][n.tr] = max(lev[b][n.tr] || 0, (n.kit ? 0.9 : 1 - (pos - n.s) * 0.4) * (0.45 + 0.55 * n.v));
+        tint[n.tr] = n.c;
     }
     for (var j = 0; j < nb; j++) {
-        var h = (lev[j] || 0) * tall + 3 * U; col(tint[j] || [96, 183, 247], 230);
-        rect(j * bw + 2, bot - h, bw - 4, h, 3); col(tint[j] || [96, 183, 247], 45);
-        rect(j * bw + 2, bot + 4 * U, bw - 4, h * 0.3, 3); lev[j] = (lev[j] || 0) * 0.9;
+        var row = lev[j] || {}, on = [];
+        for (var t in row) {
+            if (row[t] > 0.01) { on.push(t); }
+        }
+        if (!on.length) { col([96, 183, 247], 230); rect(j * bw + 2, bot - 3 * U, bw - 4, 3 * U, 3); }
+        var sw = (bw - 4) / max(1, on.length);
+        for (var k = 0; k < on.length; k++) {
+            var h = row[on[k]] * tall + 3 * U, x = j * bw + 2 + k * sw; col(tint[on[k]], 230);
+            rect(x, bot - h, max(1, sw - (on.length > 1 ? 1 : 0)), h, 3); col(tint[on[k]], 45);
+            rect(x, bot + 4 * U, max(1, sw - (on.length > 1 ? 1 : 0)), h * 0.3, 3);
+            row[on[k]] *= 0.9;
+        }
     }
 };
 var drOrbit = function () {
