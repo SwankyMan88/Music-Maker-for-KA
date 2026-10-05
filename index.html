@@ -536,6 +536,17 @@
             .visPick {
                 margin-bottom: 4px;
             }
+            #expSongs {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px 14px;
+                margin: 6px 0 8px;
+            }
+            #expSongs label {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
             #stage {
                 position: fixed;
                 inset: 0;
@@ -899,10 +910,10 @@
             // The songs this page plays.
             // Add lines from Export Text, or swap in a whole list from Export Text > The whole song list.
             var songs = [
+                "E6DMCBOcC1CAAzyBGBtD3BMBA~DmBGBtCkDGBxCoC~M+EABZ0CDBB3~FA6CAB5BoCDB1B9CDBVkDABRgDDBBj~FAmDABhCoCDB9BpDDBNkDADoDDA1BtBDBhBoCDAd~LAtB~7CB6CDAZ~bPDAx~yB1V~yZGA~gBCV~3ZK~WD~rBCRgDABJ6CDBFjDAAh~sDBd~oaK~XE~5Y8V~yB+C6CABR3BMBN~KB7~KF/~KFjC~KGG~KDl~KFn~KFp~KFr~KFt~KFv~KFxCGBBvCDBBw~FAx~FAy~FAz~FA0~FA1~FA2~l6BF4~FA5~v6BCDBB7~FA8~FA9~FA+~UU/~FAgDDBBh~FAi~17BFk~FAl~/7BCDBBnDAB5~uBB1BoDABZ/CJBlBkDAAxBoBAD5~5KB1B3~+JG~LA~wkBDmCABJ6CAAZoBDA~lBR~oCB~cT~hCubBZ0~gBDBV3~KA~aA~zjCO~1CLB~4jCD~6BDd~9jCC3~9jCS~tFK~iiBlO~6RnD~31CqX~iwD3C~i3C2qBD5BkDgMBlD~miEq5B~hCiC~1yEwRADoDGBV~mqIgF~+qIVDpD/CIDuCAAlagMB9E6CGBgDDB8CGBADBgDG~LB~TCDBwCGBQDBkBDB0~qBlBA~pBkB~XG~qBckB~nFvPl~NB~pFhFkD~gVxPm~+pBpK~wfzPjM~6PmFV~pvBxP~w0BrKXlE6CBE+BXAzXGDFtBADYADQADYMD8~NGJ~NIP~NI~nBCIADg~UA~OK~2BC~OE~3BC~qBKYADoB~SAMD8C~PHJ~PKP~PKMDsD~ME~rCCC~PH~8BC~PF~8BC~tBHtC3~mHhH~/FN~mHtGGCNyBDCEDFMGFMGLQSFkBGFYGFQ~GAIQJCMDLEMLcMCo~pBLYGFgBGLMM~TAEGLcMLQSDk~6Q/Gs~rCC~kH3GsS~lHgHGDtC~wtB+GmSLlB3BMLYMFQGFM~8eBQGjBAwBFcGLA~XAXQYFMGdUeLYMLkBGDlB~6IHGLB3BGD9~UJFR3BD~iKKDFB3BGFQ~5KLAFh~YAjBIGDlD~ZA~+JuBGL~kCBD9~5CE~gHCGLZ~WA1~2CB~WGXB3BD~sBM~0KLGLN~xCG~yoBGjB1~pDB~hIC~wZmB9By~7nBhO~kHgHRFoBYAkSgqBC5CmCACYACQACYJC8B~NFP~NI~aPIACg~UA~bC~OE~ceYACoB~SAJC8~7DC~PCP~PK~eNsD~ME~5CCC~PH~8BC~eWs~kH/GtCw~mH9GvSCt~xVjOvS~rGb~6jBqU~zchHGXtCrCAXYAXQAXYNGwBAArCg2BC4E~ohEnCs8B~oBN~xC5BMCY~uCnCOHiBoBArMgGB5CeDBYDBQ~GB8B~NlBIDBg~UC~OqBYDBoB~SC8C~PnBsD~MGY~eC~PjBjGBtCt~6GmB~nH0FeCwC~0ToCBlEo~2J+GY~9QhHDBtC3~tO+GSChDt~5rB2EVAoBAAkIgevBFtBAvBYAvBQ~IAwBvB8~SAIAvBg~bB~TFYAvBo~JAgB~UAsD~QG~oBEtCy~vCNt~xCQtBmC~zCMpB9CwCAp~SApBg~FA~sBB9D~1CO~kF5B3~vCoCs~oGE~tC9BHvBtC~vM8JtC~qBF~vCiCh~gPlC~xM0Ct~xM7E~+E1EH/C~+EB/CYA/CQ~IAjBI1CAEpFgYEgBJGEAKGEYLGQgBMeEcNGEULGKYOMQUPYEYQGEARGEgBSGEATGQYUYEAVGEMWGWUXkBEkBYGEAZGEYaGEAbGEQLGQQcSEIdGEELGEce~kDBQUfYEYgBGEAhBGEgBiBGQYjBeKAkBMEMlBGcUmBeKkBnBMKAoBMWYNYKAp~OAqBMWoBrBYKEs~QAt~eAuBoCKQvBMKYwBMEQbGEMLGEQeGEQKGiBAxBwBEcVGKAyBMEQpBGWQwBY~tDHYzBMKkB~kCWI0BwBKEXMKY1BMWU2BYKM3BMiB0BmBkHEsC~gIqCEk~1M+B~kKqFKKoC~gLVKg~5CX~9E+CY4BtBnBAoUmYBR3BABQABYDBlBj~MDJBlB~YEMBk~iBd0BABgB~jBB1~jBB~NBJB1~kBB~NB~lBjBkBABo~PBDBlCj~OFJBlC3~OFMBkC~oBmB~6EiC0~oJhJsMB1BhC~pIGt~pIH~YE~rJK~iBS~sDJt~sDIh~rFE~lBjB~rJKt~jIJh~/IF~rJM~oBa~6EgCsGB1B8~pIHo~pIH~YE~rJK~iBS~sDJ~mFC~sDD8~8NT~lBU~rJK~KA~jIG8~2SV~oBa~6EiC~+bI~oJ2I~+boJY~nIf~nlBtR~lKC~oIEZ~nIG~XE~pJK~hBR~pDJZ~oDH~gNF~kBiB~mJKZ~9HI~2RG~lJM~nBZ~2E+BaAyBQAoIwoBERwCAE4BAEoBMEtC2~OHlC8~OFGE9B/~OFSH9FmCAHYAHQAH~qzIKhBH8BAHIAHgB~cF~vyIE~dDYAHoBAH~yxINhBHsD~cE~9BC~1wII~fA~2DuDxXE1B~mJ+IR~mJ1Bt~mJmHhHHtCh~4DwDRtCwCARYARQARYeA3BeA4nBgGAxCtBDABeDAB~JwIjGAB3~KA~24PF1BhCAA5~RF~bB~4/BCApC~sBJ~bCtDyBAB5~3BD~hBP~yCE~bO~yDqK~pX5I~J8IjGAB8~mSF~KyThCDABy~KDB1BrCAA5~RF~bBBlC~WApC~sBJ~bCtD8BAB5~3BD~hBP~yCE~bO~yDqK~xiCkO~yDhO~5+BgUeDABP~I3H~hdBZ~JzI~6jDoiB~yDkOj~FAU~JzIK5BmBAAgFg2BB9B3BJBgDDBkBJB0B~8oSDGBkCGBgBGB0C~fZA~eZ8~9BalBm~hBa~9D4C~XA~7DxDmwBBV~2L3D~5H1DW6BjBAAwCggDvB5Co~wrLmCvB9B~hnMpC~9rMmC~tC1EF7BtBdAKg9CvB5FmCwBXMYXMYvBEwBvBIwBXVrCYXYY~jCE~8CBU|Neon Circuit|Drums|Bass|Disco Keys|Stabs|Lead|Arp|Robot|switch|on|the|lights|feel|wire|hum|ev-|ery|sig-|nal|glows|we|are|one|move|your|feet|to|code|in|ne-~vBB|no-|bod-|y|sleeps|dance|all|night|can|you|it|get-|ting|clos-|er|now|hands|up|sky~rFC|oh|high|more|time|to-|Funk Guitar|Acid|Choir|Bells",
                 "CkDMBBHcAyCAA8IACnC0CGCB8BGCB~K3BPmCACR~PAP6~KA~UAXkDACZ6CGCBg~ZA~PAR~PF~eGXuCACZ~jBZ~hClNVgDACF~oBIACNgDGCLg~/CBDGCvB~zBDACd8C~aBGCf~2CFR~PAn~kBE~3CDp~sDB~lBGLwCACd~qBL~6BB~pCxO~2SBV~pBI~2SDX~yCDACJ~7SQb~zZ7D~nE/B0BIAkCAA1DAtBvBgDwBtBSwBJVoDMEAGEAGJA~JES~SNI~SNO~SNc~oCfG~6CfU~SNK~+Df~oCoD~JOa~SMvBdgDAA8BTA7CAtBBy~GAQAtBMwBtBe~JAAtBU~NAa~aVmB~ODQ~oBE~bFS~1Be~OBW~NGVb4CAVQAVMYVbs~LFnB~XAMAVQ~XD~LD~WDUYVf~WDUYVX~WR~5C0CtBb~4JK~rJJ~pHIvBT6CAvBQAvBMAvBUEAyBkBAZAFxB8CGFRoCGFN~KAL~KAP~UPT~KAN~KAV~KAT~KAL~UNmb~pBjBGvBxB6CVAmBAAegP~jFEUAvBQwBvBuB~OIy~OJa~NIO~2BuBEvBq~bJG~NEgBA0CAE8BgDEQCGEADGKMEMEAFGEIGGKGHMuBKIwBEGJGEAKGKILMEEMGECNGKGOMuBGPwBEQQGEARGKMSMEATGEIUGKAV~eAWwBEGXGEAYGKCZMEGaGEIbGKGcMuBAdwBKceMKGeMEGfGEIYG6BAgB8BEK~zCCEMhBGEAiBGKUjBMKCkBMuBGlBwBKA~6BEmBGEIFG6BQnB8BEOaGEAoBGKIpBMEGqBGEKrBGKGMMuBGsBwBEc~jBbgDdB6CehBtB0BYEgBgPKwBeMKC~qFOO~qFDQ~qFKG~qFL~6BB~qFFM~qFBK~nEEEpBMECqBGEO~nEFC~qFK~jBT~qFD|Silver Boats|sil-|ver|b~PBon|mor-|ning|rain|sail-|~PAdown|the|win-~OA|pane|ev-|ry|drop|be-|comes|a|song|hum|it|as|we|float|a-|l~bAoh|let|shine|lit-|tle|star|is|m~WAhold|tight|will|sing|in-|to|n~XBHarmony",
                 "EuDMEBJJCwCAA5JACkDGCQGCI~GBQGCcGGgBMCE~KPkB~rBMCgBGCoBGCMGCU~REMYYCsC~2CvCBsCEBQEBI~GBQEBcEDgBIBE~KPkB~rBMBgBEBoBEBMEBU~REIYQ~NA~1CuCkEDBQDBI~GBQDBcDCgBGBE~KPkB~rBMBgBDBoBDBMDBU~REGYM~NA~1CtCAkECAQCAI~GBQCAcCBgBEAE~KPkB~rBMAgBCAoBCAMCAU~REDYI~NA~1CuCkEBAQBAI~GBQBAcB~rBBE~KPkB~rBPBAoBBAMBAU~REBYE~NA~1CuC~rFmFjBlHuDXD+BdAkIgMBF6~obwaMEyBeAwGgUB5C1C~3VkVRAqBAAgFgaB5CwCCBQCBI~GBQCBcCDgBEBE~KPkB~rBMBgBCBoBCBMCBU~REHYI~NA~1CtC~hLP~aA~iIC~KL~sIjBD~hLQ~1CgC~rFmFdlH6CAdYAdgBAdoBVAtBAAcgU/ClDwCA/CYA/CgBgD/CA~OIBsDA/BYA/BgBgC/BA~OHfsDAfYAfgBgBfA~LG~XSvBtDkDAvBYAvBgBAvBoBcFyCAAiQAB9FwCM~3FB~D1CBkDIBAABR/CIBN~NhGDAxBmCDBtBkD~WBDAh~RF~dvNC~dBAAhB8BCBtC~jBDC~jBB~XI~pBjTABpD6CBA1~YFB~vBGB~vBH~XCB~4CH~pBZ~4C/oBDtCuDADoDiBG1CAEaAFEHGFQIGFIJGFQKGFQLGFcMGLgBNMFEOGFcP~NAQMFERGFcS~NATMFkBUGFQVGFI~IDQWGFcXGFgBYGFoBZGFMaGFUbGFcc~WAbGXYcjBdwCAEEoLL5C6CeMLAb4WLlBkDbMdccfA8BAAGweDhGwCgBD4BgBD0~FA4BQFrBkDSvB6CBSX8F|Mountain King Speedrun|Bassoon|Pizzicato|Chip Lead|Drums|Singer|I|am|try-|ing|to|be|calm|but|the|song|keeps|get-|ting|fast-|er|ev-|ry|sin-|gle|bar|oh|no|Panic|uh",
-                "EkEMCBHEAmCUAwEALpF1CML4BMLMMLUMLsB~OCoB~PBM~OCkBMLA~DB0~gBDYMLFwC~TMUMLc~RCQMLoCMLgCML8~hCD~oBFgJLlBmCgDLQsY~jDE~/DtBE~9DyBMLBw~yHD~YAc~pCBgC~hEE~yDDg~zBDA~iBBU~jFF~3BjB~xFDo~LBsMLNr~lL0B~mHVALhBmC~7CD~uHUBmCALZrC8EvBlE8BAvBYAvBg~JAoBwBLBrC~2CBg~0GBRQSRMSXEYjBMAA1CAAvLgMEpC6CGEYGEgBGEcGEQGEMGEE~GBc~WCYGEUGEgC~XEMGEA~aI~TCQ~8BEU~5BIoB~UEQGEI~iCBc~PB~yDD~gBD~zDCIGEkB~hCIM~hBC~sCH~gBGE~qDTmMEZ/~zGJ~2FFQ~6DE~qCEY~dEU~9DB~qCH~oFF~qEG~3IF~6CD~nIC~nDmC~xGCY~DB~qKFUGEJkD~hNqGGEZm~hNpC~6JVw~7WqGGEN~sQrGGKxC/CMKM~DBEMKI~GB~PIQMKsBMvBIgGvB9F8BAvBhJyBACoCTAsRgMFVmCGFYGFgBGFcGFU~NI0B~LCY~YBc~NIMGFo~eDcGFkB~PN~4BW~tDrCc~mBB~RA~ZA~zCC~OENr~9G2GJMAJoBAJYMJ8B~LbsCAJg~LC0B~Lfo~PBMJkC~Me0BAJY~LnB~0FgE8~zECo~LgB1BwC~iHnB~2FnBk~2FrB~MA~8CoB~0FgE~qLmBsGF1B8~/XD~7YC~tYE~OC~kaXc~ka0BNr~8OhL~mamLMtB0BAtBYAtBgBwBtB0C~LB~UA~PAc~dDo~dC~sBGIDmCAAhFgGtB1DhC~tBB~FA4~qBB8~GBpBw~ZMk~GBQ~vBR~lDC~tBhBJxC1CMJgDMJ8~ID0E~QLB~QLD~gBb~gCb8~gBL1B6~iEL8~iDLk~iCLk~iCLs~gCrB~iELtBNm~/KB0~+JHU~4LCr~ZN~2JBp~0F8D~2KO~0JsD~0IC~vSBE~+IDE/C9C8BTEoBAAxGAvBV3~k/DGwBvB0C~v/DEY~PAk~5/DC~fFk~fKlBy~/BpB~xiEFo~PB1Bt~+D4B~fB~8D2B~7FqB~8DoC0~fF~uBBs~9BK~eG~8CD~rDL~9BpB~6DQ~wLzD~qTB~2HxD~sP4D~4HD~oT2D~9BVc~sBW/C~7cB/C4BgD~NAo~NAYA/CgBcFwCAAmPgYB9FmCAAxBtBMAAMBtB~P2GABZ+CDBBhDDBBk~FAnDDB1BqDAAhBtBDBdt~WAw~FAzDDBN/~6BB8BGAAGBd~OAh~OEtB~d6M~tPHAV~PB~yPH/CAB~3PD8~3PH~QF~9P7PjM~7f2d~dR1CYBRmCYBN~KFByBDBB2~FA6~FA+~FAiCDBBm~FAq~FAu~FAy~FA2~FA6~FA~6SBiDDBBm~FAq~FAuDDBNkDADoDiBG1CAE0BgYKoCHMK4BIMKMJMKUKMKsBL~SAMMKoBNMKUO~bC4BPMKkBQMKAR8BKQSMKAIMK0BT~cAUMKYVMKUWMKcX~WAYMKQZMKoCaMKgCJMK8BbMKkBNYKAc4kBKM~4DvD|Piano Panic|Left Hand|Bass|Pad|Drums|Voice|lights|on|the|wa-|ter|glow-|ing|through|qui-|et|night|hold|a|lit-|tle|we'll|be|a-|r~iBBtill|morn-~jDC",
-                "E6DMDBOcC1CAAzyBGBtD3BMBA~DmBGBtCkDGBxCoC~M+EABZ0CDBB3~FA6CAB5BoCDB1B9CDBVkDABRgDDBBj~FAmDABhCoCDB9BpDDBNkDADoDDA1BtBDBhBoCDAd~LAtB~7CB6CDAZ~bPDAx~yB1V~yZGA~gBCV~3ZK~WD~rBCRgDABJ6CDBFjDAAh~sDBd~oaK~XE~5Y8V~yB+C6CABR3BMBN~KB7~KF/~KFjC~KGG~KDl~KFn~KFp~KFr~KFt~KFv~KFxCGBBvCDBBw~FAx~FAy~FAz~FA0~FA1~FA2~l6BF4~FA5~v6BCDBB7~FA8~FA9~FA+~UU/~FAgDDBBh~FAi~17BFk~FAl~/7BCDBBnDAB5~uBB1BoDABZ/CJBlBkDAAxBoBAD5~5KB1B3~+JG~LA~wkBDmCABJ6CAAZoBDA~lBR~oCB~cT~hCubBZ0~gBDBV3~KA~aA~zjCO~1CLB~4jCD~6BDd~9jCC3~9jCS~tFK~iiBlO~6RnD~31CqX~iwD3C~i3C2qBD5BkDgMBlD~miEq5B~hCiC~1yEwRADoDGBV~mqIgF~+qIVDpD/CIDuCAAlagMB9E6CGBgDDB8CGBADBgDG~LB~TCDBwCGBQDBkBDB0~qBlBA~pBkB~XG~qBckB~nFvPl~NB~pFhFkD~gVxPm~+pBpK~wfzPjM~6PmFV~pvBxP~w0BrKXlE6CBE+BXAzXGDFtBADYADQADYMD8~NGJ~NIP~NI~nBCIADg~UA~OK~2BC~OE~3BC~qBKYADoB~SAMD8C~PHJ~PKP~PKMDsD~ME~rCCC~PH~8BC~PF~8BC~tBHtC3~mHhH~/FN~mHtGGCNyBDCEDFMGFMGLQSFkBGFYGFQ~GAIQJCMDLEMLcMCo~pBLYGFgBGLMM~TAEGLcMLQSDk~6Q/Gs~rCC~kH3GsS~lHgHGDtC~wtB+GmSLlB3BMLYMFQGFM~8eBQGjBAwBFcGLA~XAXQYFMGdUeLYMLkBGDlB~6IHGLB3BGD9~UJFR3BD~iKKDFB3BGFQ~5KLAFh~YAjBIGDlD~ZA~+JuBGL~kCBD9~5CE~gHCGLZ~WA1~2CB~WGXB3BD~sBM~0KLGLN~xCG~yoBGjB1~pDB~hIC~wZmB9By~7nBhO~kHgHRFoBYAkSgqBC5CmCACYACQACYJC8B~NFP~NI~aPIACg~UA~bC~OE~ceYACoB~SAJC8~7DC~PCP~PK~eNsD~ME~5CCC~PH~8BC~eWs~kH/GtCw~mH9GvSCt~xVjOvS~rGb~6jBqU~zchHGXtCrCAXYAXQAXYNGwBAArCg2BC4E~ohEnCs8B~oBN~xC5BMCY~uCnCOHiBoBArMgGB5CeDBYDBQ~GB8B~NlBIDBg~UC~OqBYDBoB~SC8C~PnBsD~MGY~eC~PjBjGBtCt~6GmB~nH0FeCwC~0ToCBlEo~2J+GY~9QhHDBtC3~tO+GSChDt~5rB2EVAoBAAkIgevBFtBAvBYAvBQ~IAwBvB8~SAIAvBg~bB~TFYAvBo~JAgB~UAsD~QG~oBEtCy~vCNt~xCQtBmC~zCMpB9CwCAp~SApBg~FA~sBB9D~1CO~kF5B3~vCoCs~oGE~tC9BHvBtC~vM8JtC~qBF~vCiCh~gPlC~xM0Ct~xM7E~+E1EH/C~+EB/CYA/CQ~IAjBI1CAEpFgYEgBJGEAKGEYLGQgBMeEcNGEULGKYOMQUPYEYQGEARGEgBSGEATGQYUYEAVGEMWGWUXkBEkBYGEAZGEYaGEAbGEQLGQQcSEIdGEELGEce~kDBQUfYEYgBGEAhBGEgBiBGQYjBeKAkBMEMlBGcUmBeKkBnBMKAoBMWYNYKAp~OAqBMWoBrBYKEs~QAt~eAuBoCKQvBMKYwBMEQbGEMLGEQeGEQKGiBAxBwBEcVGKAyBMEQpBGWQwBY~tDHYzBMKkB~kCWI0BwBKEXMKY1BMWU2BYKM3BMiB0BmBkHEsC~gIqCEk~1M+B~kKqFKKoC~gLVKg~5CX~9E+CY4BtBnBAoUmYBR3BABQABYDBlBj~MDJBlB~YEMBk~iBd0BABgB~jBB1~jBB~NBJB1~kBB~NB~lBjBkBABo~PBDBlCj~OFJBlC3~OFMBkC~oBmB~6EiC0~oJhJsMB1BhC~pIGt~pIH~YE~rJK~iBS~sDJt~sDIh~rFE~lBjB~rJKt~jIJh~/IF~rJM~oBa~6EgCsGB1B8~pIHo~pIH~YE~rJK~iBS~sDJ~mFC~sDD8~8NT~lBU~rJK~KA~jIG8~2SV~oBa~6EiC~+bI~oJ2I~+boJY~nIf~nlBtR~lKC~oIEZ~nIG~XE~pJK~hBR~pDJZ~oDH~gNF~kBiB~mJKZ~9HI~2RG~lJM~nBZ~2E+BaAyBQAoIwoBERwCAE4BAEoBMEtC2~OHlC8~OFGE9B/~OFSH9FmCAHYAHQAH~qzIKhBH8BAHIAHgB~cF~vyIE~dDYAHoBAH~yxINhBHsD~cE~9BC~1wII~fA~2DuDxXE1B~mJ+IR~mJ1Bt~mJmHhHHtCh~4DwDRtCwCARYARQARYeA3BeA4nBgGAxCtBDABeDAB~JwIjGAB3~KA~24PF1BhCAA5~RF~bB~4/BCApC~sBJ~bCtDyBAB5~3BD~hBP~yCE~bO~yDqK~pX5I~J8IjGAB8~mSF~KyThCDABy~KDB1BrCAA5~RF~bBBlC~WApC~sBJ~bCtD8BAB5~3BD~hBP~yCE~bO~yDqK~xiCkO~yDhO~5+BgUeDABP~I3H~hdBZ~JzI~6jDoiB~yDkOj~FAU~JzIK5BmBAAgFg2BB9B3BJBgDDBkBJB0B~8oSDGBkCGBgBGB0C~fZA~eZ8~9BalBm~hBa~9D4C~XA~7DxDmwBBV~2L3D~5H1DW6BjBAAwCggDvB5Co~wrLmCvB9B~hnMpC~9rMmC~tC1EF7BtBdAKg9CvB5FmCwBXMYXMYvBEwBvBIwBXVrCYXYY~jCE~8CBU|Neon Circuit|Drums|Bass|Disco Keys|Stabs|Lead|Arp|Robot|switch|on|the|lights|feel|wire|hum|ev-|ery|sig-|nal|glows|we|are|one|move|your|feet|to|code|in|ne-~vBB|no-|bod-|y|sleeps|dance|all|night|can|you|it|get-|ting|clos-|er|now|hands|up|sky~rFC|oh|high|more|time|to-|Funk Guitar|Acid|Choir|Bells"
+                "EkEMBBHEAmCUAwEALpF1CML4BMLMMLUMLsB~OCoB~PBM~OCkBMLA~DB0~gBDYMLFwC~TMUMLc~RCQMLoCMLgCML8~hCD~oBFgJLlBmCgDLQsY~jDE~/DtBE~9DyBMLBw~yHD~YAc~pCBgC~hEE~yDDg~zBDA~iBBU~jFF~3BjB~xFDo~LBsMLNr~lL0B~mHVALhBmC~7CD~uHUBmCALZrC8EvBlE8BAvBYAvBg~JAoBwBLBrC~2CBg~0GBRQSRMSXEYjBMAA1CAAvLgMEpC6CGEYGEgBGEcGEQGEMGEE~GBc~WCYGEUGEgC~XEMGEA~aI~TCQ~8BEU~5BIoB~UEQGEI~iCBc~PB~yDD~gBD~zDCIGEkB~hCIM~hBC~sCH~gBGE~qDTmMEZ/~zGJ~2FFQ~6DE~qCEY~dEU~9DB~qCH~oFF~qEG~3IF~6CD~nIC~nDmC~xGCY~DB~qKFUGEJkD~hNqGGEZm~hNpC~6JVw~7WqGGEN~sQrGGKxC/CMKM~DBEMKI~GB~PIQMKsBMvBIgGvB9F8BAvBhJyBACoCTAsRgMFVmCGFYGFgBGFcGFU~NI0B~LCY~YBc~NIMGFo~eDcGFkB~PN~4BW~tDrCc~mBB~RA~ZA~zCC~OENr~9G2GJMAJoBAJYMJ8B~LbsCAJg~LC0B~Lfo~PBMJkC~Me0BAJY~LnB~0FgE8~zECo~LgB1BwC~iHnB~2FnBk~2FrB~MA~8CoB~0FgE~qLmBsGF1B8~/XD~7YC~tYE~OC~kaXc~ka0BNr~8OhL~mamLMtB0BAtBYAtBgBwBtB0C~LB~UA~PAc~dDo~dC~sBGIDmCAAhFgGtB1DhC~tBB~FA4~qBB8~GBpBw~ZMk~GBQ~vBR~lDC~tBhBJxC1CMJgDMJ8~ID0E~QLB~QLD~gBb~gCb8~gBL1B6~iEL8~iDLk~iCLk~iCLs~gCrB~iELtBNm~/KB0~+JHU~4LCr~ZN~2JBp~0F8D~2KO~0JsD~0IC~vSBE~+IDE/C9C8BTEoBAAxGAvBV3~k/DGwBvB0C~v/DEY~PAk~5/DC~fFk~fKlBy~/BpB~xiEFo~PB1Bt~+D4B~fB~8D2B~7FqB~8DoC0~fF~uBBs~9BK~eG~8CD~rDL~9BpB~6DQ~wLzD~qTB~2HxD~sP4D~4HD~oT2D~9BVc~sBW/C~7cB/C4BgD~NAo~NAYA/CgBcFwCAAmPgYB9FmCAAxBtBMAAMBtB~P2GABZ+CDBBhDDBBk~FAnDDB1BqDAAhBtBDBdt~WAw~FAzDDBN/~6BB8BGAAGBd~OAh~OEtB~d6M~tPHAV~PB~yPH/CAB~3PD8~3PH~QF~9P7PjM~7f2d~dR1CYBRmCYBN~KFByBDBB2~FA6~FA+~FAiCDBBm~FAq~FAu~FAy~FA2~FA6~FA~6SBiDDBBm~FAq~FAuDDBNkDADoDiBG1CAE0BgYKoCHMK4BIMKMJMKUKMKsBL~SAMMKoBNMKUO~bC4BPMKkBQMKAR8BKQSMKAIMK0BT~cAUMKYVMKUWMKcX~WAYMKQZMKoCaMKgCJMK8BbMKkBNYKAc4kBKM~4DvD|Piano Panic|Left Hand|Bass|Pad|Drums|Voice|lights|on|the|wa-|ter|glow-|ing|through|qui-|et|night|hold|a|lit-|tle|we'll|be|a-|r~iBBtill|morn-~jDC"
             ];
         </script>
         <script>
@@ -1807,7 +1818,7 @@ var playerSrc = function () {
                 var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox", b = nt._bend;
                 var d = b ? b.len * spt : e - s, gl = b && b.gl ? core.secs(b.gl, spt) : null;
                 total = max(total, e);
-                notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti });
+                notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti, v: nt.v / 127, pan: tr.pan / 50 });
                 lo = ins.k === "kit" ? lo : min(lo, nt.p);
                 hi = ins.k === "kit" ? hi : max(hi, nt.p);
                 if (vox && !seen[round(s * 100) + nt.w]) { ly.push({ s: s, e: e, w: nt.w }); }
@@ -1876,7 +1887,9 @@ var playerSrc = function () {
             if (x2 < 0 || x1 > width) { continue; }
             col(n.c, lit(n) ? 255 : 140);
             if (n.kit) {
-                rect(x1, bot - 16 * U, max(3, min(x2 - x1, 7 * U)), 10 * U, 2);
+                // kicks sit lowest, snares and claps above them, hats and cymbals on top
+                var lane = n.p < 37 ? 0 : n.p < 41 ? 1 : n.p < 49 && n.p !== 42 && n.p !== 44 && n.p !== 46 ? 2 : 3;
+                rect(x1, bot - (14 + lane * 7) * U, max(3, min(x2 - x1, 7 * U)), 5 * U, 2);
             } else {
                 rect(x1, top + 6 * U + (hi - n.p) * rh, max(2, x2 - x1 - 1), max(2, rh - 1), 2);
             }
@@ -1891,8 +1904,8 @@ var playerSrc = function () {
         for (var i = 0; i < notes.length && notes[i].s <= pos; i++) {
             var n = notes[i];
             if (!lit(n)) { continue; }
-            var b = n.kit ? floor(random(0, 4)) : floor((n.p - lo) / (hi - lo + 1) * (nb - 4)) + 4;
-            lev[b] = max(lev[b] || 0, n.kit ? 0.6 : 1 - (pos - n.s) * 0.4);
+            var b = n.kit ? (n.p < 37 ? 0 : n.p < 41 ? 1 : n.p === 42 || n.p === 44 || n.p === 46 ? 3 : 2) : floor((n.p - lo) / (hi - lo + 1) * (nb - 4)) + 4;
+            lev[b] = max(lev[b] || 0, (n.kit ? 0.9 : 1 - (pos - n.s) * 0.4) * (0.45 + 0.55 * n.v));
             tint[b] = n.c;
         }
         for (var j = 0; j < nb; j++) {
@@ -1917,7 +1930,7 @@ var playerSrc = function () {
             if (n.s < st || n.s >= st + bar) { continue; }
             var ang = (n.s - st) / bar * TWO_PI - PI / 2;
             var r = R * (0.3 + 0.7 * (n.tr + 1) / nt);
-            var sz = (lit(n) ? 16 : 7) * U;
+            var sz = (lit(n) ? 8 + 10 * n.v : 7) * U;
             col(n.c, lit(n) ? 255 : 150);
             ellipse(cx + cos(ang) * r, cy + sin(ang) * r, sz, sz);
         }
@@ -1933,18 +1946,19 @@ var playerSrc = function () {
         var cx = width / 2, cy = height / 2 - 34 * U;
         while (state === "play" && vi < notes.length && notes[vi].s <= pos) {
             var n = notes[vi];
-            var ang = n.kit ? random(0, TWO_PI) : (n.p - lo) / (hi - lo + 1) * TWO_PI;
-            if (n.kit) { kick = 1; }
-            for (var j = 0; j < (n.kit ? 3 : 6) && parts.length < 500; j++) {
-                var sp = random(1.5, 3.5) * U;
+            var hiP = (n.p - lo) / (hi - lo + 1), boom = n.kit && n.p < 37;
+            var ang = n.kit ? random(0, TWO_PI) : hiP * TWO_PI;
+            if (boom) { kick = max(kick, n.v); }
+            for (var j = 0; j < (boom ? 0 : n.kit ? 2 : 2 + round(n.v * 5)) && parts.length < 500; j++) {
+                var sp = (n.kit ? random(3, 5) : random(0.8, 1.6) + hiP * 2.6) * U;
                 var a2 = ang + random(-0.25, 0.25);
-                parts.push({ x: cx, y: cy, vx: cos(a2) * sp, vy: sin(a2) * sp, c: n.c, life: 1 });
+                parts.push({ x: cx, y: cy, vx: cos(a2) * sp + n.pan * U, vy: sin(a2) * sp, c: n.c, life: 1, z: n.kit ? 3 : 4 + (1 - hiP) * 8 });
             }
             vi++;
         }
-        col([96, 183, 247], 40 + kick * 60);
-        ellipse(cx, cy, (40 + kick * 30) * U, (40 + kick * 30) * U);
-        kick *= 0.9;
+        col([96, 183, 247], 40 + kick * 90);
+        ellipse(cx, cy, (40 + kick * 45) * U, (40 + kick * 45) * U);
+        kick *= 0.88;
         for (var i = parts.length - 1; i >= 0; i--) {
             var q = parts[i];
             q.x += q.vx;
@@ -1955,7 +1969,7 @@ var playerSrc = function () {
                 continue;
             }
             col(q.c, q.life * 255);
-            ellipse(q.x, q.y, 6 * U * q.life + 2, 6 * U * q.life + 2);
+            ellipse(q.x, q.y, q.z * U * q.life + 2, q.z * U * q.life + 2);
         }
     };
 
@@ -2475,7 +2489,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v9/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v10/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -4455,31 +4469,82 @@ var size = function (n) {
     return n < 1024 ? n + " characters" : (n / 1024).toFixed(1) + "k characters";
 };
 
-// Text and PJS exports share this dialog.
-// Changing the visual updates the song and the text.
+// Picks a visual that suits a song: Piano Roll for melody songs without drums or led by piano,
+// Bars for fast dance beats, Stars for big busy songs, and Orbit for the rest.
+var autoVis = function (sg) {
+    var count = 0, kit = 0, keys = 0;
+    sg.tracks.forEach(function (tr) {
+        var ins = core.insOf(tr) || {}, name = ins.n || "";
+        count += tr.notes.length;
+        if (ins.k === "kit") { kit += tr.notes.length; }
+        if (/Piano|Music Box|Harp|Marimba|Bell|Harpsichord/.test(name)) { keys += tr.notes.length; }
+    });
+    if (!kit || keys > count * 0.4) { return 1; }
+    if (sg.bpm >= 116) { return 2; }
+    if (sg.tracks.length >= 8) { return 4; }
+    return 3;
+};
+
+// Text, PJS and player exports share this dialog.
+// "Visual for this song" changes the song itself, the other choices only change what gets exported.
+var expPick = null;
 var exportBox = function (kind) {
+    commit();
+    if (!expPick || expPick.length !== book.list.length) { expPick = book.list.map(function () { return true; }); }
+    var mode = "own", same = 1;
+    // The ticked songs, each with the visual it should use in the export.
+    var chosen = function () {
+        var out = [];
+        book.list.forEach(function (t, i) {
+            if (!expPick[i]) { return; }
+            if (mode === "own") {
+                out.push(t);
+                return;
+            }
+            var sg = core.decode(t);
+            sg.vis = mode === "auto" ? autoVis(sg) : same;
+            out.push(core.encode(sg));
+        });
+        return out;
+    };
     var make = function () {
         var txt = core.encode(song);
         var all = $("whatSel") && $("whatSel").value === "all";
-        var listLine = "var songs = [\n" + book.list.map(function (t) { return '    "' + t + '"'; }).join(",\n") + "\n];";
-        var code = kind === "pjs" ? pjs.build(book.list) : (kind === "page" ? pjs.page(book.list) : (all ? listLine : txt));
+        var list = chosen();
+        if (!list.length && (kind !== "text" || all)) { return { code: "", info: '<span class="warn">Tick at least one song.</span>' }; }
+        var n = list.length + (list.length === 1 ? " song" : " songs");
+        var listLine = "var songs = [\n" + list.map(function (t) { return '    "' + t + '"'; }).join(",\n") + "\n];";
+        var code = kind === "pjs" ? pjs.build(list) : (kind === "page" ? pjs.page(list) : (all ? listLine : txt));
         var info = kind === "page" ?
-            "A page that only plays your songs with their visuals (" + book.list.length + (book.list.length === 1 ? " song" : " songs") + "). Paste it into a new Khan Academy webpage, or save it as an .html file. Vox tracks sing here, the voice loads from GitHub." :
+            "A page that only plays your songs with their visuals (" + n + "). Paste it into a new Khan Academy webpage, or save it as an .html file. Vox tracks sing here, the voice loads from GitHub." :
             kind === "pjs" ?
-            "Paste into a new Processing.js program on Khan Academy. <b>" + code.split("\n").length + " lines</b> with " + book.list.length + (book.list.length === 1 ? " song" : " songs") + ". Click the title in the program to switch songs." :
-            (all ? "Replace <b>var songs</b> in the HTML page or a PJS program with this." :
+            "Paste into a new Processing.js program on Khan Academy. <b>" + code.split("\n").length + " lines</b> with " + n + ". Click the title in the program to switch songs." :
+            (all ? "Replace <b>var songs</b> in the HTML page or a PJS program with this (" + n + ")." :
                 "<b>" + size(txt.length) + "</b>, lossless. Add it as a line in <b>var songs</b> in the HTML page or a PJS program, or Import it.");
-        if (kind === "pjs" && book.list.some(function (t) { return pjs.hasVox(core.decode(t)); })) { info += '<br><span class="warn">Vox tracks are not sung in the PJS version. Their lyrics still show as karaoke text.</span>'; }
+        if (kind === "pjs" && list.some(function (t) { return pjs.hasVox(core.decode(t)); })) { info += '<br><span class="warn">Vox tracks are not sung in the PJS version. Their lyrics still show as karaoke text.</span>'; }
         return { code: code, info: info };
     };
-    var picks = core.visuals.map(function (v, i) {
-        return '<option value="' + i + '"' + (i === (song.vis || 0) ? " selected" : "") + ">" + v + "</option>";
+    var opts = function (cur) {
+        return core.visuals.map(function (v, i) {
+            return '<option value="' + i + '"' + (i === cur ? " selected" : "") + ">" + v + "</option>";
+        }).join("");
+    };
+    var boxes = book.list.map(function (t, i) {
+        return '<label><input type="checkbox" data-song="' + i + '"' + (expPick[i] ? " checked" : "") + ">" + titleOf(t, i).replace(/</g, "&lt;") + "</label>";
     }).join("");
+    var many = kind !== "text";
     var first = make();
     modal({
         title: kind === "pjs" ? "Khan Academy program" : (kind === "page" ? "Player page" : "Song text"),
-        html: '<label class="visPick">Visual for this song <select id="visSel">' + picks + "</select></label>" +
-            (kind !== "text" ? "" : '<label class="visPick">Copy <select id="whatSel"><option value="one">This song</option><option value="all">The whole song list</option></select></label>') +
+        html: '<label class="visPick">Visual for this song <select id="visSel">' + opts(song.vis || 0) + "</select></label>" +
+            (many ? "" : '<label class="visPick">Copy <select id="whatSel"><option value="one">This song</option><option value="all">Song list</option></select></label>') +
+            '<div id="expMany"' + (many ? "" : " hidden") + ">" +
+            '<div id="expSongs">' + boxes + "</div>" +
+            '<label class="visPick">Visuals <select id="modeSel">' +
+            '<option value="own">Each song keeps its own</option>' +
+            '<option value="auto">Pick one to fit each song</option>' +
+            '<option value="same">The same for every song</option>' +
+            '</select></label> <select id="sameSel" hidden>' + opts(same) + "</select></div>" +
             '<div id="expInfo">' + first.info + "</div>",
         area: first.code,
         ro: true,
@@ -4505,7 +4570,25 @@ var exportBox = function (kind) {
         commit();
         refresh();
     });
-    if ($("whatSel")) { $("whatSel").addEventListener("change", refresh); }
+    $("expSongs").addEventListener("change", function (e) {
+        expPick[Number(e.target.dataset.song)] = e.target.checked;
+        refresh();
+    });
+    $("modeSel").addEventListener("change", function () {
+        mode = $("modeSel").value;
+        $("sameSel").hidden = mode !== "same";
+        refresh();
+    });
+    $("sameSel").addEventListener("change", function () {
+        same = Number($("sameSel").value);
+        refresh();
+    });
+    if ($("whatSel")) {
+        $("whatSel").addEventListener("change", function () {
+            $("expMany").hidden = $("whatSel").value !== "all";
+            refresh();
+        });
+    }
 };
 
 $("expBtn").addEventListener("click", function () { exportBox("text"); });
