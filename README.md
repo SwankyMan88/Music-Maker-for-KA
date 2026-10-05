@@ -20,7 +20,7 @@ Processing.js program.
 
 In `index.html`, the voice loads from this repo through jsDelivr:
 
-    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v14/js/voice.js
+    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v15/js/voice.js
 
 It points at the `v6` tag. After changing the voice files, push a new tag (`v2`, ...) and update the
 link in `index.html`, since jsDelivr caches files for a while.
