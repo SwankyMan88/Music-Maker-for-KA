@@ -82,7 +82,7 @@ core.insts = [
     0, 0, 0,
     {"n":"Vox","g":"Voice","c":[252,141,211],"k":"vox","vx":{"fs":1,"op":0.4,"cl":0.16,"br":0.04,"tl":0.62,"vr":5.5,"vd":0.3}},
     {"n":"Bright Vox","g":"Voice","c":[246,181,112],"k":"vox","vx":{"fs":1.17,"op":0.45,"cl":0.2,"br":0.1,"tl":0.8,"vr":5.8,"vd":0.35}},
-    0, 0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ];
 core.freq = function (m) { return 440 * Math.pow(2, (m - 69) / 12); }; core.arr = function (ctx, n) {
 return ctx.createBuffer(1, Math.max(1, n), ctx.sampleRate).getChannelData(0); }; core.blep = function (t, dt) {
@@ -100,7 +100,7 @@ h._bend.gl.p.push({ at: to.t - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c })
 core.layerJob = function (ctx, out, L, base, hold, gl) { var sr = ctx.sampleRate, w = L.w || "sin", pw = L.pw || 0.5, step = L.nr ? sr / L.nr : 0;
 var g = L.g === undefined ? 0.3 : L.g, s = L.s === undefined ? 1 : L.s;
 var a = L.a || 0.002, d = L.d || 0.2, r = L.r || 0.05, damp = 1.4 - (L.fq || 0) * 1.25;
-var f0 = (L.f || base * (L.m || 1)) * Math.pow(2, (L.dt || 0) / 1200);
+var f0 = (L.f || base * (L.m || 1)) * Math.pow(2, (L.dt || 0) / 1200); if (L.kd) { d = d * Math.pow(261.6 / (base || 261.6), L.kd); }
 var ph = 0, lo = 0, band = 0, cf = 0, held = 0, cnt = 0, nz = 0, y = null, dl = 0, burst = 0; var fc = (L.fc || 1000) * (L.fk ? f0 : 1);
 var fe = (L.fe || L.fc || 1000) * (L.fk ? f0 : 1); if (w === "ks") { y = core.arr(ctx, out.length); dl = sr / f0 - 0.5; burst = Math.round(sr / f0); }
 var i = 0; var run = function (n) { var end = Math.min(out.length, i + n); for (; i < end; i++) { var t = i / sr;

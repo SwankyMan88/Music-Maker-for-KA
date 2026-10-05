@@ -81,7 +81,7 @@ core.insts = [
     {"n":"Warm Pad","g":"Pad","c":[91,141,226],"l":[{"w":"saw","dt":-9,"g":0.11,"a":0.7,"d":1,"s":0.8,"r":1.3,"ft":"lp","fc":3.5,"fk":1},{"w":"saw","dt":9,"g":0.11,"a":0.7,"d":1,"s":0.8,"r":1.3,"ft":"lp","fc":3.5,"fk":1},{"w":"tri","m":0.5,"g":0.12,"a":0.7,"d":1,"s":0.8,"r":1.3}]},
     0, 0, 0, 0, 0, 0, 0, 0, 0,
     {"n":"8-Bit Kit","g":"Drums","c":[241,118,73],"k":"kit","kit":{"36":{"n":"Kick","len":0.3,"l":[{"w":"tri","f":60,"g":0.8,"a":0.001,"d":0.14,"s":0,"r":0.03,"pe":[30,0.03],"qz":8}]},"38":{"n":"Snare","len":0.25,"l":[{"w":"noi","nr":9000,"g":0.45,"a":0.001,"d":0.08,"s":0,"r":0.04},{"w":"tri","f":220,"g":0.3,"a":0.001,"d":0.04,"s":0,"r":0.03,"pe":[12,0.02],"qz":8}]},"39":{"n":"Clap","len":0.25,"l":[{"w":"noi","nr":7000,"g":0.5,"a":0.001,"d":0.08,"s":0,"r":0.04,"bu":3}]},"42":{"n":"Hat","len":0.08,"l":[{"w":"noi","nr":22000,"g":0.25,"a":0.001,"d":0.02,"s":0,"r":0.02,"ft":"hp","fc":5000}]},"45":{"n":"Tom","len":0.35,"l":[{"w":"tri","f":140,"g":0.6,"a":0.001,"d":0.15,"s":0,"r":0.04,"pe":[12,0.05],"qz":8}]},"46":{"n":"Open Hat","len":0.3,"l":[{"w":"noi","nr":22000,"g":0.22,"a":0.001,"d":0.12,"s":0,"r":0.04,"ft":"hp","fc":5000}]},"49":{"n":"Crash","len":1,"l":[{"w":"noi","nr":14000,"g":0.25,"a":0.001,"d":0.5,"s":0,"r":0.1}]},"50":{"n":"Blip","len":0.12,"l":[{"w":"sqr","f":880,"g":0.15,"a":0.001,"d":0.05,"s":0,"r":0.02,"pe":[12,0.01]}]}}},
-    0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ];
 core.freq = function (m) { return 440 * Math.pow(2, (m - 69) / 12); }; core.arr = function (ctx, n) {
 return ctx.createBuffer(1, Math.max(1, n), ctx.sampleRate).getChannelData(0); }; core.blep = function (t, dt) {
@@ -99,7 +99,7 @@ h._bend.gl.p.push({ at: to.t - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c })
 core.layerJob = function (ctx, out, L, base, hold, gl) { var sr = ctx.sampleRate, w = L.w || "sin", pw = L.pw || 0.5, step = L.nr ? sr / L.nr : 0;
 var g = L.g === undefined ? 0.3 : L.g, s = L.s === undefined ? 1 : L.s;
 var a = L.a || 0.002, d = L.d || 0.2, r = L.r || 0.05, damp = 1.4 - (L.fq || 0) * 1.25;
-var f0 = (L.f || base * (L.m || 1)) * Math.pow(2, (L.dt || 0) / 1200);
+var f0 = (L.f || base * (L.m || 1)) * Math.pow(2, (L.dt || 0) / 1200); if (L.kd) { d = d * Math.pow(261.6 / (base || 261.6), L.kd); }
 var ph = 0, lo = 0, band = 0, cf = 0, held = 0, cnt = 0, nz = 0, y = null, dl = 0, burst = 0; var fc = (L.fc || 1000) * (L.fk ? f0 : 1);
 var fe = (L.fe || L.fc || 1000) * (L.fk ? f0 : 1); if (w === "ks") { y = core.arr(ctx, out.length); dl = sr / f0 - 0.5; burst = Math.round(sr / f0); }
 var i = 0; var run = function (n) { var end = Math.min(out.length, i + n); for (; i < end; i++) { var t = i / sr;

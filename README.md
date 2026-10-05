@@ -20,7 +20,7 @@ Processing.js program.
 
 In `index.html`, the voice loads from this repo through jsDelivr:
 
-    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v19/js/voice.js
+    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v20/js/voice.js
 
 It points at the `v6` tag. After changing the voice files, push a new tag (`v2`, ...) and update the
 link in `index.html`, since jsDelivr caches files for a while.
@@ -40,4 +40,5 @@ Copyright (C) 1993-2015 Carnegie Mellon University. Its license is kept at the t
 - Click a track header (Ctrl or Shift for more) and use Ctrl+C / Ctrl+V to copy whole tracks. Drag the ⠿ grip to reorder tracks.
 - Drag from a note's output dot (right) to a later note to make it slide in. Click the line to set the slide time and shape, right click it to remove it.
 - The ✎ button on a track opens its sound effects, voice settings and the instrument's raw data.
+- The Acoustic group has instruments modelled on real ones: grand piano, nylon and steel guitar, upright bass, violin, cello, string section, trumpet, French horn, clarinet, oboe, choir, timpani and an acoustic drum kit. Switch a track's instrument to try them; songs keep their own instruments.
 - On phones: one finger edits, two fingers move and pinch to zoom, and Delete mode turns taps into deletes.

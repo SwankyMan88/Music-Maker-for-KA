@@ -88,7 +88,7 @@ core.insts = [
     {"n":"Brass","g":"Wind","c":[233,167,66],"l":[{"w":"saw","g":0.24,"a":0.035,"d":0.3,"s":0.85,"r":0.12,"ft":"lp","fc":1.2,"fe":7,"fk":1,"fd":0.07,"vb":[5.2,10,0.35]},{"w":"saw","dt":6,"g":0.12,"a":0.04,"d":0.3,"s":0.85,"r":0.12,"ft":"lp","fc":1.2,"fe":7,"fk":1,"fd":0.07,"vb":[5.2,10,0.35]}]},
     0,
     {"n":"Drum Kit","g":"Drums","c":[228,93,82],"k":"kit","kit":{"35":{"n":"Deep Kick","len":0.6,"l":[{"w":"sin","f":45,"g":0.9,"a":0.001,"d":0.3,"s":0,"r":0.05,"pe":[24,0.05]}]},"36":{"n":"Kick","len":0.45,"l":[{"w":"sin","f":50,"g":0.95,"a":0.001,"d":0.16,"s":0,"r":0.04,"pe":[30,0.03]},{"w":"noi","g":0.2,"a":0.001,"d":0.008,"s":0,"r":0.01,"ft":"lp","fc":4000}]},"37":{"n":"Rim","len":0.08,"l":[{"w":"tri","f":820,"g":0.5,"a":0.001,"d":0.012,"s":0,"r":0.02},{"w":"noi","g":0.2,"a":0.001,"d":0.006,"s":0,"r":0.01,"ft":"hp","fc":3000}]},"38":{"n":"Snare","len":0.3,"l":[{"w":"tri","f":185,"g":0.5,"a":0.001,"d":0.05,"s":0,"r":0.04,"pe":[8,0.015]},{"w":"noi","g":0.55,"a":0.001,"d":0.085,"s":0,"r":0.05,"ft":"hp","fc":1400}]},"39":{"n":"Clap","len":0.35,"l":[{"w":"noi","g":0.6,"a":0.001,"d":0.11,"s":0,"r":0.05,"ft":"bp","fc":1250,"fq":0.4,"bu":3}]},"41":{"n":"Low Tom","len":0.5,"l":[{"w":"sin","f":92,"g":0.75,"a":0.001,"d":0.22,"s":0,"r":0.05,"pe":[7,0.04]}]},"42":{"n":"Closed Hat","len":0.1,"l":[{"w":"noi","g":0.35,"a":0.001,"d":0.022,"s":0,"r":0.02,"ft":"hp","fc":7500}]},"44":{"n":"Pedal Hat","len":0.1,"l":[{"w":"noi","g":0.25,"a":0.004,"d":0.015,"s":0,"r":0.02,"ft":"hp","fc":6000}]},"45":{"n":"Mid Tom","len":0.45,"l":[{"w":"sin","f":128,"g":0.7,"a":0.001,"d":0.2,"s":0,"r":0.05,"pe":[7,0.04]}]},"46":{"n":"Open Hat","len":0.45,"l":[{"w":"noi","g":0.3,"a":0.001,"d":0.16,"s":0,"r":0.06,"ft":"hp","fc":7000}]},"48":{"n":"High Tom","len":0.4,"l":[{"w":"sin","f":170,"g":0.65,"a":0.001,"d":0.18,"s":0,"r":0.05,"pe":[7,0.04]}]},"49":{"n":"Crash","len":1.8,"l":[{"w":"noi","g":0.35,"a":0.001,"d":0.6,"s":0,"r":0.2,"ft":"hp","fc":4500},{"w":"sqr","f":410,"g":0.04,"a":0.001,"d":0.3,"s":0,"r":0.1,"ft":"hp","fc":3000}]},"51":{"n":"Ride","len":1.2,"l":[{"w":"noi","g":0.15,"a":0.001,"d":0.35,"s":0,"r":0.1,"ft":"hp","fc":8500},{"w":"sin","f":3150,"g":0.07,"a":0.001,"d":0.45,"s":0,"r":0.1}]}}},
-    0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ];
 core.freq = function (m) { return 440 * Math.pow(2, (m - 69) / 12); }; core.arr = function (ctx, n) {
 return ctx.createBuffer(1, Math.max(1, n), ctx.sampleRate).getChannelData(0); }; core.blep = function (t, dt) {
@@ -106,7 +106,7 @@ h._bend.gl.p.push({ at: to.t - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c })
 core.layerJob = function (ctx, out, L, base, hold, gl) { var sr = ctx.sampleRate, w = L.w || "sin", pw = L.pw || 0.5, step = L.nr ? sr / L.nr : 0;
 var g = L.g === undefined ? 0.3 : L.g, s = L.s === undefined ? 1 : L.s;
 var a = L.a || 0.002, d = L.d || 0.2, r = L.r || 0.05, damp = 1.4 - (L.fq || 0) * 1.25;
-var f0 = (L.f || base * (L.m || 1)) * Math.pow(2, (L.dt || 0) / 1200);
+var f0 = (L.f || base * (L.m || 1)) * Math.pow(2, (L.dt || 0) / 1200); if (L.kd) { d = d * Math.pow(261.6 / (base || 261.6), L.kd); }
 var ph = 0, lo = 0, band = 0, cf = 0, held = 0, cnt = 0, nz = 0, y = null, dl = 0, burst = 0; var fc = (L.fc || 1000) * (L.fk ? f0 : 1);
 var fe = (L.fe || L.fc || 1000) * (L.fk ? f0 : 1); if (w === "ks") { y = core.arr(ctx, out.length); dl = sr / f0 - 0.5; burst = Math.round(sr / f0); }
 var i = 0; var run = function (n) { var end = Math.min(out.length, i + n); for (; i < end; i++) { var t = i / sr;

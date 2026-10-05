@@ -86,7 +86,8 @@ core.insts = [
     {"n":"Laser","g":"FX","c":[143,233,64],"l":[{"w":"sqr","g":0.17,"a":0.001,"d":0.25,"s":0,"r":0.05,"pe":[24,0.06]},{"w":"saw","dt":12,"g":0.08,"a":0.001,"d":0.2,"s":0,"r":0.05,"pe":[30,0.05]}]},
     0, 0,
     {"n":"Vox HD","g":"Voice","c":[238,104,171],"k":"vox","vx":{"hd":1,"fs":1,"op":0.4,"cl":0.16,"br":0.04,"tl":0.62,"vr":5.5,"vd":0.3}},
-    {"n":"Bright Vox HD","g":"Voice","c":[251,152,92],"k":"vox","vx":{"hd":1,"fs":1.17,"op":0.45,"cl":0.2,"br":0.1,"tl":0.8,"vr":5.8,"vd":0.35}}
+    {"n":"Bright Vox HD","g":"Voice","c":[251,152,92],"k":"vox","vx":{"hd":1,"fs":1.17,"op":0.45,"cl":0.2,"br":0.1,"tl":0.8,"vr":5.8,"vd":0.35}},
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ];
 core.freq = function (m) { return 440 * Math.pow(2, (m - 69) / 12); }; core.arr = function (ctx, n) {
 return ctx.createBuffer(1, Math.max(1, n), ctx.sampleRate).getChannelData(0); }; core.blep = function (t, dt) {
@@ -104,7 +105,7 @@ h._bend.gl.p.push({ at: to.t - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c })
 core.layerJob = function (ctx, out, L, base, hold, gl) { var sr = ctx.sampleRate, w = L.w || "sin", pw = L.pw || 0.5, step = L.nr ? sr / L.nr : 0;
 var g = L.g === undefined ? 0.3 : L.g, s = L.s === undefined ? 1 : L.s;
 var a = L.a || 0.002, d = L.d || 0.2, r = L.r || 0.05, damp = 1.4 - (L.fq || 0) * 1.25;
-var f0 = (L.f || base * (L.m || 1)) * Math.pow(2, (L.dt || 0) / 1200);
+var f0 = (L.f || base * (L.m || 1)) * Math.pow(2, (L.dt || 0) / 1200); if (L.kd) { d = d * Math.pow(261.6 / (base || 261.6), L.kd); }
 var ph = 0, lo = 0, band = 0, cf = 0, held = 0, cnt = 0, nz = 0, y = null, dl = 0, burst = 0; var fc = (L.fc || 1000) * (L.fk ? f0 : 1);
 var fe = (L.fe || L.fc || 1000) * (L.fk ? f0 : 1); if (w === "ks") { y = core.arr(ctx, out.length); dl = sr / f0 - 0.5; burst = Math.round(sr / f0); }
 var i = 0; var run = function (n) { var end = Math.min(out.length, i + n); for (; i < end; i++) { var t = i / sr;

@@ -95,7 +95,8 @@ core.insts = [
     0,
     {"n":"Percussion","g":"Drums","c":[212,121,94],"k":"kit","kit":{"54":{"n":"Tambourine","len":0.3,"l":[{"w":"noi","g":0.3,"a":0.001,"d":0.12,"s":0,"r":0.05,"ft":"hp","fc":6500,"bu":2},{"w":"sin","f":5200,"g":0.05,"a":0.001,"d":0.1,"s":0,"r":0.05}]},"56":{"n":"Cowbell","len":0.4,"l":[{"w":"sqr","f":562,"g":0.15,"a":0.001,"d":0.12,"s":0,"r":0.05,"ft":"bp","fc":1200,"fq":0.3},{"w":"sqr","f":845,"g":0.15,"a":0.001,"d":0.12,"s":0,"r":0.05,"ft":"bp","fc":1200,"fq":0.3}]},"60":{"n":"Hi Bongo","len":0.25,"l":[{"w":"sin","f":420,"g":0.6,"a":0.001,"d":0.08,"s":0,"r":0.03,"pe":[4,0.01]}]},"61":{"n":"Lo Bongo","len":0.3,"l":[{"w":"sin","f":300,"g":0.6,"a":0.001,"d":0.1,"s":0,"r":0.03,"pe":[4,0.01]}]},"63":{"n":"Conga","len":0.4,"l":[{"w":"sin","f":220,"g":0.65,"a":0.001,"d":0.15,"s":0,"r":0.04,"pe":[5,0.02]}]},"70":{"n":"Shaker","len":0.12,"l":[{"w":"noi","g":0.3,"a":0.015,"d":0.04,"s":0,"r":0.03,"ft":"hp","fc":6000}]},"75":{"n":"Claves","len":0.12,"l":[{"w":"sin","f":2500,"g":0.5,"a":0.001,"d":0.03,"s":0,"r":0.02}]},"76":{"n":"Woodblock","len":0.12,"l":[{"w":"sin","f":1050,"g":0.5,"a":0.001,"d":0.035,"s":0,"r":0.02},{"w":"tri","f":2600,"g":0.1,"a":0.001,"d":0.01,"s":0,"r":0.01}]},"81":{"n":"Triangle","len":1.4,"l":[{"w":"sin","f":4200,"g":0.12,"a":0.001,"d":0.8,"s":0,"r":0.2},{"w":"sin","f":6300,"g":0.04,"a":0.001,"d":0.5,"s":0,"r":0.2}]}}},
     0, 0, 0, 0,
-    {"n":"Bright Vox HD","g":"Voice","c":[251,152,92],"k":"vox","vx":{"hd":1,"fs":1.17,"op":0.45,"cl":0.2,"br":0.1,"tl":0.8,"vr":5.8,"vd":0.35}}
+    {"n":"Bright Vox HD","g":"Voice","c":[251,152,92],"k":"vox","vx":{"hd":1,"fs":1.17,"op":0.45,"cl":0.2,"br":0.1,"tl":0.8,"vr":5.8,"vd":0.35}},
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ];
 core.freq = function (m) { return 440 * Math.pow(2, (m - 69) / 12); }; core.arr = function (ctx, n) {
 return ctx.createBuffer(1, Math.max(1, n), ctx.sampleRate).getChannelData(0); }; core.blep = function (t, dt) {
@@ -113,7 +114,7 @@ h._bend.gl.p.push({ at: to.t - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c })
 core.layerJob = function (ctx, out, L, base, hold, gl) { var sr = ctx.sampleRate, w = L.w || "sin", pw = L.pw || 0.5, step = L.nr ? sr / L.nr : 0;
 var g = L.g === undefined ? 0.3 : L.g, s = L.s === undefined ? 1 : L.s;
 var a = L.a || 0.002, d = L.d || 0.2, r = L.r || 0.05, damp = 1.4 - (L.fq || 0) * 1.25;
-var f0 = (L.f || base * (L.m || 1)) * Math.pow(2, (L.dt || 0) / 1200);
+var f0 = (L.f || base * (L.m || 1)) * Math.pow(2, (L.dt || 0) / 1200); if (L.kd) { d = d * Math.pow(261.6 / (base || 261.6), L.kd); }
 var ph = 0, lo = 0, band = 0, cf = 0, held = 0, cnt = 0, nz = 0, y = null, dl = 0, burst = 0; var fc = (L.fc || 1000) * (L.fk ? f0 : 1);
 var fe = (L.fe || L.fc || 1000) * (L.fk ? f0 : 1); if (w === "ks") { y = core.arr(ctx, out.length); dl = sr / f0 - 0.5; burst = Math.round(sr / f0); }
 var i = 0; var run = function (n) { var end = Math.min(out.length, i + n); for (; i < end; i++) { var t = i / sr;
