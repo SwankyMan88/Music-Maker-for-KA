@@ -2641,7 +2641,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v18/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v19/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -4699,30 +4699,20 @@ var exportBox = function (kind) {
         });
         return out;
     };
-    // Song text has to carry its visual inside it, so the song list re-encodes changed songs (remembered per song).
-    var withVis = function (t, v) {
-        var inf = pjs.info(t);
-        inf.as = inf.as || {};
-        if (inf.as[v] === undefined) {
-            var sg = core.decode(t);
-            sg.vis = v;
-            inf.as[v] = core.encode(sg);
-        }
-        return inf.as[v];
-    };
     var make = function () {
         var all = $("whatSel") && $("whatSel").value === "all";
         var txt = all ? "" : book.list[book.at];
         var list = chosen();
         if (!list.length && (kind !== "text" || all)) { return { code: "", info: '<span class="warn">Tick at least one song.</span>' }; }
         var n = list.length + (list.length === 1 ? " song" : " songs");
-        var listLine = "var songs = [\n" + list.map(function (t, i) { return '    "' + (looks ? withVis(t, looks[i]) : t) + '"'; }).join(",\n") + "\n];";
+        // the song list gets the same visuals line as the programs, re-encoding every song for it was too slow on Khan Academy
+        var listLine = "var songs = [\n" + list.map(function (t) { return '    "' + t + '"'; }).join(",\n") + "\n];" + (looks ? "\n" + pjs.visLine(looks) : "");
         var code = kind === "pjs" ? pjs.build(list, looks) : (kind === "page" ? pjs.page(list, looks) : (all ? listLine : txt));
         var info = kind === "page" ?
             "A page that only plays your songs with their visuals (" + n + "). Paste it into a new Khan Academy webpage, or save it as an .html file. Vox tracks sing here, the voice loads from GitHub." :
             kind === "pjs" ?
             "Paste into a new Processing.js program on Khan Academy. <b>" + code.split("\n").length + " lines</b> with " + n + ". Click the title in the program to switch songs." :
-            (all ? "Replace <b>var songs</b> in the HTML page or a PJS program with this (" + n + ")." :
+            (all ? "Replace <b>var songs</b> in the HTML page or a PJS program with this (" + n + ")." + (looks ? " The <b>var visuals</b> line picks each song's visual in exported programs and player pages." : "") :
                 "<b>" + size(txt.length) + "</b>, lossless. Add it as a line in <b>var songs</b> in the HTML page or a PJS program, or Import it.");
         if (kind === "pjs" && list.some(function (t) { return pjs.info(t).vox; })) { info += '<br><span class="warn">Vox tracks are not sung in the PJS version. Their lyrics still show as karaoke text.</span>'; }
         return { code: code, info: info };
@@ -4768,10 +4758,11 @@ var exportBox = function (kind) {
         $("mArea").value = now.code;
         $("expInfo").innerHTML = now.info;
     };
+    // Saving a big song and rebuilding the export are done one after the other, never both in one go.
     $("visSel").addEventListener("change", function () {
         song.vis = Number($("visSel").value);
         commit();
-        refresh();
+        setTimeout(refresh, 0);
     });
     $("expSongs").addEventListener("change", function (e) {
         expPick[Number(e.target.dataset.song)] = e.target.checked;
@@ -5561,7 +5552,8 @@ $("vel").addEventListener("change", function () {
     core.setup(sfx);
     book.list = texts.filter(function (t) {
         try {
-            titles[t] = core.decode(t).title || "";
+            // the decoded song is kept for the exports, so opening an export never has to decode every song at once
+            titles[t] = pjs.info(t).title;
             return true;
         } catch (er) {
             console.warn("A song in the page could not be read", er);
