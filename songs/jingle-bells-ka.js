@@ -254,22 +254,24 @@ triangle(29 * U, by - 9 * U, 29 * U, by + 9 * U, state === "play" ? 29 * U : 43 
 rect(66 * U, by - 4 * U, width - 86 * U, 8 * U, 4); fill(96, 183, 247); rect(66 * U, by - 4 * U, bar, 8 * U, 4); if (!menu) { return; }
 fill(31, 34, 42, 245); rect(10 * U, 38 * U, 250 * U, list.length * 24 * U + 8 * U, 6); textAlign(LEFT, CENTER); textSize(14 * U);
 for (var m = 0; m < list.length; m++) { fill(m === at ? 252 : 226, m === at ? 160 : 228, m === at ? 216 : 235);
-text(names[m], 22 * U, 54 * U + m * 24 * U); } }; var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () { background(21, 23, 29);
-noStroke(); if (named < list.length) { names[named] = core.decode(list[named]).title || names[named]; named++; } if (state === "load") {
-var t0 = millis(); while (done < jobs.length && millis() - t0 < 12) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
+text(names[m], 22 * U, 54 * U + m * 24 * U); } }; var pump = function () { pos = sfx.context.currentTime - base; if (loopLen && pos >= loopLen) {
+base += loopLen; pos -= loopLen; lap--; vi = 0; parts = []; } for (var sg = 0; sg < 4000; sg++) { if (idx >= evs.length) { if (!loopLen) { break; }
+lap++; idx = 0; } var ev = evs[idx], b = bufs[ev.k], when = ev.s + lap * loopLen; if (when >= pos + 0.4) { break; }
+if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre, ev.g, ev.pan, ev.to); } idx++; }
+if (!loopLen && pos > total + 0.6) { halt(); pos = 0; } };
+var bg = sfx.context.createScriptProcessor ? sfx.context.createScriptProcessor(2048, 1, 1) : null; if (bg) { var hush = sfx.context.createGain();
+hush.gain.value = 0; bg.connect(hush); hush.connect(sfx.context.destination); bg.onaudioprocess = function () { if (state === "play") { pump(); } }; }
+sfx.quit = function () { state = "stop"; if (bg) { bg.disconnect(); } }; var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () {
+background(21, 23, 29); noStroke(); if (named < list.length) { names[named] = core.decode(list[named]).title || names[named]; named++; }
+if (state === "load") { var t0 = millis(); while (done < jobs.length && millis() - t0 < 12) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
 bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, j.vx, j.tl, j.nt, j.gl); done++; continue; }
 j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl); if (j.r.step(3000)) { bufs[j.k] = { buf: j.r.buf, pre: 0 }; done++; } }
 state = done >= jobs.length ? "stop" : state; fill(226, 228, 235); textSize(15 * U); textAlign(CENTER, CENTER);
 text("Building sounds...", width / 2, height / 2 - 20 * U); fill(46, 51, 63); rect(width / 2 - 100 * U, height / 2, 200 * U, 8 * U, 4);
-fill(96, 183, 247); rect(width / 2 - 100 * U, height / 2, 200 * U * done / max(1, jobs.length), 8 * U, 4); return; } if (state === "play") {
-pos = sfx.context.currentTime - base; if (loopLen && pos >= loopLen) { base += loopLen; pos -= loopLen; lap--; vi = 0; parts = []; }
-for (var sg = 0; sg < 4000; sg++) { if (idx >= evs.length) { if (!loopLen) { break; } lap++; idx = 0; }
-var ev = evs[idx], b = bufs[ev.k], when = ev.s + lap * loopLen; if (when >= pos + 0.4) { break; }
-if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre, ev.g, ev.pan, ev.to); } idx++; }
-if (!loopLen && pos > total + 0.6) { halt(); pos = 0; } } (looks[look] || drRoll)(); drLyrics(); drUi(); }; mouseClicked = function () {
-var row = floor((mouseY - 42 * U) / (24 * U)); if (menu || (mouseY < 36 * U && list.length > 1)) {
-if (menu && mouseX < 260 * U && row >= 0 && row < list.length) { prep(row); } menu = !menu; return; } if (state === "load") { return; }
-var p = constrain((mouseX - 66 * U) / (width - 86 * U), 0, 1) * total; var seek = mouseY > height - 56 * U && mouseX > 60 * U;
-if (!seek) { toggle(); } else if (state === "play") { go(p); } else { pos = p; } }; mouseMoved = function () {
-var now = dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U; if (now !== over) { over = now; sfx.play(over ? "hover" : "unhover"); } };
-keyPressed = function () { if (keyCode === 32) { toggle(); } };
+fill(96, 183, 247); rect(width / 2 - 100 * U, height / 2, 200 * U * done / max(1, jobs.length), 8 * U, 4); return; } if (state === "play") { pump(); }
+(looks[look] || drRoll)(); drLyrics(); drUi(); }; mouseClicked = function () { var row = floor((mouseY - 42 * U) / (24 * U));
+if (menu || (mouseY < 36 * U && list.length > 1)) { if (menu && mouseX < 260 * U && row >= 0 && row < list.length) { prep(row); } menu = !menu;
+return; } if (state === "load") { return; } var p = constrain((mouseX - 66 * U) / (width - 86 * U), 0, 1) * total;
+var seek = mouseY > height - 56 * U && mouseX > 60 * U; if (!seek) { toggle(); } else if (state === "play") { go(p); } else { pos = p; } };
+mouseMoved = function () { var now = dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U; if (now !== over) { over = now;
+sfx.play(over ? "hover" : "unhover"); } }; keyPressed = function () { if (keyCode === 32) { toggle(); } };

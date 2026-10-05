@@ -2096,6 +2096,52 @@ var playerSrc = function () {
         }
     };
 
+    // Moves the playhead and schedules the notes just ahead of it.
+    var pump = function () {
+        pos = sfx.context.currentTime - base;
+        // passing the loop point starts the next pass: the visuals go back to the start
+        if (loopLen && pos >= loopLen) {
+            base += loopLen;
+            pos -= loopLen;
+            lap--;
+            vi = 0;
+            parts = [];
+        }
+        for (var sg = 0; sg < 4000; sg++) {
+            if (idx >= evs.length) {
+                if (!loopLen) { break; }
+                lap++;
+                idx = 0;
+            }
+            var ev = evs[idx], b = bufs[ev.k], when = ev.s + lap * loopLen;
+            if (when >= pos + 0.4) { break; }
+            if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre, ev.g, ev.pan, ev.to); }
+            idx++;
+        }
+        if (!loopLen && pos > total + 0.6) {
+            halt();
+            pos = 0;
+        }
+    };
+
+    // A browser stops drawing in a tab you are not looking at, but keeps the sound running.
+    // This silent sound node is called about every 46ms by the sound system itself, so the song keeps going in the background.
+    var bg = sfx.context.createScriptProcessor ? sfx.context.createScriptProcessor(2048, 1, 1) : null;
+    if (bg) {
+        var hush = sfx.context.createGain();
+        hush.gain.value = 0;
+        bg.connect(hush);
+        hush.connect(sfx.context.destination);
+        bg.onaudioprocess = function () {
+            if (state === "play") { pump(); }
+        };
+    }
+    // The HTML page calls this when it closes the player, so a closed player stops scheduling notes.
+    sfx.quit = function () {
+        state = "stop";
+        if (bg) { bg.disconnect(); }
+    };
+
     var looks = [drRoll, drRoll, drBars, drOrbit, drStars];
 
     draw = function () {
@@ -2131,32 +2177,7 @@ var playerSrc = function () {
             rect(width / 2 - 100 * U, height / 2, 200 * U * done / max(1, jobs.length), 8 * U, 4);
             return;
         }
-        if (state === "play") {
-            pos = sfx.context.currentTime - base;
-            // passing the loop point starts the next pass: the visuals go back to the start
-            if (loopLen && pos >= loopLen) {
-                base += loopLen;
-                pos -= loopLen;
-                lap--;
-                vi = 0;
-                parts = [];
-            }
-            for (var sg = 0; sg < 4000; sg++) {
-                if (idx >= evs.length) {
-                    if (!loopLen) { break; }
-                    lap++;
-                    idx = 0;
-                }
-                var ev = evs[idx], b = bufs[ev.k], when = ev.s + lap * loopLen;
-                if (when >= pos + 0.4) { break; }
-                if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre, ev.g, ev.pan, ev.to); }
-                idx++;
-            }
-            if (!loopLen && pos > total + 0.6) {
-                halt();
-                pos = 0;
-            }
-        }
+        if (state === "play") { pump(); }
         (looks[look] || drRoll)();
         drLyrics();
         drUi();
@@ -2313,6 +2334,7 @@ var pjsRun = function (cv, text) {
     loop();
     return function () {
         live = false;
+        if (sfx.quit) { sfx.quit(); }
         sfx.stop();
         cv.removeEventListener("click", click);
         cv.removeEventListener("mousemove", move);
@@ -2606,7 +2628,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v16/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v17/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
