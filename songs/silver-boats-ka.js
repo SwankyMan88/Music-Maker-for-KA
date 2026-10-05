@@ -238,7 +238,7 @@ sfx.define("press", { dur: 0.05, freq: 400, freqTo: 480, type: "sine", attack: 0
 sfx.define("released", { dur: 0.07, freq: 480, freqTo: 370, type: "sine", attack: 0.02, decay: 0.9, sustain: 0.0, gain: 0.1 });
 
 var core = (function () {
-    var core = { ver: 3, res: 12 };
+    var core = { ver: 4, res: 12 };
     var abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     core.insts = [
         { n: "Piano", g: "Keys", c: [236, 213, 141], l: [{ w: "tri", g: 0.42, a: 0.003, d: 0.9, s: 0, r: 0.25, ft: "lp", fc: 9, fe: 2.5, fk: 1, fd: 0.5 }, { w: "sin", m: 2, g: 0.14, a: 0.003, d: 0.5, s: 0, r: 0.2 }, { w: "saw", g: 0.07, a: 0.002, d: 0.2, s: 0, r: 0.2, ft: "lp", fc: 7, fe: 1.5, fk: 1, fd: 0.12 }] },
@@ -299,7 +299,10 @@ var core = (function () {
         if (t > 1 - dt) { t = (t - 1) / dt; return t * t + t + t + 1; }
         return 0;
     };
-    core.layer = function (ctx, out, L, base, hold) {
+    core.slide = function (gl, t, u) {
+        return gl.c ? 1 - (u = Math.min(1, t / gl.t)) * u * (3 - 2 * u) : 1 - Math.min(1, t / gl.t);
+    };
+    core.layer = function (ctx, out, L, base, hold, gl) {
         var sr = ctx.sampleRate, w = L.w || "sin", pw = L.pw || 0.5, step = L.nr ? sr / L.nr : 0;
         var g = L.g === undefined ? 0.3 : L.g, s = L.s === undefined ? 1 : L.s;
         var a = L.a || 0.002, d = L.d || 0.2, r = L.r || 0.05, damp = 1.4 - (L.fq || 0) * 1.25;
@@ -318,7 +321,7 @@ var core = (function () {
             if (t > hold && (t - hold) / r >= 1) { break; }
             if (t > hold) { e = e * (1 - (t - hold) / r); }
             if (L.bu && t < L.bu * 0.011) { e = e * (1 - (t / 0.011) % 1); }
-            var f = f0;
+            var f = gl ? f0 * Math.pow(2, gl.s * core.slide(gl, t) / 12) : f0;
             if (L.pe) { f = f * Math.pow(2, L.pe[0] * Math.exp(-t / L.pe[1]) / 12); }
             if (L.vb && t > L.vb[2]) {
                 var vr = Math.min(1, (t - L.vb[2]) / 0.3);
@@ -363,14 +366,14 @@ var core = (function () {
             out[i] += v * e * g;
         }
     };
-    core.render = function (ctx, ins, midi, sec) {
+    core.render = function (ctx, ins, midi, sec, gl) {
         if (!ins || ins.k === "vox") { return null; }
         var pc = ins.k === "kit" ? ins.kit[midi] : ins;
         if (!pc) { return null; }
         var ls = pc.l, hold = pc.len || Math.min(sec, 30), tail = 0;
         for (var i = 0; i < ls.length; i++) { tail = Math.max(tail, ls[i].r || 0.05); }
         var buf = ctx.createBuffer(1, Math.ceil((hold + tail) * ctx.sampleRate) + 1, ctx.sampleRate);
-        for (var j = 0; j < ls.length; j++) { core.layer(ctx, buf.getChannelData(0), ls[j], core.freq(midi), hold); }
+        for (var j = 0; j < ls.length; j++) { core.layer(ctx, buf.getChannelData(0), ls[j], core.freq(midi), hold, gl); }
         return buf;
     };
     core.key = function (id, p, sec, ins) {
@@ -450,11 +453,12 @@ var core = (function () {
             tr.mute = (fl & 1) > 0;
             tr.solo = (fl & 2) > 0;
             if (fl & 8) { tr.x = JSON.parse(str(get()).replace(/'/g, "\"")); }
-            var pt = 0, pp = 60, pv = 100;
+            var pt = 0, pp = 60, pv = 100, flags = ver > 3 ? 4 : 2;
             for (var j = 0; j < nn; j++) {
-                var t = pt + get(), l = get() + 1, q = get(), p = pp + core.uz(Math.floor(q / 2));
+                var t = pt + get(), l = get() + 1, q = get(), p = pp + core.uz(Math.floor(q / flags));
                 var v = q % 2 ? get() : pv;
-                tr.notes.push({ t: t, l: l, p: p, v: v, w: fl & 4 ? str(get()) : "" });
+                var g = flags > 2 && q % 4 > 1 ? { dt: get(), dp: core.uz(get()), ms: get() * 10, c: get() } : null;
+                tr.notes.push(g ? { t: t, l: l, p: p, v: v, g: g, w: fl & 4 ? str(get()) : "" } : { t: t, l: l, p: p, v: v, w: fl & 4 ? str(get()) : "" });
                 pt = t;
                 pp = p;
                 pv = v;
@@ -547,21 +551,23 @@ var prep = function (n) {
     for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; }
     for (var ti = 0; ti < data.tracks.length; ti++) {
         var tr = data.tracks[ti], ins = core.insOf(tr), prev = "", ly = [], own = tr.x && tr.x.ins ? "c" + ti : "";
-        var on = !tr.mute && (!solo || tr.solo), dest = tr.x && tr.x.fx && core.fx ? core.fx(sfx, tr.x.fx, tr.pan / 50) : null;
+        var on = !tr.mute && (!solo || tr.solo), dest = tr.x && tr.x.fx && core.fx ? core.fx(sfx, tr.x.fx, tr.pan / 50) : null, spot = {};
+        for (var a2 = 0; a2 < tr.notes.length; a2++) { spot[tr.notes[a2].t + ":" + tr.notes[a2].p] = tr.notes[a2]; }
         for (var ni = 0; ins && ni < tr.notes.length; ni++) {
-            var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox";
+            var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox", to = nt.g && spot[(nt.t + nt.g.dt) + ":" + (nt.p + nt.g.dp)];
+            if (to && to.t > nt.t) { to.gl = { s: -nt.g.dp, t: nt.g.ms / 1000, c: nt.g.c }; }
             total = max(total, e);
             notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti });
             lo = ins.k === "kit" ? lo : min(lo, nt.p);
             hi = ins.k === "kit" ? hi : max(hi, nt.p);
             if (vox && !seen[round(s * 100) + nt.w]) { ly.push({ s: s, e: e, w: nt.w }); }
-            var k = vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round((e - s) * 1000) : own + core.key(tr.inst, nt.p, e - s, ins);
+            var k = (vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round((e - s) * 1000) : own + core.key(tr.inst, nt.p, e - s, ins)) + (nt.gl ? "g" + nt.gl.s + ":" + nt.gl.t + ":" + nt.gl.c : "");
             var pw = prev;
             if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
             if (!on || (vox && !core.vox)) { continue; }
             if (bufs[k] === undefined) {
                 bufs[k] = null;
-                jobs.push({ k: k, ins: ins, p: nt.p, d: e - s, w: nt.w, pw: pw, tl: tr.notes, nt: nt });
+                jobs.push({ k: k, ins: ins, p: nt.p, d: e - s, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: nt.gl });
             }
             evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50, to: dest });
         }
@@ -743,7 +749,7 @@ draw = function () {
         var t0 = millis();
         while (done < jobs.length && millis() - t0 < 12) {
             var j = jobs[done], ji = j.ins;
-            bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt) : { buf: core.render(sfx.context, ji, j.p, j.d), pre: 0 };
+            bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt) : { buf: core.render(sfx.context, ji, j.p, j.d, j.gl), pre: 0 };
             done++;
         }
         state = done >= jobs.length ? "stop" : state;

@@ -13,15 +13,16 @@ Processing.js program.
 - `js/voice-dict.js` - the pronunciation dictionary the HD voices read from.
 - `tools/voice-test.html` - sing any text with all four voices side by side.
 - `tools/build-dict.js` - rebuilds `voice-dict.js` from a fresh copy of CMUdict.
+- `js/page.js` - `index.html` published as a script, made with `tools/build-page.js`. Copies running on Khan Academy load it for exports and the full window. Rebuild it before tagging a release.
 - `songs/` - example song text and a ready-made Khan Academy program.
 
 ## Hosting the voice
 
 In `index.html`, the voice loads from this repo through jsDelivr:
 
-    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v4/js/voice.js
+    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v5/js/voice.js
 
-It points at the `v4` tag. After changing the voice files, push a new tag (`v2`, ...) and update the
+It points at the `v5` tag. After changing the voice files, push a new tag (`v2`, ...) and update the
 link in `index.html`, since jsDelivr caches files for a while.
 
 ## Credits
@@ -36,6 +37,7 @@ Copyright (C) 1993-2015 Carnegie Mellon University. Its license is kept at the t
 - Left click adds a note, drag a note to move it, drag its right edge to stretch it, click a note twice to edit it (lyrics for voices, loudness for the rest).
 - Right click deletes. The middle button drags the view in any direction. The wheel zooms (Alt + wheel changes note height).
 - Drag on the ruler to pick a section to copy, paste, duplicate, delete or loop.
-- Click a track header (Ctrl or Shift for more) and use Ctrl+C / Ctrl+V to copy whole tracks.
+- Click a track header (Ctrl or Shift for more) and use Ctrl+C / Ctrl+V to copy whole tracks. Drag the ⠿ grip to reorder tracks.
+- Drag from a note's output dot (right) to a later note to make it slide in. Click the line to set the slide time and shape, right click it to remove it.
 - The ✎ button on a track opens its sound effects, voice settings and the instrument's raw data.
 - On phones: one finger edits, two fingers move and pinch to zoom, and Delete mode turns taps into deletes.

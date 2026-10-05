@@ -544,8 +544,8 @@ var voice = {
         var cl = o.cl || dflt.cl;
         var br = o.br === undefined ? dflt.br : o.br;
         var tb = o.tb === undefined ? 50 : o.tb;
-        var tl = Math.min(1, (o.tl || dflt.tl) * (0.35 + tb * 0.013));
-        var lift = tb > 50 ? (tb - 50) / 60 : 0;
+        var tl = Math.min(1, (o.tl || dflt.tl) * (0.15 + tb * 0.017));
+        var lift = tb > 50 ? Math.min(0.95, (tb - 50) / 50) : 0;
         var vr = o.vr || dflt.vr;
         var vdep = o.vd || dflt.vd;
         if (o.hd && this.hd) {
@@ -630,6 +630,7 @@ var voice = {
             var semi = -0.3 * Math.exp(-Math.max(0, rt) / 0.05);
             var vd = Math.min(1, Math.max(0, rt - 0.3) / 0.35);
             semi += vd * vdep * Math.sin(6.2832 * vr * t) + jit * 0.1;
+            if (o.gl) { semi += o.gl.s * core.slide(o.gl, Math.max(0, rt)); }
             var dp = f0 * Math.pow(2, semi / 12) / sr;
             ph += dp;
             if (ph >= 1) {
@@ -706,5 +707,11 @@ var voice = {
 };
 
 core.vox = function (ctx, w, p, sec, prev, vx, notes, note) {
+    if (note && note.gl) {
+        var own = {};
+        Object.keys(vx || {}).forEach(function (k) { own[k] = vx[k]; });
+        own.gl = note.gl;
+        vx = own;
+    }
     return voice.render(ctx, w, p, sec, prev, vx, notes, note);
 };

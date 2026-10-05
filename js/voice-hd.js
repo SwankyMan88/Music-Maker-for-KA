@@ -142,8 +142,8 @@ voice.hd = {
         var fs = o.fs || 1;
         var op = this.op || o.op || 0.4, cl = this.cl || o.cl || 0.16, tl = this.tilt || o.tl || 0.62, br = o.br === undefined ? 0.04 : o.br;
         var tb = o.tb === undefined ? 50 : o.tb;
-        tl = Math.min(1, tl * (0.35 + tb * 0.013));
-        var lift = Math.max(this.pre, tb > 50 ? (tb - 50) / 60 : 0);
+        tl = Math.min(1, tl * (0.15 + tb * 0.017));
+        var lift = Math.max(this.pre, tb > 50 ? Math.min(0.95, (tb - 50) / 50) : 0);
         var hp = 0;
         var cas = [], casN = [], par = [];
         for (var q = 0; q < 7; q++) {
@@ -200,6 +200,7 @@ voice.hd = {
             var semi = -0.25 * Math.exp(-Math.max(0, rt) / 0.05) + jit * 0.08;
             semi += Math.min(1, Math.max(0, rt - 0.35) / 0.35) * (o.vd || 0.3) * 0.7 * Math.sin(6.2832 * (o.vr || 5.5) * t);
             if (this.speak) { semi = 3 - 6 * t / total; }
+            if (o.gl) { semi += o.gl.s * core.slide(o.gl, Math.max(0, rt)); }
             var dp = f0 * Math.pow(2, semi / 12) / sr;
             ph += dp;
             if (ph >= 1) { ph -= 1; }

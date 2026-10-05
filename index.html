@@ -385,7 +385,31 @@
             .pa {
                 width: 36px;
             }
+            .grip {
+                width: 14px;
+                flex: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: rgb(101, 108, 123);
+                cursor: grab;
+                touch-action: none;
+            }
+            .grip:hover {
+                color: rgb(221, 224, 231);
+            }
+            .hd.dropUp {
+                box-shadow: inset 0 2px 0 rgb(97, 183, 246);
+            }
+            .hd.dropDown {
+                box-shadow: inset 0 -2px 0 rgb(97, 183, 246);
+            }
+            .hdAdd:hover {
+                color: rgb(221, 224, 231);
+                background: rgb(36, 40, 49);
+            }
             .hdAdd {
+                cursor: pointer;
                 height: 56px;
                 display: flex;
                 align-items: center;
@@ -752,7 +776,7 @@
             <div id="work">
                 <div id="arr">
                     <div id="arrTop">
-                        <div class="corner"><button id="addBtn" title="Add a track with the picked instrument">+ Track</button></div>
+                        <div class="corner"></div>
                         <canvas id="ruler"></canvas>
                     </div>
                     <div id="arrBody">
@@ -1138,7 +1162,7 @@ sfxDefs();
 // It also gets copied into the Khan Academy export, so it stays ES5 and avoids window, eval and Function.
 // coreEdit adds the parts only the editor needs (writing song text).
 var coreSrc = function () {
-    var core = { ver: 3, res: 12 };
+    var core = { ver: 4, res: 12 };
     var abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     // Instrument ids are their spot in this list, so only add to the end.
@@ -1211,7 +1235,12 @@ var coreSrc = function () {
         return 0;
     };
 
-    core.layer = function (ctx, out, L, base, hold) {
+    // How far along a slide is: 1 at the start down to 0, straight or eased (cubic).
+    core.slide = function (gl, t, u) {
+        return gl.c ? 1 - (u = Math.min(1, t / gl.t)) * u * (3 - 2 * u) : 1 - Math.min(1, t / gl.t);
+    };
+
+    core.layer = function (ctx, out, L, base, hold, gl) {
         var sr = ctx.sampleRate, w = L.w || "sin", pw = L.pw || 0.5, step = L.nr ? sr / L.nr : 0;
         var g = L.g === undefined ? 0.3 : L.g, s = L.s === undefined ? 1 : L.s;
         var a = L.a || 0.002, d = L.d || 0.2, r = L.r || 0.05, damp = 1.4 - (L.fq || 0) * 1.25;
@@ -1232,7 +1261,7 @@ var coreSrc = function () {
             if (t > hold) { e = e * (1 - (t - hold) / r); }
             if (L.bu && t < L.bu * 0.011) { e = e * (1 - (t / 0.011) % 1); }
 
-            var f = f0;
+            var f = gl ? f0 * Math.pow(2, gl.s * core.slide(gl, t) / 12) : f0;
             if (L.pe) { f = f * Math.pow(2, L.pe[0] * Math.exp(-t / L.pe[1]) / 12); }
             if (L.vb && t > L.vb[2]) {
                 var vr = Math.min(1, (t - L.vb[2]) / 0.3);
@@ -1284,7 +1313,7 @@ var coreSrc = function () {
         }
     };
 
-    core.render = function (ctx, ins, midi, sec) {
+    core.render = function (ctx, ins, midi, sec, gl) {
         if (!ins || ins.k === "vox") { return null; }
         var pc = ins.k === "kit" ? ins.kit[midi] : ins;
         if (!pc) { return null; }
@@ -1292,7 +1321,7 @@ var coreSrc = function () {
         for (var i = 0; i < ls.length; i++) { tail = Math.max(tail, ls[i].r || 0.05); }
         var buf = ctx.createBuffer(1, Math.ceil((hold + tail) * ctx.sampleRate) + 1, ctx.sampleRate);
         for (var j = 0; j < ls.length; j++) {
-            core.layer(ctx, buf.getChannelData(0), ls[j], core.freq(midi), hold);
+            core.layer(ctx, buf.getChannelData(0), ls[j], core.freq(midi), hold, gl);
         }
         return buf;
     };
@@ -1386,11 +1415,12 @@ var coreSrc = function () {
             tr.mute = (fl & 1) > 0;
             tr.solo = (fl & 2) > 0;
             if (fl & 8) { tr.x = JSON.parse(str(get()).replace(/'/g, "\"")); }
-            var pt = 0, pp = 60, pv = 100;
+            var pt = 0, pp = 60, pv = 100, flags = ver > 3 ? 4 : 2;
             for (var j = 0; j < nn; j++) {
-                var t = pt + get(), l = get() + 1, q = get(), p = pp + core.uz(Math.floor(q / 2));
+                var t = pt + get(), l = get() + 1, q = get(), p = pp + core.uz(Math.floor(q / flags));
                 var v = q % 2 ? get() : pv;
-                tr.notes.push({ t: t, l: l, p: p, v: v, w: fl & 4 ? str(get()) : "" });
+                var g = flags > 2 && q % 4 > 1 ? { dt: get(), dp: core.uz(get()), ms: get() * 10, c: get() } : null;
+                tr.notes.push(g ? { t: t, l: l, p: p, v: v, g: g, w: fl & 4 ? str(get()) : "" } : { t: t, l: l, p: p, v: v, w: fl & 4 ? str(get()) : "" });
                 pt = t;
                 pp = p;
                 pv = v;
@@ -1632,8 +1662,14 @@ var coreEdit = function (core) {
             ns.forEach(function (n) {
                 put(n.t - pt);
                 put(n.l - 1);
-                put(core.zz(n.p - pp) * 2 + (n.v !== pv ? 1 : 0));
+                put(core.zz(n.p - pp) * 4 + (n.v !== pv ? 1 : 0) + (n.g ? 2 : 0));
                 if (n.v !== pv) { put(n.v); }
+                if (n.g) {
+                    put(n.g.dt);
+                    put(core.zz(n.g.dp));
+                    put(Math.round(n.g.ms / 10));
+                    put(n.g.c ? 1 : 0);
+                }
                 if (words) { put(sid(n.w)); }
                 pt = n.t;
                 pp = n.p;
@@ -1675,21 +1711,24 @@ var playerSrc = function () {
         for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; }
         for (var ti = 0; ti < data.tracks.length; ti++) {
             var tr = data.tracks[ti], ins = core.insOf(tr), prev = "", ly = [], own = tr.x && tr.x.ins ? "c" + ti : "";
-            var on = !tr.mute && (!solo || tr.solo), dest = tr.x && tr.x.fx && core.fx ? core.fx(sfx, tr.x.fx, tr.pan / 50) : null;
+            var on = !tr.mute && (!solo || tr.solo), dest = tr.x && tr.x.fx && core.fx ? core.fx(sfx, tr.x.fx, tr.pan / 50) : null, spot = {};
+            for (var a2 = 0; a2 < tr.notes.length; a2++) { spot[tr.notes[a2].t + ":" + tr.notes[a2].p] = tr.notes[a2]; }
             for (var ni = 0; ins && ni < tr.notes.length; ni++) {
-                var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox";
+                var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox", to = nt.g && spot[(nt.t + nt.g.dt) + ":" + (nt.p + nt.g.dp)];
+                // notes come in time order, so a slide is set on its later note before that note is reached
+                if (to && to.t > nt.t) { to.gl = { s: -nt.g.dp, t: nt.g.ms / 1000, c: nt.g.c }; }
                 total = max(total, e);
                 notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti });
                 lo = ins.k === "kit" ? lo : min(lo, nt.p);
                 hi = ins.k === "kit" ? hi : max(hi, nt.p);
                 if (vox && !seen[round(s * 100) + nt.w]) { ly.push({ s: s, e: e, w: nt.w }); }
-                var k = vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round((e - s) * 1000) : own + core.key(tr.inst, nt.p, e - s, ins);
+                var k = (vox ? "v" + tr.inst + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round((e - s) * 1000) : own + core.key(tr.inst, nt.p, e - s, ins)) + (nt.gl ? "g" + nt.gl.s + ":" + nt.gl.t + ":" + nt.gl.c : "");
                 var pw = prev;
                 if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
                 if (!on || (vox && !core.vox)) { continue; }
                 if (bufs[k] === undefined) {
                     bufs[k] = null;
-                    jobs.push({ k: k, ins: ins, p: nt.p, d: e - s, w: nt.w, pw: pw, tl: tr.notes, nt: nt });
+                    jobs.push({ k: k, ins: ins, p: nt.p, d: e - s, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: nt.gl });
                 }
                 evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50, to: dest });
             }
@@ -1894,7 +1933,7 @@ var playerSrc = function () {
             var t0 = millis();
             while (done < jobs.length && millis() - t0 < 12) {
                 var j = jobs[done], ji = j.ins;
-                bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt) : { buf: core.render(sfx.context, ji, j.p, j.d), pre: 0 };
+                bufs[j.k] = ji.k === "vox" ? core.vox(sfx.context, j.w, j.p, j.d, j.pw, ji.vx, j.tl, j.nt) : { buf: core.render(sfx.context, ji, j.p, j.d, j.gl), pre: 0 };
                 done++;
             }
             state = done >= jobs.length ? "stop" : state;
@@ -2088,7 +2127,8 @@ var pjsRun = function (cv, text) {
 var orig = { text: null, tried: false, wait: [] };
 
 var getOrig = function (fn) {
-    if (orig.tried || !/KAInfiniteLoop/.test(String(playerSrc)) || !window.fetch || !window.voiceFrom) {
+    var local = location.protocol === "file:" || location.hostname === "localhost";
+    if (orig.tried || (local && !/KAInfiniteLoop/.test(String(playerSrc))) || !window.voiceFrom) {
         fn();
         return;
     }
@@ -2101,9 +2141,12 @@ var getOrig = function (fn) {
         orig.wait = [];
         list.forEach(function (f) { f(); });
     };
-    fetch(voiceFrom[voiceFrom.length - 1].replace(/js\/$/, "") + "index.html").then(function (r) {
-        return r.ok ? r.text() : "";
-    }).then(done, function () { done(""); });
+    var tag = document.createElement("script");
+    tag.src = voiceFrom[voiceFrom.length - 1] + "page.js";
+    tag.setAttribute("data-dyn", "1");
+    tag.onload = function () { done(window.songboardPage || ""); };
+    tag.onerror = function () { done(""); };
+    document.head.appendChild(tag);
 };
 
 // The engine's credits, put back if Khan Academy's rewrite dropped the comment.
@@ -2325,7 +2368,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v4/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v5/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -2440,7 +2483,11 @@ var anySolo = function () { return song.tracks.some(function (t) { return t.solo
 var hasSec = function () { return ui.hi > ui.lo; };
 var inSec = function (n) { return n.t >= ui.lo && n.t < ui.hi; };
 var bar = function () { return song.res * 4; };
-var copyNote = function (n) { return { t: n.t, l: n.l, p: n.p, v: n.v, w: n.w || "" }; };
+var copyNote = function (n) {
+    var c = { t: n.t, l: n.l, p: n.p, v: n.v, w: n.w || "" };
+    if (n.g) { c.g = { dt: n.g.dt, dp: n.g.dp, ms: n.g.ms, c: n.g.c }; }
+    return c;
+};
 var minOf = function (list, k) { return Math.min.apply(null, list.map(function (n) { return n[k]; })); };
 var maxOf = function (list, k) { return Math.max.apply(null, list.map(function (n) { return n[k]; })); };
 
@@ -2591,6 +2638,13 @@ var ord = function (tr) {
         hi = Math.max(hi, n.p);
     });
     list.sorted = true;
+    var spot = {};
+    list.forEach(function (n) { spot[n.t + ":" + n.p] = n; });
+    tr._in = new Map();
+    list.forEach(function (n) {
+        var to = n.g && spot[(n.t + n.g.dt) + ":" + (n.p + n.g.dp)];
+        if (to && to !== n && to.t > n.t) { tr._in.set(to, { s: -n.g.dp, t: n.g.ms / 1000, c: n.g.c, from: n }); }
+    });
     tr._s = list;
     tr._v = ver;
     tr._m = m;
@@ -2635,6 +2689,31 @@ var resetBuses = function () {
     buses = new Map();
 };
 
+// Test sounds from the edit window, so a new test, the Test button or Play can stop them.
+var tests = [];
+
+var stopTests = function () {
+    tests.forEach(function (src) {
+        try {
+            src.stop();
+        } catch (er) {
+            src.onended = null;
+        }
+    });
+    tests = [];
+    $("eTest").textContent = "▶ Test";
+};
+
+var addTest = function (src) {
+    if (!src) { return; }
+    tests.push(src);
+    $("eTest").textContent = "■ Stop";
+    src.addEventListener("ended", function () {
+        tests = tests.filter(function (t) { return t !== src; });
+        if (!tests.length) { $("eTest").textContent = "▶ Test"; }
+    });
+};
+
 var mixAll = function () {
     var solo = anySolo();
     song.tracks.forEach(function (tr) {
@@ -2643,6 +2722,36 @@ var mixAll = function () {
         b.g.gain.setTargetAtTime(on ? tr.vol / 100 : 0, ctx.currentTime, 0.01);
         (b.fx ? b.in.out : b.in).pan.value = tr.pan / 50;
     });
+};
+
+// The slide into a note, if another note's output is joined to it.
+var glideOf = function (tr, n) {
+    ord(tr);
+    var gi = tr._in.get(n);
+    return gi ? { s: gi.s, t: gi.t, c: gi.c } : null;
+};
+
+// Every joined pair on a track, as [from, to].
+var links = function (tr) {
+    ord(tr);
+    var out = [];
+    tr._in.forEach(function (gi, to) { out.push([gi.from, to]); });
+    return out;
+};
+
+// After notes move, joins follow the notes they were made between. A join that ends up going backwards is dropped.
+var relink = function (pairs, last) {
+    pairs.forEach(function (pr) {
+        var a = pr[0], b = pr[1];
+        if (!a.g) { return; }
+        if (b.t > a.t) {
+            a.g.dt = b.t - a.t;
+            a.g.dp = b.p - a.p;
+        } else if (last) {
+            delete a.g;
+        }
+    });
+    bump();
 };
 
 var keep = function (key, make, peek) {
@@ -2684,16 +2793,18 @@ var getBuf = function (tr, n, sec, peek) {
     var ins = insOf(tr);
     if (ins.k === "vox") {
         if (!window.voice) { return null; }
-        var vx = voxOf(tr), list = ord(tr), p = n.p + (vx.pt || 0);
+        var vx = voxOf(tr), list = ord(tr), p = n.p, gl = glideOf(tr, n);
+        if (gl) { vx.gl = gl; }
         var pw = voice.held(n.w) ? prevWord(tr, n) : "";
         var ch = vx.hd ? voice.chain(list, n) : null;
         var key = "v" + tr.inst + JSON.stringify((tr.x && tr.x.vx) || 0) + ":" + n.w + ":" + pw + ":" + (ch ? ch.word + ch.part : "") + ":" + (voice.big ? 1 : 0);
-        return keep(key + ":" + p + ":" + Math.round(sec * 1000), function () {
+        return keep(key + ":" + p + ":" + Math.round(sec * 1000) + JSON.stringify(gl), function () {
             return voice.render(ctx, n.w, p, sec, pw, vx, list, n);
         }, peek);
     }
-    return keep(insKey(tr) + core.key(tr.inst, n.p, sec, ins), function () {
-        return { buf: core.render(ctx, ins, n.p, sec), pre: 0 };
+    var slide = glideOf(tr, n);
+    return keep(insKey(tr) + core.key(tr.inst, n.p, sec, ins) + (slide ? JSON.stringify(slide) : ""), function () {
+        return { buf: core.render(ctx, ins, n.p, sec, slide), pre: 0 };
     }, peek);
 };
 
@@ -2736,6 +2847,7 @@ var warmStep = function () {
 // Plays a short test of a preset (by number) or of a track, with the track's own sound and effects.
 var preview = function (src, p, w) {
     var tr = typeof src === "number" ? null : src;
+    stopTests();
     var ins = tr ? insOf(tr) : core.insts[src];
     if (!ins || (ins.k === "vox" && !window.voice)) { return; }
     ctx.resume();
@@ -2747,7 +2859,7 @@ var preview = function (src, p, w) {
     var vx = tr ? voxOf(tr) : ins.vx, word = w || "la", len = ins.k === "vox" ? 0.45 : 0.6;
     var who = tr ? insKey(tr) + tr.inst + JSON.stringify((tr.x && tr.x.vx) || 0) : src;
     var r = keep("pv" + who + ":" + word + ":" + p, function () {
-        if (ins.k === "vox") { return voice.render(ctx, word, p + (vx.pt || 0), len, "", vx); }
+        if (ins.k === "vox") { return voice.render(ctx, word, p, len, "", vx); }
         return { buf: core.render(ctx, ins, p, len), pre: 0 };
     });
     if (r && r.buf) { prevSrc = core.fire(sfx, r.buf, ctx.currentTime, 0.75, 0, tr && tr.x && tr.x.fx ? bus(tr).in : null); }
@@ -2804,6 +2916,7 @@ var startPlay = function (from) {
         play.on = false;
     }
     ctx.resume();
+    stopTests();
     mixAll();
     play.start = from;
     $("playBtn").classList.add("on");
@@ -2977,6 +3090,51 @@ var drNote = function (g, n, x, y, w, color, on, label) {
     }
 };
 
+// Where a join's line runs, as points along it (straight, or an S curve for smooth slides).
+var linkPath = function (a, b) {
+    var x1 = tx(a.t, HEAD) + Math.max(3, a.l * ui.zx - 1) + 3, y1 = rollY(a.p) + ui.zy / 2;
+    var x2 = tx(b.t, HEAD) - 3, y2 = rollY(b.p) + ui.zy / 2, pts = [];
+    for (var i = 0; i <= 16; i++) {
+        var u = i / 16, k = a.g.c ? u * u * (3 - 2 * u) : u;
+        pts.push([x1 + (x2 - x1) * u, y1 + (y2 - y1) * k]);
+    }
+    return pts;
+};
+
+var drLinks = function (g, tr, w, h) {
+    var dots = ui.zy >= 10;
+    g.strokeStyle = "rgba(240, 242, 248, 0.75)";
+    g.lineWidth = 2;
+    links(tr).forEach(function (pr) {
+        var pts = linkPath(pr[0], pr[1]);
+        if (pts[16][0] < HEAD || pts[0][0] > w) { return; }
+        g.beginPath();
+        pts.forEach(function (pt, i) {
+            if (i) {
+                g.lineTo(pt[0], pt[1]);
+            } else {
+                g.moveTo(pt[0], pt[1]);
+            }
+        });
+        g.stroke();
+    });
+    g.lineWidth = 1;
+    if (!dots) { return; }
+    var list = ord(tr);
+    for (var k = seek(list, ui.x - tr._m); k < list.length && tx(list[k].t, HEAD) <= w; k++) {
+        var n = list[k], x = tx(n.t, HEAD), y = rollY(n.p) + ui.zy / 2, nw = Math.max(3, n.l * ui.zx - 1);
+        if (y < RUL || y > h) { continue; }
+        g.fillStyle = tr._in.has(n) ? "rgb(252, 214, 105)" : "rgba(220, 224, 232, 0.55)";
+        g.beginPath();
+        g.arc(x - 3, y, 2.5, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = n.g ? "rgb(252, 214, 105)" : "rgba(220, 224, 232, 0.55)";
+        g.beginPath();
+        g.arc(x + nw + 3, y, 2.5, 0, Math.PI * 2);
+        g.fill();
+    }
+};
+
 var drRoll = function () {
     var c = fit(cv.roll);
     var g = c.g, w = c.w, h = c.h;
@@ -3022,6 +3180,16 @@ var drRoll = function () {
         each(tr, function (n) {
             drNote(g, n, tx(n.t, HEAD), rollY(n.p), Math.max(3, n.l * ui.zx - 1), rgb(ins.c, 0.5 + 0.5 * n.v / 127), picked.has(n), isVox(tr));
         });
+        drLinks(g, tr, w, h);
+    }
+    if (ui.wire) {
+        g.strokeStyle = "rgba(252, 214, 105, 0.9)";
+        g.lineWidth = 2;
+        g.beginPath();
+        g.moveTo(ui.wire.x1, ui.wire.y1);
+        g.lineTo(ui.wire.x2, ui.wire.y2);
+        g.stroke();
+        g.lineWidth = 1;
     }
     if (ui.box) {
         var b = ui.box;
@@ -3117,7 +3285,7 @@ var renderHeads = function () {
         var d = document.createElement("div");
         d.className = "hd" + (i === ui.cur ? " on" : "") + (ui.focus === "tracks" && ui.tsel.indexOf(i) >= 0 ? " pick" : "");
         d.dataset.i = i;
-        d.innerHTML = '<div class="strip" style="background:' + rgb(insOf(tr).c) + '"></div><div class="hm"><div class="r1">' +
+        d.innerHTML = '<div class="grip" title="Drag to move this track">⠿</div><div class="strip" style="background:' + rgb(insOf(tr).c) + '"></div><div class="hm"><div class="r1">' +
             '<input class="nm" type="text" maxlength="40">' +
             '<button data-a="edit" title="Edit the sound">✎</button>' +
             '<button class="mb' + (tr.mute ? " on" : "") + '" data-a="mute" title="Mute">M</button>' +
@@ -3134,7 +3302,9 @@ var renderHeads = function () {
     });
     var add = document.createElement("div");
     add.className = "hdAdd";
-    add.textContent = "+ drop instrument here";
+    add.textContent = "+ Track";
+    add.title = "Add a track with the picked instrument, or drop an instrument here";
+    add.addEventListener("click", function () { addTrack(ui.brush); });
     box.appendChild(add);
     nameBar();
     dirty = true;
@@ -3272,6 +3442,28 @@ var pickMarks = function () {
     dirty = true;
 };
 
+$("heads").addEventListener("pointerdown", function (e) {
+    var grip = e.target.closest(".grip");
+    if (!grip) { return; }
+    e.preventDefault();
+    var i = Number(grip.closest(".hd").dataset.i);
+    drag = { k: "order", from: i, to: i };
+});
+
+// Moves a track to a new spot in the list (the order is part of the song).
+var moveTrack = function (from, to) {
+    $("heads").querySelectorAll(".hd").forEach(function (d) { d.classList.remove("dropUp", "dropDown"); });
+    if (from === to) { return; }
+    var tr = song.tracks.splice(from, 1)[0];
+    song.tracks.splice(to, 0, tr);
+    ui.tsel = [to];
+    ui.cur = -1;
+    renderHeads();
+    setCur(to);
+    mixAll();
+    commit();
+};
+
 $("heads").addEventListener("mousedown", function (e) {
     var d = e.target.closest(".hd");
     if (!d) { return; }
@@ -3380,6 +3572,77 @@ var hitLane = function (row, x, y) {
     return null;
 };
 
+// The note whose output dot (just past its right end) is under the pointer.
+var outAt = function (tr, m) {
+    if (!tr || ui.zy < 10) { return null; }
+    var list = ord(tr), best = null;
+    for (var k = seek(list, ui.x - tr._m); k < list.length && tx(list[k].t, HEAD) <= m.x + 10; k++) {
+        var n = list[k], ox = tx(n.t, HEAD) + Math.max(3, n.l * ui.zx - 1) + 3, oy = rollY(n.p) + ui.zy / 2;
+        if (Math.hypot(m.x - ox, m.y - oy) <= 6) { best = n; }
+    }
+    return best;
+};
+
+// The join whose line passes under the pointer, as its starting note.
+var linkAt = function (tr, m) {
+    if (!tr) { return null; }
+    var hit = null;
+    links(tr).forEach(function (pr) {
+        var pts = linkPath(pr[0], pr[1]);
+        for (var i = 1; i < pts.length && !hit; i++) {
+            var ax = pts[i - 1][0], ay = pts[i - 1][1], bx = pts[i][0], by = pts[i][1];
+            var len = Math.max(1, (bx - ax) * (bx - ax) + (by - ay) * (by - ay));
+            var u = clamp(((m.x - ax) * (bx - ax) + (m.y - ay) * (by - ay)) / len, 0, 1);
+            if (Math.hypot(m.x - (ax + (bx - ax) * u), m.y - (ay + (by - ay) * u)) <= 5) { hit = pr[0]; }
+        }
+    });
+    return hit;
+};
+
+// Join one note's output to a later note's input. A note only takes one slide in.
+var join = function (a, b) {
+    var tr = cur();
+    if (!a || !b || a === b || b.t <= a.t) { return false; }
+    links(tr).forEach(function (pr) {
+        if (pr[1] === b && pr[0] !== a) { delete pr[0].g; }
+    });
+    a.g = { dt: b.t - a.t, dp: b.p - a.p, ms: a.g ? a.g.ms : 120, c: a.g ? a.g.c : 0 };
+    bump();
+    return true;
+};
+
+// A small box for a join: how long the slide takes and whether it is straight or smooth.
+var editSlide = function (n) {
+    var g = n.g;
+    modal({
+        title: "Slide",
+        html: '<p class="note">The second note starts at the first note\'s pitch and slides to its own.</p>' + knob("Slide time (ms)", 20, 2000, g.ms, 10) +
+            '<label class="knob"><span>Shape</span><select id="slShape"><option value="0">Straight (linear)</option><option value="1">Smooth (cubic)</option></select><span></span></label>',
+        btns: [
+            { t: "Done", hi: true, fn: closeModal },
+            {
+                t: "Remove slide",
+                fn: function () {
+                    delete n.g;
+                    commit();
+                    closeModal();
+                }
+            }
+        ]
+    });
+    var range = $("mText").querySelector("input[type=range]");
+    $("slShape").value = g.c ? 1 : 0;
+    range.addEventListener("input", function () {
+        g.ms = Number(range.value);
+        range.nextElementSibling.textContent = range.value;
+    });
+    range.addEventListener("change", commit);
+    $("slShape").addEventListener("change", function () {
+        g.c = Number($("slShape").value);
+        commit();
+    });
+};
+
 var nearEdge = function (n, x) {
     var w = Math.max(3, n.l * ui.zx);
     return x > tx(n.t, HEAD) + w - Math.min(7, w / 3);
@@ -3387,6 +3650,9 @@ var nearEdge = function (n, x) {
 
 var removeNotes = function (tr, list) {
     var gone = new Set(list);
+    links(tr).forEach(function (pr) {
+        if (gone.has(pr[1])) { delete pr[0].g; }
+    });
     tr.notes = tr.notes.filter(function (n) { return !gone.has(n); });
     sel = sel.filter(function (n) { return !gone.has(n); });
     bump();
@@ -3450,7 +3716,23 @@ cv.roll.addEventListener("pointerdown", function (e) {
     var tk = rollT(m.x), p = clamp(rollP(m.y), 0, 127);
     var hit = hitNote(tr, m.x, m.y);
     var now = performance.now();
+    var out = outAt(tr, m), wire = !out && linkAt(tr, m);
     dirty = true;
+    if (wire && (e.button === 2 || ui.trash)) {
+        delete wire.g;
+        commit();
+        return;
+    }
+    if (wire && e.button === 0) {
+        editSlide(wire);
+        return;
+    }
+    if (out && e.button === 0 && !ui.trash) {
+        var oy = rollY(out.p) + ui.zy / 2;
+        drag = { k: "link", from: out };
+        ui.wire = { x1: tx(out.t, HEAD) + Math.max(3, out.l * ui.zx - 1) + 3, y1: oy, x2: m.x, y2: m.y };
+        return;
+    }
     if (e.button === 2 || (ui.trash && e.button === 0)) {
         drag = { k: "erase", hit: !!hit };
         if (hit) { removeNotes(tr, [hit]); }
@@ -3501,7 +3783,7 @@ cv.roll.addEventListener("pointerdown", function (e) {
     var orig = sel.map(function (o) { return { n: o, t: o.t, l: o.l, p: o.p }; });
     drag = {
         k: edge ? "size" : "move", t0: tk, p0: p, cx: m.x, orig: orig, ref: hit, lp: hit.p, moved: made,
-        minT: minOf(orig, "t"), minP: minOf(orig, "p"), maxP: maxOf(orig, "p")
+        minT: minOf(orig, "t"), minP: minOf(orig, "p"), maxP: maxOf(orig, "p"), pairs: links(tr)
     };
     if (!edge) { preview(tr, hit.p, hit.w); }
 });
@@ -3632,7 +3914,7 @@ var moves = {
             o.n.p = o.p + dp;
         });
         drag.moved = drag.moved || !!(dt || dp);
-        bump();
+        relink(drag.pairs, false);
         if (drag.ref.p !== drag.lp) {
             drag.lp = drag.ref.p;
             preview(cur(), drag.ref.p, drag.ref.w);
@@ -3652,6 +3934,18 @@ var moves = {
             drag.moved = true;
             ui.len = drag.ref.l;
         }
+    },
+    link: function (e, m) {
+        ui.wire.x2 = m.x;
+        ui.wire.y2 = m.y;
+    },
+    order: function (e) {
+        var r = $("heads").getBoundingClientRect();
+        drag.to = clamp(Math.floor((e.clientY - r.top) / LANE), 0, song.tracks.length - 1);
+        $("heads").querySelectorAll(".hd").forEach(function (d, k) {
+            d.classList.toggle("dropUp", k === drag.to && drag.to < drag.from);
+            d.classList.toggle("dropDown", k === drag.to && drag.to > drag.from);
+        });
     },
     erase: function (e, m) {
         var hit = hitNote(cur(), m.x, m.y);
@@ -3688,7 +3982,14 @@ var lift = function (e) {
     var d = drag;
     drag = null;
     ui.box = null;
+    if (d.k === "move" && d.pairs) { relink(d.pairs, true); }
     if ((d.k === "move" || d.k === "size") && d.moved) { commit(); }
+    if (d.k === "link") {
+        var m = rollPos(e);
+        if (join(d.from, hitNote(cur(), m.x + 4, m.y) || hitNote(cur(), m.x, m.y))) { commit(); }
+        ui.wire = null;
+    }
+    if (d.k === "order") { moveTrack(d.from, d.to); }
     if (d.k === "size" && d.fresh && isVox(cur())) { openLyric(d.ref); }
     if (d.k === "erase" && d.hit) { commit(); }
     if (d.k === "ruler" && !d.moved) {
@@ -3892,10 +4193,12 @@ var nudge = function (dt, dp) {
     if (!sel.length) { return; }
     dt = Math.max(dt, -minOf(sel, "t"));
     dp = clamp(dp, -minOf(sel, "p"), 127 - maxOf(sel, "p"));
+    var pairs = links(cur());
     sel.forEach(function (n) {
         n.t += dt;
         n.p += dp;
     });
+    relink(pairs, true);
     if (sel.length === 1 && dp) { preview(cur(), sel[0].p, sel[0].w); }
     commit();
 };
@@ -4271,10 +4574,9 @@ var fxKnobs = [
 
 // Voice sliders run 0 to 100 (pitch in semitones) and turn into the singer's settings.
 var voxKnobs = [
-    ["pt", "Pitch", -12, 12, function (v) { return v; }, function (x) { return x; }],
     ["fs", "Depth", 0, 100, function (v) { return 1.3 - v * 0.005; }, function (x) { return (1.3 - x) / 0.005; }],
     ["tb", "Treble", 0, 100, function (v) { return v; }, function (x) { return x; }],
-    ["br", "Breath", 0, 100, function (v) { return v * 0.004; }, function (x) { return x / 0.004; }],
+    ["br", "Breath", 0, 100, function (v) { return v * 0.006; }, function (x) { return x / 0.006; }],
     ["vd", "Vibrato", 0, 100, function (v) { return v * 0.01; }, function (x) { return x / 0.01; }],
     ["vr", "Vibrato rate", 0, 100, function (v) { return 3 + v * 0.06; }, function (x) { return (x - 3) / 0.06; }]
 ];
@@ -4343,8 +4645,8 @@ var edAdv = function () {
     var tr = ed.tr, ins = insOf(tr), html = '<div class="graphs"><canvas id="gEnv" width="520" height="110"></canvas><canvas id="gWave" width="260" height="110"></canvas></div>';
     if (ins.k === "vox") {
         var vx = voxOf(tr);
-        html += '<p class="note">The singer\'s raw numbers. fs formant size, op / cl pulse shape, tl tone, br breath, vr / vd vibrato, tb treble, pt pitch.</p><div class="fields">' +
-            ["fs", "op", "cl", "tl", "br", "vr", "vd", "tb", "pt"].map(function (k) {
+        html += '<p class="note">The singer\'s raw numbers. fs formant size, op / cl pulse shape, tl tone, br breath, vr / vd vibrato, tb treble.</p><div class="fields">' +
+            ["fs", "op", "cl", "tl", "br", "vr", "vd", "tb"].map(function (k) {
                 return '<label>' + k + '<input data-raw="' + k + '" value="' + (vx[k] !== undefined ? vx[k] : "") + '"></label>';
             }).join("") + "</div>";
         $("eBody").innerHTML = html;
@@ -4394,7 +4696,7 @@ var edGraph = function () {
     if (ins.k === "vox") {
         if (!window.voice) { return; }
         var vx = voxOf(tr);
-        r = voice.render(ctx, "ah", p + (vx.pt || 0), 0.8, "", vx);
+        r = voice.render(ctx, "ah", p, 0.8, "", vx);
     } else {
         r = { buf: core.render(ctx, ins, ins.k === "kit" ? ed.piece : p, 0.8) };
     }
@@ -4478,14 +4780,17 @@ $("edit").addEventListener("mousedown", function (e) {
 });
 
 // Sings the test words one after another, or plays one test note.
+// Sings the test words (the last one held so vibrato and breath come through), or plays one test note.
+// Pressing Test while a test plays stops it.
 $("eTest").addEventListener("click", function () {
     var tr = ed.tr, p = Number($("ePitch").value);
-    if (isKit(tr)) {
-        preview(tr, ed.piece);
-        return;
-    }
-    if (!isVox(tr) || !window.voice) {
-        preview(tr, p);
+    var busy = tests.length > 0;
+    stopTests();
+    if (busy) { return; }
+    if (play.on) { stopPlay(); }
+    if (isKit(tr) || !isVox(tr) || !window.voice) {
+        preview(tr, isKit(tr) ? ed.piece : p);
+        addTest(prevSrc);
         return;
     }
     ctx.resume();
@@ -4493,9 +4798,10 @@ $("eTest").addEventListener("click", function () {
     var notes = words.map(function (w, i) { return { t: i * 6, l: 6, p: p, w: w }; });
     var dest = tr.x && tr.x.fx ? bus(tr).in : null;
     notes.forEach(function (n, i) {
-        var r = voice.render(ctx, n.w, p + (vx.pt || 0) + (i % 3 === 2 ? 2 : 0), 0.32, "", vx, notes, n);
-        core.fire(sfx, r.buf, at - r.pre, 0.8, 0, dest);
-        at += 0.36;
+        var held = i === notes.length - 1, len = held ? 1.4 : 0.34;
+        var r = voice.render(ctx, n.w, p + (i % 3 === 2 ? 2 : 0), len, "", vx, notes, n);
+        addTest(core.fire(sfx, r.buf, at - r.pre, 0.8, 0, dest));
+        at += len + 0.04;
     });
 });
 
@@ -4582,7 +4888,6 @@ $("eBody").addEventListener("click", function (e) {
     if (b.id === "eRandom") {
         xOf(tr).vx = tr.x.vx || {};
         voxKnobs.forEach(function (k) { tr.x.vx[k[0]] = Math.round(k[4](k[2] + Math.random() * (k[3] - k[2]) * (k[0] === "pt" ? 0.6 : 1)) * 1000) / 1000; });
-        tr.x.vx.pt = Math.round(tr.x.vx.pt);
         tr.x.vx.tb = Math.round(tr.x.vx.tb);
         edChanged();
         edVoice();
@@ -4638,7 +4943,6 @@ $("playBtn").addEventListener("click", toggle);
 $("loopBtn").addEventListener("click", function () { setLoop(!ui.loop); });
 $("undoBtn").addEventListener("click", undo);
 $("redoBtn").addEventListener("click", redo);
-$("addBtn").addEventListener("click", function () { addTrack(ui.brush); });
 $("sideAdd").addEventListener("click", function () {
     addTrack(ui.brush);
     if (single()) { setView("notes"); }
