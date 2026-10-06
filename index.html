@@ -2858,7 +2858,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v34/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v35/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -5793,23 +5793,31 @@ var mp3Load = function (i, done) {
     document.head.appendChild(tag);
 };
 
-// Plays the whole song into a recording, the same way the player sounds: every track's volume, pan, effects and voices.
-var mp3Render = function (text, step, done) {
+// Gives the page a moment to breathe between small pieces of work.
+// A message channel is used instead of a timer, because timers in a small window can be slowed right down.
+var mp3Ch = null, mp3Q = [];
+var mp3Next = function (fn) {
+    if (!mp3Ch) {
+        mp3Ch = new MessageChannel();
+        mp3Ch.port1.onmessage = function () {
+            var f = mp3Q.shift();
+            if (f) { f(); }
+        };
+    }
+    mp3Q.push(fn);
+    mp3Ch.port2.postMessage(0);
+};
+
+// Makes the MP3 in pieces of about 15 seconds, so a long song never needs much memory or a long freeze.
+// Each piece starts a few seconds early so echoes and reverb carry over, then that lead-in is dropped,
+// and each finished piece goes straight into the MP3 before the next one is made.
+var mp3Make = function (text, step, done) {
     var s = core.decode(text), spt = 60 / (s.bpm * s.res), total = 0, solo = s.tracks.some(function (tr) { return tr.solo; });
-    s.tracks.forEach(function (tr) { tr.notes.forEach(function (nt) { total = Math.max(total, (nt.t + nt.l) * spt); }); });
-    var sr = 44100, off = new OfflineAudioContext(2, Math.ceil((total + 2.5) * sr), sr);
-    var master = off.createGain(), comp = off.createDynamicsCompressor();
-    var cfg = { threshold: -12, knee: 12, ratio: 4, attack: 0.004, release: 0.2 };
-    for (var k in cfg) { comp[k].value = cfg[k]; }
-    master.gain.value = 0.7;
-    master.connect(comp);
-    comp.connect(off.destination);
-    var fake = { context: off, eqLow: master }, work = [], cache = {};
+    var sr = 44100, PIECE = 15, LEAD = 3, events = [], cache = {};
     s.tracks.forEach(function (tr) {
         var ins = core.insOf(tr);
         if (!ins || tr.mute || (solo && !tr.solo)) { return; }
-        var vox = ins.k === "vox", dest = tr.x && tr.x.fx && core.fx ? core.fx(fake, tr.x.fx, tr.pan / 50) : null, prev = "";
-        var vx = ins.vx;
+        var vox = ins.k === "vox", prev = "", vx = ins.vx;
         if (vox && tr.x && tr.x.vx) {
             vx = {};
             Object.keys(ins.vx).forEach(function (q) { vx[q] = ins.vx[q]; });
@@ -5819,52 +5827,15 @@ var mp3Render = function (text, step, done) {
         tr.notes.forEach(function (nt) {
             var b = nt._bend, d = b ? b.len * spt : nt.l * spt, gl = b && b.gl ? core.secs(b.gl, spt) : null, pw = prev;
             if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
+            total = Math.max(total, nt.t * spt + d);
             if (nt._skip || (vox && !core.vox)) { return; }
-            work.push({ tr: tr, ins: ins, nt: nt, d: d, gl: gl, pw: pw, vx: vx, vox: vox, dest: dest });
+            var key = (vox ? "v" + pw + ":" + nt.w + ":" : core.key(tr.inst, nt.p, d, ins) + ":") + nt.p + ":" + Math.round(d * 1000) + JSON.stringify(gl) + JSON.stringify(vx || 0);
+            events.push({ tr: tr, ins: ins, nt: nt, s: nt.t * spt, d: d, gl: gl, pw: pw, vx: vx, vox: vox, key: key });
         });
     });
-    // sounds are built a little at a time so the window keeps showing progress
-    var at = 0;
-    var build = function () {
-        var t0 = Date.now();
-        while (at < work.length && Date.now() - t0 < 40) {
-            var w = work[at], key = (w.vox ? "v" + w.pw + ":" + w.nt.w + ":" : core.key(w.tr.inst, w.nt.p, w.d, w.ins) + ":") + w.nt.p + ":" + Math.round(w.d * 1000) + JSON.stringify(w.gl) + JSON.stringify(w.vx || 0);
-            if (cache[key] === undefined) {
-                var r = w.vox ? core.vox(off, w.nt.w, w.nt.p, w.d, w.pw, w.vx, w.tr.notes, w.nt, w.gl) : { buf: core.render(off, w.ins, w.nt.p, w.d, w.gl), pre: 0 };
-                cache[key] = r && r.buf ? r : null;
-            }
-            var got = cache[key];
-            if (got) {
-                var src = off.createBufferSource(), vol = off.createGain(), pan = off.createStereoPanner();
-                src.buffer = got.buf;
-                vol.gain.value = w.tr.vol / 100 * w.nt.v / 127;
-                pan.pan.value = w.tr.pan / 50;
-                src.connect(vol);
-                if (w.dest) {
-                    vol.connect(w.dest);
-                } else {
-                    vol.connect(pan);
-                    pan.connect(master);
-                }
-                var when = w.nt.t * spt - (got.pre || 0);
-                src.start(Math.max(0, when), Math.max(0, -when));
-            }
-            at++;
-        }
-        step(at / Math.max(1, work.length));
-        if (at < work.length) {
-            setTimeout(build, 0);
-            return;
-        }
-        off.startRendering().then(done, function () { done(null); });
-    };
-    build();
-};
-
-// Turns the recording into an MP3 a piece at a time.
-var mp3Encode = function (buf, step, done) {
-    var enc = new lamejs.Mp3Encoder(2, buf.sampleRate, 192), chunks = [], at = 0, size = 1152 * 40;
-    var left = buf.getChannelData(0), right = buf.getChannelData(1);
+    events.sort(function (a, b) { return a.s - b.s; });
+    var end = total + 2.5, pieces = Math.max(1, Math.ceil(end / PIECE));
+    var enc = new lamejs.Mp3Encoder(2, sr, 192), chunks = [];
     var ints = function (a, from, n) {
         var o = new Int16Array(n);
         for (var i = 0; i < n; i++) {
@@ -5873,24 +5844,95 @@ var mp3Encode = function (buf, step, done) {
         }
         return o;
     };
-    var go = function () {
-        var t0 = Date.now();
-        while (at < left.length && Date.now() - t0 < 40) {
-            var n = Math.min(size, left.length - at);
-            var part = enc.encodeBuffer(ints(left, at, n), ints(right, at, n));
-            if (part.length) { chunks.push(new Uint8Array(part)); }
-            at += n;
-        }
-        step(at / left.length);
-        if (at < left.length) {
-            setTimeout(go, 0);
+
+    var piece = function (k) {
+        if (k >= pieces) {
+            var last = enc.flush();
+            if (last.length) { chunks.push(new Uint8Array(last)); }
+            done(new Blob(chunks, { type: "audio/mpeg" }));
             return;
         }
-        var last = enc.flush();
-        if (last.length) { chunks.push(new Uint8Array(last)); }
-        done(new Blob(chunks, { type: "audio/mpeg" }));
+        var from = k * PIECE, to = Math.min(end, from + PIECE), lead = k ? LEAD : 0, t0 = from - lead;
+        var off = new OfflineAudioContext(2, Math.ceil((to - t0) * sr), sr);
+        var master = off.createGain(), comp = off.createDynamicsCompressor();
+        var cfg = { threshold: -12, knee: 12, ratio: 4, attack: 0.004, release: 0.2 };
+        for (var c in cfg) { comp[c].value = cfg[c]; }
+        master.gain.value = 0.7;
+        master.connect(comp);
+        comp.connect(off.destination);
+        var fake = { context: off, eqLow: master }, buses = {};
+        // only the notes that can be heard in this piece (counting their fade and echo) are built and played
+        var list = events.filter(function (e) { return e.s < to && e.s + e.d + 4 > t0; }), at = 0;
+        var build = function () {
+            var b0 = Date.now();
+            while (at < list.length && Date.now() - b0 < 12) {
+                var e = list[at];
+                if (cache[e.key] === undefined) {
+                    var r = e.vox ? core.vox(off, e.nt.w, e.nt.p, e.d, e.pw, e.vx, e.tr.notes, e.nt, e.gl) : { buf: core.render(off, e.ins, e.nt.p, e.d, e.gl), pre: 0 };
+                    cache[e.key] = r && r.buf ? { buf: r.buf, pre: r.pre || 0, used: k } : null;
+                }
+                var got = cache[e.key];
+                if (got) {
+                    got.used = k;
+                    var when = e.s - got.pre - t0;
+                    if (when + got.buf.duration > 0) {
+                        var bi = s.tracks.indexOf(e.tr);
+                        if (buses[bi] === undefined) { buses[bi] = e.tr.x && e.tr.x.fx && core.fx ? core.fx(fake, e.tr.x.fx, e.tr.pan / 50) : null; }
+                        var src = off.createBufferSource(), vol = off.createGain();
+                        src.buffer = got.buf;
+                        vol.gain.value = e.tr.vol / 100 * e.nt.v / 127;
+                        src.connect(vol);
+                        if (buses[bi]) {
+                            vol.connect(buses[bi]);
+                        } else {
+                            var pan = off.createStereoPanner();
+                            pan.pan.value = e.tr.pan / 50;
+                            vol.connect(pan);
+                            pan.connect(master);
+                        }
+                        src.start(Math.max(0, when), Math.max(0, -when));
+                    }
+                }
+                at++;
+            }
+            step((k + 0.6 * at / Math.max(1, list.length)) / pieces);
+            if (at < list.length) {
+                mp3Next(build);
+                return;
+            }
+            // if the browser never finishes a piece, say so instead of waiting forever
+            var stuck = setTimeout(function () { done(null, "A piece of the song never finished rendering."); }, 30000);
+            off.startRendering().then(function (buf) {
+                clearTimeout(stuck);
+                var skip = Math.round(lead * sr), n = buf.length - skip, l = buf.getChannelData(0), r2 = buf.getChannelData(1), pos = 0;
+                // sounds no later piece needs are let go, so memory stays small
+                Object.keys(cache).forEach(function (q) {
+                    if (cache[q] && cache[q].used < k - 1) { delete cache[q]; }
+                });
+                var put = function () {
+                    var p0 = Date.now();
+                    while (pos < n && Date.now() - p0 < 12) {
+                        var m = Math.min(1152 * 20, n - pos);
+                        var part = enc.encodeBuffer(ints(l, skip + pos, m), ints(r2, skip + pos, m));
+                        if (part.length) { chunks.push(new Uint8Array(part)); }
+                        pos += m;
+                    }
+                    step((k + 0.6 + 0.4 * pos / Math.max(1, n)) / pieces);
+                    if (pos < n) {
+                        mp3Next(put);
+                        return;
+                    }
+                    mp3Next(function () { piece(k + 1); });
+                };
+                put();
+            }, function () {
+                clearTimeout(stuck);
+                done(null, "The song could not be rendered.");
+            });
+        };
+        build();
     };
-    go();
+    piece(0);
 };
 
 // The whole job: render, encode, download, and close the little window when it was opened just for this.
@@ -5903,23 +5945,21 @@ var mp3Run = function (closeAfter) {
     mp3Load(0, function (ok) {
         if (!ok) { return fail("The MP3 maker could not load (it needs the internet)."); }
         voiceReady(function () {
-            mp3Render(text, function (p) { mp3Show("Building the sounds for “" + title + "”...", p * 0.5); }, function (buf) {
-                if (!buf) { return fail("The song could not be rendered."); }
-                mp3Encode(buf, function (p) { mp3Show("Making the MP3...", 0.5 + p * 0.5); }, function (blob) {
-                    var a = document.createElement("a");
-                    a.href = URL.createObjectURL(blob);
-                    a.download = name + ".mp3";
-                    document.body.appendChild(a);
-                    a.click();
-                    mp3Show(closeAfter ? "Downloaded “" + name + ".mp3”. This window will close." : "Downloaded “" + name + ".mp3”.", 1);
-                    setTimeout(function () {
-                        if (closeAfter) {
-                            window.close();
-                        } else {
-                            $("mp3Box").remove();
-                        }
-                    }, 2500);
-                });
+            mp3Make(text, function (p) { mp3Show("Making “" + title + "”... " + Math.round(p * 100) + "%", p); }, function (blob, why) {
+                if (!blob) { return fail(why || "The song could not be rendered."); }
+                var a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = name + ".mp3";
+                document.body.appendChild(a);
+                a.click();
+                mp3Show(closeAfter ? "Downloaded “" + name + ".mp3”. This window will close." : "Downloaded “" + name + ".mp3”.", 1);
+                setTimeout(function () {
+                    if (closeAfter) {
+                        window.close();
+                    } else {
+                        $("mp3Box").remove();
+                    }
+                }, 2500);
             });
         });
     });
