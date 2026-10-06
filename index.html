@@ -1884,6 +1884,8 @@ var core = coreEdit(fxSrc(coreSrc()));
 var playerSrc = function () {
     var list = typeof songs !== "undefined" ? songs : [song];
     var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
+    // the song picker: how wide its button is, and whether the mouse is over the button or a row of the list
+    var pickW = 0, hovPick = false, hovRow = -1;
     var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0, mxd = 0;
     var bySt = function (x, y) { return x.s - y.s; };
     var bg = null, drawn = 0;
@@ -2238,15 +2240,29 @@ var playerSrc = function () {
 
     var drUi = function () {
         var by = height - 40 * U, bar = (width - 86 * U) * constrain(pos / max(total, 0.01), 0, 1);
+        var title = data.title || "Untitled", many = list.length > 1;
         textAlign(LEFT, CENTER);
-        fill(236, 238, 243);
         textSize(18 * U);
-        text((data.title || "Untitled") + (list.length > 1 ? "  \u25BE" : ""), 16 * U, 24 * U);
+        // With more than one song, the title is a button with an arrow that opens the song list.
+        if (many) {
+            pickW = textWidth(title) + 48 * U;
+            fill(hovPick || menu ? 52 : 38, hovPick || menu ? 58 : 42, hovPick || menu ? 72 : 52);
+            rect(8 * U, 7 * U, pickW, 34 * U, 8 * U);
+            var ax = 8 * U + pickW - 20 * U;
+            fill(96, 183, 247);
+            if (menu) {
+                triangle(ax - 6 * U, 28 * U, ax + 6 * U, 28 * U, ax, 21 * U);
+            } else {
+                triangle(ax - 6 * U, 21 * U, ax + 6 * U, 21 * U, ax, 28 * U);
+            }
+        }
+        fill(236, 238, 243);
+        text(title, 18 * U, 24 * U);
         fill(141, 148, 163);
         textSize(12 * U);
-        text(data.bpm + " BPM", 16 * U, 46 * U);
+        text(data.bpm + " BPM" + (many ? "   \u00B7   Song " + (at + 1) + " of " + list.length : ""), 16 * U, 54 * U);
         textAlign(RIGHT, CENTER);
-        text(clock(pos) + " / " + clock(total), width - 16 * U, 46 * U);
+        text(clock(pos) + " / " + clock(total), width - 16 * U, 54 * U);
         fill(over ? 120 : 96, over ? 198 : 183, 247);
         ellipse(34 * U, by, 40 * U, 40 * U);
         fill(21, 23, 29);
@@ -2258,13 +2274,27 @@ var playerSrc = function () {
         fill(96, 183, 247);
         rect(66 * U, by - 4 * U, bar, 8 * U, 4);
         if (!menu) { return; }
-        fill(31, 34, 42, 245);
-        rect(10 * U, 38 * U, 250 * U, list.length * 24 * U + 8 * U, 6);
+        // the open list: a heading, then one numbered row per song, the playing one marked with a bar
+        var mw = max(250 * U, pickW);
+        fill(31, 34, 42, 250);
+        rect(8 * U, 44 * U, mw, 34 * U + list.length * 24 * U, 8 * U);
         textAlign(LEFT, CENTER);
+        textSize(11 * U);
+        fill(141, 148, 163);
+        text("CHOOSE A SONG", 20 * U, 59 * U);
         textSize(14 * U);
         for (var m = 0; m < list.length; m++) {
-            fill(m === at ? 252 : 226, m === at ? 160 : 228, m === at ? 216 : 235);
-            text(names[m], 22 * U, 54 * U + m * 24 * U);
+            var ry = 70 * U + m * 24 * U;
+            if (m === hovRow) {
+                fill(48, 54, 68);
+                rect(12 * U, ry, mw - 8 * U, 24 * U, 5 * U);
+            }
+            if (m === at) {
+                fill(96, 183, 247);
+                rect(14 * U, ry + 5 * U, 3 * U, 14 * U, 2 * U);
+            }
+            fill(m === at ? 140 : 226, m === at ? 205 : 228, m === at ? 250 : 235);
+            text((m + 1) + ".  " + names[m], 24 * U, ry + 12 * U);
         }
     };
 
@@ -2362,10 +2392,16 @@ var playerSrc = function () {
     };
 
     mouseClicked = function () {
-        var row = floor((mouseY - 42 * U) / (24 * U));
-        if (menu || (mouseY < 36 * U && list.length > 1)) {
-            if (menu && mouseX < 260 * U && row >= 0 && row < list.length) { prep(row); }
-            menu = !menu;
+        var row = floor((mouseY - 70 * U) / (24 * U));
+        // the open list picks the song under the mouse, and any click closes it
+        if (menu) {
+            if (mouseX > 8 * U && mouseX < 8 * U + max(250 * U, pickW) && mouseY > 70 * U && row >= 0 && row < list.length) { prep(row); }
+            menu = false;
+            return;
+        }
+        if (list.length > 1 && mouseX > 8 * U && mouseX < 8 * U + pickW && mouseY > 7 * U && mouseY < 41 * U) {
+            sfx.play("press");
+            menu = true;
             return;
         }
         if (state === "load") { return; }
@@ -2375,7 +2411,10 @@ var playerSrc = function () {
     };
 
     mouseMoved = function () {
-        var now = dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U;
+        hovPick = list.length > 1 && mouseX > 8 * U && mouseX < 8 * U + pickW && mouseY > 7 * U && mouseY < 41 * U;
+        var row = floor((mouseY - 70 * U) / (24 * U));
+        hovRow = menu && mouseX > 8 * U && mouseX < 8 * U + max(250 * U, pickW) && mouseY > 70 * U && row < list.length ? row : -1;
+        var now = !menu && dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U;
         if (now !== over) {
             over = now;
             sfx.play(over ? "hover" : "unhover");
@@ -2818,7 +2857,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v32/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v33/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;

@@ -186,6 +186,7 @@ var hit = core.badRuns(ws); for (var k = 0; k < tr.notes.length; k++) { tr.notes
 
 // The player: loading, visuals, lyrics and controls.
 var list = typeof songs !== "undefined" ? songs : [song]; var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
+var pickW = 0, hovPick = false, hovRow = -1;
 var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0, mxd = 0;
 var bySt = function (x, y) { return x.s - y.s; }; var bg = null, drawn = 0; var kin = sfx.context.constructor;
 if (kin.songboardStop) { kin.songboardStop(sfx); } kin.songboardStop = function (next) { state = "stop"; if (bg) { bg.disconnect(); } sfx.stop();
@@ -282,19 +283,25 @@ words.push({ j: j, w: ly[j].w, t: (glue ? " " : "") + ly[j].w.replace(/-$/, "") 
 for (var a = 0; a < words.length; a++) { x -= textWidth(words[a].t) / 2; } for (var b = 0; b < words.length; b++) {
 var now = state === "play" && words[b].j === k && pos < ly[k].e + 0.3; fill(now ? c[0] : 150, now ? c[1] : 154, now ? c[2] : 168, 255 * fade);
 text(words[b].t, x, y); x += textWidth(words[b].t); } } }; var drUi = function () {
-var by = height - 40 * U, bar = (width - 86 * U) * constrain(pos / max(total, 0.01), 0, 1); textAlign(LEFT, CENTER); fill(236, 238, 243);
-textSize(18 * U); text((data.title || "Untitled") + (list.length > 1 ? "  \u25BE" : ""), 16 * U, 24 * U); fill(141, 148, 163); textSize(12 * U);
-text(data.bpm + " BPM", 16 * U, 46 * U); textAlign(RIGHT, CENTER); text(clock(pos) + " / " + clock(total), width - 16 * U, 46 * U);
-fill(over ? 120 : 96, over ? 198 : 183, 247); ellipse(34 * U, by, 40 * U, 40 * U); fill(21, 23, 29);
-rect(27 * U, by - 8 * U, 5 * U, state === "play" ? 16 * U : 0); rect(36 * U, by - 8 * U, 5 * U, state === "play" ? 16 * U : 0);
+var by = height - 40 * U, bar = (width - 86 * U) * constrain(pos / max(total, 0.01), 0, 1);
+var title = data.title || "Untitled", many = list.length > 1; textAlign(LEFT, CENTER); textSize(18 * U); if (many) {
+pickW = textWidth(title) + 48 * U; fill(hovPick || menu ? 52 : 38, hovPick || menu ? 58 : 42, hovPick || menu ? 72 : 52);
+rect(8 * U, 7 * U, pickW, 34 * U, 8 * U); var ax = 8 * U + pickW - 20 * U; fill(96, 183, 247); if (menu) {
+triangle(ax - 6 * U, 28 * U, ax + 6 * U, 28 * U, ax, 21 * U); } else { triangle(ax - 6 * U, 21 * U, ax + 6 * U, 21 * U, ax, 28 * U); } }
+fill(236, 238, 243); text(title, 18 * U, 24 * U); fill(141, 148, 163); textSize(12 * U);
+text(data.bpm + " BPM" + (many ? "   \u00B7   Song " + (at + 1) + " of " + list.length : ""), 16 * U, 54 * U); textAlign(RIGHT, CENTER);
+text(clock(pos) + " / " + clock(total), width - 16 * U, 54 * U); fill(over ? 120 : 96, over ? 198 : 183, 247); ellipse(34 * U, by, 40 * U, 40 * U);
+fill(21, 23, 29); rect(27 * U, by - 8 * U, 5 * U, state === "play" ? 16 * U : 0); rect(36 * U, by - 8 * U, 5 * U, state === "play" ? 16 * U : 0);
 triangle(29 * U, by - 9 * U, 29 * U, by + 9 * U, state === "play" ? 29 * U : 43 * U, by); fill(46, 51, 63);
 rect(66 * U, by - 4 * U, width - 86 * U, 8 * U, 4); fill(96, 183, 247); rect(66 * U, by - 4 * U, bar, 8 * U, 4); if (!menu) { return; }
-fill(31, 34, 42, 245); rect(10 * U, 38 * U, 250 * U, list.length * 24 * U + 8 * U, 6); textAlign(LEFT, CENTER); textSize(14 * U);
-for (var m = 0; m < list.length; m++) { fill(m === at ? 252 : 226, m === at ? 160 : 228, m === at ? 216 : 235);
-text(names[m], 22 * U, 54 * U + m * 24 * U); } }; var pump = function () { pos = sfx.context.currentTime - base; if (loopLen && pos >= loopLen) {
-base += loopLen; pos -= loopLen; lap--; vi = 0; parts = []; } for (var sg = 0; sg < 4000; sg++) { if (idx >= evs.length) { if (!loopLen) { break; }
-lap++; idx = 0; } var ev = evs[idx], b = bufs[ev.k], when = ev.s + lap * loopLen; if (when >= pos + 0.4) { break; }
-if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre, ev.g, ev.pan, ev.to); } idx++; }
+var mw = max(250 * U, pickW); fill(31, 34, 42, 250); rect(8 * U, 44 * U, mw, 34 * U + list.length * 24 * U, 8 * U); textAlign(LEFT, CENTER);
+textSize(11 * U); fill(141, 148, 163); text("CHOOSE A SONG", 20 * U, 59 * U); textSize(14 * U); for (var m = 0; m < list.length; m++) {
+var ry = 70 * U + m * 24 * U; if (m === hovRow) { fill(48, 54, 68); rect(12 * U, ry, mw - 8 * U, 24 * U, 5 * U); } if (m === at) { fill(96, 183, 247);
+rect(14 * U, ry + 5 * U, 3 * U, 14 * U, 2 * U); } fill(m === at ? 140 : 226, m === at ? 205 : 228, m === at ? 250 : 235);
+text((m + 1) + ".  " + names[m], 24 * U, ry + 12 * U); } }; var pump = function () { pos = sfx.context.currentTime - base;
+if (loopLen && pos >= loopLen) { base += loopLen; pos -= loopLen; lap--; vi = 0; parts = []; } for (var sg = 0; sg < 4000; sg++) {
+if (idx >= evs.length) { if (!loopLen) { break; } lap++; idx = 0; } var ev = evs[idx], b = bufs[ev.k], when = ev.s + lap * loopLen;
+if (when >= pos + 0.4) { break; } if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre, ev.g, ev.pan, ev.to); } idx++; }
 if (!loopLen && pos > total + 0.6) { halt(); pos = 0; } };
 bg = sfx.context.createScriptProcessor ? sfx.context.createScriptProcessor(2048, 1, 1) : null; if (bg) { var hush = sfx.context.createGain();
 hush.gain.value = 0; bg.connect(hush); hush.connect(sfx.context.destination); bg.onaudioprocess = function () {
@@ -308,9 +315,13 @@ if (state === "load") { state = done >= jobs.length ? "stop" : state; fill(226, 
 text("Building sounds...", width / 2, height / 2 - 20 * U); fill(46, 51, 63); rect(width / 2 - 100 * U, height / 2, 200 * U, 8 * U, 4);
 fill(96, 183, 247); rect(width / 2 - 100 * U, height / 2, 200 * U * done / max(1, jobs.length), 8 * U, 4); return; } drawn = millis();
 if (state === "play") { pump(); } (looks[look] || drRoll)(); drLyrics(); drUi(); }; mouseClicked = function () {
-var row = floor((mouseY - 42 * U) / (24 * U)); if (menu || (mouseY < 36 * U && list.length > 1)) {
-if (menu && mouseX < 260 * U && row >= 0 && row < list.length) { prep(row); } menu = !menu; return; } if (state === "load") { return; }
-var p = constrain((mouseX - 66 * U) / (width - 86 * U), 0, 1) * total; var seek = mouseY > height - 56 * U && mouseX > 60 * U;
-if (!seek) { toggle(); } else if (state === "play") { go(p); } else { pos = p; } }; mouseMoved = function () {
-var now = dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U; if (now !== over) { over = now; sfx.play(over ? "hover" : "unhover"); } };
+var row = floor((mouseY - 70 * U) / (24 * U)); if (menu) {
+if (mouseX > 8 * U && mouseX < 8 * U + max(250 * U, pickW) && mouseY > 70 * U && row >= 0 && row < list.length) { prep(row); } menu = false; return; }
+if (list.length > 1 && mouseX > 8 * U && mouseX < 8 * U + pickW && mouseY > 7 * U && mouseY < 41 * U) { sfx.play("press"); menu = true; return; }
+if (state === "load") { return; } var p = constrain((mouseX - 66 * U) / (width - 86 * U), 0, 1) * total;
+var seek = mouseY > height - 56 * U && mouseX > 60 * U; if (!seek) { toggle(); } else if (state === "play") { go(p); } else { pos = p; } };
+mouseMoved = function () { hovPick = list.length > 1 && mouseX > 8 * U && mouseX < 8 * U + pickW && mouseY > 7 * U && mouseY < 41 * U;
+var row = floor((mouseY - 70 * U) / (24 * U));
+hovRow = menu && mouseX > 8 * U && mouseX < 8 * U + max(250 * U, pickW) && mouseY > 70 * U && row < list.length ? row : -1;
+var now = !menu && dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U; if (now !== over) { over = now; sfx.play(over ? "hover" : "unhover"); } };
 keyPressed = function () { if (keyCode === 32) { toggle(); } };
