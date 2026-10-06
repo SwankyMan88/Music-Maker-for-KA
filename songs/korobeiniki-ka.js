@@ -4,7 +4,7 @@
 **/
 // Each line in songs is one song: paste in text from Songboard's Export Text to add one, delete a line to remove one.
 var songs = [
-    "E2EMCBOMCyBJAuHgGKhE/CMEkBGEIGKQMEMGEEGKMMEAGEYGKgB~TBMGQES~iBC~DAcMKUMWAYQoBS~mBNc~QHKE~pCB~5BNK4B~1DuDW5B6CYWcYWQYWUYWI~GBEYWYYWoB~ZGKIMKgBM~UAuBEwBKhCo~vFvD~kJwD4YGlB/CICkBECIEGQICMECEEGMICAECYEGgB~TBMEKEM~iBC~DAcIGUIOAQKoBM~mBNc~QHGE~pCB~5BNG5E3B~3DtDODmBUA+HgSKhDmCMEc~uLKU~lJBgBGKYMEE~uLKIMKUMKc~uLBw~uLC~lBFMSEU~PG~sLJ~3BHW5BhC~kUB~wUFc~wUBgB~EC~aEKIMKY~wUHd3B~rFrD~sUB~yD7G~vM0BGdmCICc~5VKU~wTBgBEGYICE~5VKIIGUIGc~5VBw~5VC~lBFMMCU~PG~3VJ~3BHG4B~yDqDOEeXAvEgeWhC3~rpBC~+pBCQ~lJEYYWw~ZHKQ~kqBCg~lJCNKNt~umBGYMEU~umBOEGEU~xOEY~6MB~umBF~xOG~pQBQM~tmBF~1BB~yOG~4BJ4MWxB~uFwBBGM~rkBFYICU~rkBOEECU~gLEY~pJB~rkBF~gLG~4MBKM~qkBF~1BB~hLG~4BKG5B8~hoBG~2DjDPF3BAAjNAE1DyBGEgDGE8C~ISkE~gBa0~gC7B1B8~iCb~Ic~iF8B0~gCbk~iJ7C~I8B~gI8F9C3~kU7D~gC6DmY~jR9B~jQ6FmMC9C8BECgDEC8C~IyBkE~gBa0~gDb0~gCbk~gCb~gE8B~I8B~gI7FF9CwCIFAIFAdG3BAA8SwBB9FmCAAxBoBGAAGBtBmCABQAAh~SJ~hBW2B~iBc~jCd~SAr~hBBt~PH~hBC~SI~hBoPw~hBBy~PH~hBC~SI~hBkPmkBBtB8BAAxBe~iBD8B~iBD~RH~fmOuLAd8BCAB+BBABgCCABiCBABk~KAm~KAo~KAq~KAs~KAu~KAw~KAy~KA0~KA2~KA4~KA6CBBN~j0BEEAAE~j0BK~SG~hB0fcHhCAA8RgeD1CwCgMBlD1~z0BDAD5B/CGA1ByBGBtB1~91BN~qBE~PG~hB5O6~hBB3~PH~hBC~SI~hBlPD5B/~whBC~zmDCo~whBHoB~8mDJ~s3DL~PI~hB5O~hSEAD5BuDEA1B3BE~qSK~10BD~qBE~PG~hB5O/~hBB8~5QH8~5QB/~qBE8~qBM~PG~hB5OuDACpD6CIBlD~MQNIoBKAkFgqB~mjJnH4M~njJ0BGhC~j4IvDQGlBkD~3DtDaAyBYAjJ~9QBDh~77IsD~+yIuDE9EmCGEhD3BAEYAEgBGE1~TgE9F~TBE~TDo~T4B~4EoCtG~TA5~/CBo~XAGE1~T0B~8LoC~wJyEmMGhC8~2gJrDQG5Bh~8nJsDF9EkDAFgDAFYAFgBAFoBIF8F~TeVAqBTAkF~mmJDAWgBYW8BA~2sBCAWwBYWkC~ICc~WC~PA~IAs~mBDM~eCA~8BYKcAKoBMKEAKgBMWA~kBBuBsBAuBoBwBvB1BoBAvBYAvBg~RB0~PK8~PE~vBC~eL~PB~hCC~tBJ~8BgB1Bt~6DwDNW9~fA~xLzDf~2HBfYAfgBgBf0~MH8~MCo~YM~MAo~QA~kBG~wBZ1By~iD4C4BnC1EmCAnCYAnCgBAnCoBWJqBAAsDgevBpC~5OL~qOa~ekCN~tW1DNWd8BAWhBmCYW1~+SBZ~LAF~KFt~VGN~KF~qBC~2BCl~MH~sBGJ~3ClBKN8BAKZmCMK~UAKhBmCM~gCHuB~iDBuB~OAwJf1C~nU5C~lRBByB~lRKCAqBdA9BgiCKhE1~m8CvDvB9C~jRL~9UhDEAtBkBAoHAEpFmCGEYGEgBGEcGEU~NIc~NBoB~+mJC~bC~OEM~2BvBmMENtB~5BV~NW~pEyBU~lBCY~KBkB~OM~sDnCm8BCVoBECYECgBECcECU~NiBc~NBoB~+hJC~bC~OEM~jCY~uDDU~rBC~OK~sDpCVt~4GwGcCpCrCDCkBDCcDCU~KKIK8BAAhKgqBE1Gw~+zK9H1~iI5HmME9C~lQc~h8K6GGC1B1~/rK6HC9C6~iI5HcvB9C1CeLtBoBAgDmiCBtBmCMBA~D2CqMBB8BIBA~D4CBhC~iD5C|Korobeiniki|Lead|Harmony|Low ~METriangle Bass|Chip Drums|~GCSaw|Choir|~gBBTambourine"
+    "F2EMDABOMCyBJAuHgGKhE/CMEkBGEIGKQMEMGEEGKMMEAGEYGKgB~TBMGQES~iBC~DAcMKUMWAYQoBS~mBNc~QHKE~pCB~5BNK4B~1DuDW5B6CYWcYWQYWUYWI~GBEYWYYWoB~ZGKIMKgBM~UAuBEwBKhCo~vFvD~kJwD4YGlB/CICkBECIEGQICMECEEGMICAECYEGgB~TBMEKEM~iBC~DAcIGUIOAQKoBM~mBNc~QHGE~pCB~5BNG5E3B~3DtDODmBUA+HgSKhDmCMEc~uLKU~lJBgBGKYMEE~uLKIMKUMKc~uLBw~uLC~lBFMSEU~PG~sLJ~3BHW5BhC~kUB~wUFc~wUBgB~EC~aEKIMKY~wUHd3B~rFrD~sUB~yD7G~vM0BGdmCICc~5VKU~wTBgBEGYICE~5VKIIGUIGc~5VBw~5VC~lBFMMCU~PG~3VJ~3BHG4B~yDqDOEeXAvEgeWhC3~rpBC~+pBCQ~lJEYYWw~ZHKQ~kqBCg~lJCNKNt~umBGYMEU~umBOEGEU~xOEY~6MB~umBF~xOG~pQBQM~tmBF~1BB~yOG~4BJ4MWxB~uFwBBGM~rkBFYICU~rkBOEECU~gLEY~pJB~rkBF~gLG~4MBKM~qkBF~1BB~hLG~4BKG5B8~hoBG~2DjDPF3BAAjNAE1DyBGEgDGE8C~ISkE~gBa0~gC7B1B8~iCb~Ic~iF8B0~gCbk~iJ7C~I8B~gI8F9C3~kU7D~gC6DmY~jR9B~jQ6FmMC9C8BECgDEC8C~IyBkE~gBa0~gDb0~gCbk~gCb~gE8B~I8B~gI7FF9CwCIFAIFAdG3BAA8SwBB9FmCAAxBoBGAAGBtBmCABQAAh~SJ~hBW2B~iBc~jCd~SAr~hBBt~PH~hBC~SI~hBoPw~hBBy~PH~hBC~SI~hBkPmkBBtB8BAAxBe~iBD8B~iBD~RH~fmOuLAd8BCAB+BBABgCCABiCBABk~KAm~KAo~KAq~KAs~KAu~KAw~KAy~KA0~KA2~KA4~KA6CBBN~j0BEEAAE~j0BK~SG~hB0fcHhCAA8RgeD1CwCgMBlD1~z0BDAD5B/CGA1ByBGBtB1~91BN~qBE~PG~hB5O6~hBB3~PH~hBC~SI~hBlPD5B/~whBC~zmDCo~whBHoB~8mDJ~s3DL~PI~hB5O~hSEAD5BuDEA1B3BE~qSK~10BD~qBE~PG~hB5O/~hBB8~5QH8~5QB/~qBE8~qBM~PG~hB5OuDACpD6CIBlD~MQNIoBKAkFgqB~mjJnH4M~njJ0BGhC~j4IvDQGlBkD~3DtDaAyBYAjJ~9QBDh~77IsD~+yIuDE9EmCGEhD3BAEYAEgBGE1~TgE9F~TBE~TDo~T4B~4EoCtG~TA5~/CBo~XAGE1~T0B~8LoC~wJyEmMGhC8~2gJrDQG5Bh~8nJsDF9EkDAFgDAFYAFgBAFoBIF8F~TeVAqBTAkF~mmJDAWgBYW8BA~2sBCAWwBYWkC~ICc~WC~PA~IAs~mBDM~eCA~8BYKcAKoBMKEAKgBMWA~kBBuBsBAuBoBwBvB1BoBAvBYAvBg~RB0~PK8~PE~vBC~eL~PB~hCC~tBJ~8BgB1Bt~6DwDNW9~fA~xLzDf~2HBfYAfgBgBf0~MH8~MCo~YM~MAo~QA~kBG~wBZ1By~iD4C4BnC1EmCAnCYAnCgBAnCoBWJqBAAsDgevBpC~5OL~qOa~ekCN~tW1DNWd8BAWhBmCYW1~+SBZ~LAF~KFt~VGN~KF~qBC~2BCl~MH~sBGJ~3ClBKN8BAKZmCMK~UAKhBmCM~gCHuB~iDBuB~OAwJf1C~nU5C~lRBByB~lRKCAqBdA9BgiCKhE1~m8CvDvB9C~jRL~9UhDEAtBkBAoHAEpFmCGEYGEgBGEcGEU~NIc~NBoB~+mJC~bC~OEM~2BvBmMENtB~5BV~NW~pEyBU~lBCY~KBkB~OM~sDnCm8BCVoBECYECgBECcECU~NiBc~NBoB~+hJC~bC~OEM~jCY~uDDU~rBC~OK~sDpCVt~4GwGcCpCrCDCkBDCcDCU~KKIK8BAAhKgqBE1Gw~+zK9H1~iI5HmME9C~lQc~h8K6GGC1B1~/rK6HC9C6~iI5HcvB9C1CeLtBoBAgDmiCBtBmCMBA~D2CqMBB8BIBA~D4CBhC~iD5C|Korobeiniki|Lead|Harmony|Low ~METriangle Bass|Chip Drums|~GCSaw|Choir|~gBBTambourine"
 ];
 
 
@@ -229,24 +229,31 @@ rect(x, bot - h, max(1, sw - (on.length > 1 ? 1 : 0)), h, 3); col(tint[on[k]], 4
 rect(x, bot + 4 * U, max(1, sw - (on.length > 1 ? 1 : 0)), h * 0.3, 3); row[on[k]] *= 0.9; } } }; var wedge = function (x, y, r0, r1, a0, a1) {
 var steps = 8; beginShape(); for (var k = 0; k <= steps; k++) { var p = a0 + (a1 - a0) * k / steps;
 vertex(x + Math.cos(p) * r1, y + Math.sin(p) * r1); } for (k = steps; k >= 0; k--) { var q = a0 + (a1 - a0) * k / steps;
-vertex(x + Math.cos(q) * r0, y + Math.sin(q) * r0); } endShape(); }; var seg = [], segC = [], waves = [], sparks = [], spin = 0;
-var drOrbit = function () { var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0, hats = 0;
+vertex(x + Math.cos(q) * r0, y + Math.sin(q) * r0); } endShape(); };
+var seg = [], segC = [], waves = [], sparks = [], spin = 0, tunnel = 0, rush = []; var drOrbit = function () {
+var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0, hats = 0;
 var piece = Math.PI * 2 / 12, top = -Math.PI / 2; for (i = 0; i < notes.length; i++) { n = notes[i]; if (!lit(n)) { continue; }
 var fresh = n.hy !== lap; n.hy = lap; if (n.kit) { if (n.p >= 41) { hats = max(hats, n.v); } else if (fresh) { var hv = n.p < 37 ? n.v : n.v * 0.5;
 hit = max(hit, hv); if (waves.length < 12) { waves.push({ r: R * 0.45, life: 1, c: n.c, w: hv }); } } continue; } var k = n.p % 12;
 seg[k] = max(seg[k] || 0, n.v); segC[k] = n.c; for (var j = 0; fresh && j < 3 + n.v * 6 && sparks.length < 260; j++) {
 var sa = top + k * piece + random(-0.3, 0.3) * piece, sp = random(2, 6) * U * (0.6 + n.v);
 sparks.push({ x: cx + Math.cos(sa) * R * 0.6, y: cy + Math.sin(sa) * R * 0.6, vx: Math.cos(sa) * sp, vy: Math.sin(sa) * sp, c: n.c, life: 1 }); } }
-kick = max(kick * 0.84, hit); spin += 0.004 + kick * 0.05; var z = 1 - 0.09 * kick; noStroke(); col([96, 183, 247], kick * 38);
-rect(0, 0, width, height); for (i = 0; i < 48; i++) { var da = i / 48 * Math.PI * 2 + spin, dr = R * 1.3 * z, big = i % 4 === 0;
-col([96, 183, 247], big ? 80 + kick * 120 : 35); ellipse(cx + Math.cos(da) * dr, cy + Math.sin(da) * dr, (big ? 4 : 2.5) * U, (big ? 4 : 2.5) * U);
+kick = max(kick * 0.84, hit); spin += 0.004 + kick * 0.05; var z = 1 - 0.09 * kick; cx += random(-1, 1) * kick * 7 * U;
+cy += random(-1, 1) * kick * 7 * U; noStroke(); col([96, 183, 247], kick * 38); rect(0, 0, width, height);
+tunnel = (tunnel + (data.bpm / 6000 + kick * 0.03)) % 1; noFill(); for (i = 0; i < 6; i++) { var f = (i + tunnel) / 6, hr = R * 0.3 * Math.pow(9, f);
+stroke(96, 183, 247, 70 * Math.sin(f * Math.PI) * (0.5 + kick)); strokeWeight((1 + 3 * f) * U); beginShape(); for (var h = 0; h <= 6; h++) {
+var ha = h / 6 * Math.PI * 2 + spin * 0.5; vertex(cx + Math.cos(ha) * hr, cy + Math.sin(ha) * hr); } endShape(); } noStroke();
+while (rush.length < 70) { rush.push({ a: random(0, Math.PI * 2), d: random(0.1, 1.6), s: random(0.6, 1.4) }); } for (i = 0; i < rush.length; i++) {
+var st2 = rush[i]; st2.d *= 1 + (0.012 + kick * 0.06) * st2.s; if (st2.d > 2.4) { st2.d = random(0.1, 0.3); st2.a = random(0, Math.PI * 2); }
+col([255, 255, 255], min(200, st2.d * 120));
+ellipse(cx + Math.cos(st2.a) * R * st2.d, cy + Math.sin(st2.a) * R * st2.d, st2.d * 2.5 * U, st2.d * 2.5 * U); } for (i = 0; i < 48; i++) {
+var da = i / 48 * Math.PI * 2 + spin, dr = R * 1.3 * z, big = i % 4 === 0; col([96, 183, 247], big ? 80 + kick * 120 : 35);
+ellipse(cx + Math.cos(da) * dr, cy + Math.sin(da) * dr, (big ? 4 : 2.5) * U, (big ? 4 : 2.5) * U);
 var db = -i / 48 * Math.PI * 2 - spin * 1.5, dq = R * 1.12 * z; col([252, 214, 105], 25 + hats * 90);
 ellipse(cx + Math.cos(db) * dq, cy + Math.sin(db) * dq, 2 * U, 2 * U); } noFill(); for (i = waves.length - 1; i >= 0; i--) { var wv = waves[i];
 stroke(wv.c[0], wv.c[1], wv.c[2], 200 * wv.life); strokeWeight((2 + 5 * wv.w) * wv.life * U); ellipse(cx, cy, wv.r * 2, wv.r * 2);
-wv.r += (6 + 6 * wv.w) * U; wv.life -= 0.035; if (wv.life <= 0) { waves.splice(i, 1); } } for (i = 0; i < 12; i++) {
-var bl = seg[i] || 0, ba = top + i * piece; if (bl < 0.15) { continue; } stroke(segC[i][0], segC[i][1], segC[i][2], 120 * bl);
-strokeWeight(3 * bl * U); line(cx, cy, cx + Math.cos(ba) * R * (1.1 + 0.6 * bl) * z, cy + Math.sin(ba) * R * (1.1 + 0.6 * bl) * z); } noStroke();
-for (i = 0; i < 12; i++) { var lv = seg[i] || 0, a0 = top + (i - 0.5) * piece, a1 = a0 + piece;
+wv.r += (6 + 6 * wv.w) * U; wv.life -= 0.035; if (wv.life <= 0) { waves.splice(i, 1); } } noStroke(); for (i = 0; i < 12; i++) {
+var lv = seg[i] || 0, a0 = top + (i - 0.5) * piece, a1 = a0 + piece;
 var c = segC[i] || [96, 183, 247], r0 = R * 0.42 * z, r1 = R * (0.47 + 0.55 * lv) * z; if (lv > 0.05) { col(c, 60 * lv);
 wedge(cx, cy, r0, r1 + 8 * U * lv, a0 - 0.03, a1 + 0.03); }
 col([96 + (c[0] - 96) * lv, 183 + (c[1] - 183) * lv, 247 + (c[2] - 247) * lv], 150 + 105 * lv); wedge(cx, cy, r0, r1, a0 - 0.004, a1 + 0.004);
