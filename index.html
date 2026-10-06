@@ -2060,18 +2060,16 @@ var playerSrc = function () {
     };
 
     // Pulse: a plain circle split into twelve pieces, one for each note name. A piece grows outward when its note plays,
-    // and on every beat the whole picture jumps back a little and eases forward again.
-    var seg = [], segC = [], lastBeat = -1;
+    // and on each drum beat the whole picture jumps back a little and eases forward again.
+    var seg = [], segC = [];
     var drOrbit = function () {
         var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0;
-        var nb = floor(pos / (60 / data.bpm));
-        if (state === "play" && nb !== lastBeat) { hit = 0.5; }
-        lastBeat = nb;
         for (i = 0; i < notes.length; i++) {
             n = notes[i];
             if (!lit(n)) { continue; }
             if (n.kit) {
-                if (n.p < 37 && pos - n.s < 0.06) { hit = max(hit, n.v); }
+                // only the drum kit makes it jump: kicks fully, snares and claps half as much
+                if (n.p < 41 && pos - n.s < 0.06) { hit = max(hit, n.p < 37 ? n.v : n.v * 0.5); }
                 continue;
             }
             var k = n.p % 12;
@@ -2736,7 +2734,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v24/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v25/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;

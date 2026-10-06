@@ -226,12 +226,11 @@ rect(x, bot - h, max(1, sw - (on.length > 1 ? 1 : 0)), h, 3); col(tint[on[k]], 4
 rect(x, bot + 4 * U, max(1, sw - (on.length > 1 ? 1 : 0)), h * 0.3, 3); row[on[k]] *= 0.9; } } }; var wedge = function (x, y, r0, r1, a0, a1) {
 var steps = 8; beginShape(); for (var k = 0; k <= steps; k++) { var p = a0 + (a1 - a0) * k / steps;
 vertex(x + Math.cos(p) * r1, y + Math.sin(p) * r1); } for (k = steps; k >= 0; k--) { var q = a0 + (a1 - a0) * k / steps;
-vertex(x + Math.cos(q) * r0, y + Math.sin(q) * r0); } endShape(); }; var seg = [], segC = [], lastBeat = -1; var drOrbit = function () {
-var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0; var nb = floor(pos / (60 / data.bpm));
-if (state === "play" && nb !== lastBeat) { hit = 0.5; } lastBeat = nb; for (i = 0; i < notes.length; i++) { n = notes[i]; if (!lit(n)) { continue; }
-if (n.kit) { if (n.p < 37 && pos - n.s < 0.06) { hit = max(hit, n.v); } continue; } var k = n.p % 12; seg[k] = max(seg[k] || 0, n.v); segC[k] = n.c; }
-kick = max(kick * 0.84, hit); var z = 1 - 0.09 * kick; noStroke(); for (i = 0; i < 48; i++) {
-var da = i / 48 * Math.PI * 2 + pos * 0.15, dr = R * 1.3 * z; col([96, 183, 247], i % 4 === 0 ? 70 : 30);
+vertex(x + Math.cos(q) * r0, y + Math.sin(q) * r0); } endShape(); }; var seg = [], segC = []; var drOrbit = function () {
+var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0; for (i = 0; i < notes.length; i++) { n = notes[i];
+if (!lit(n)) { continue; } if (n.kit) { if (n.p < 41 && pos - n.s < 0.06) { hit = max(hit, n.p < 37 ? n.v : n.v * 0.5); } continue; }
+var k = n.p % 12; seg[k] = max(seg[k] || 0, n.v); segC[k] = n.c; } kick = max(kick * 0.84, hit); var z = 1 - 0.09 * kick; noStroke();
+for (i = 0; i < 48; i++) { var da = i / 48 * Math.PI * 2 + pos * 0.15, dr = R * 1.3 * z; col([96, 183, 247], i % 4 === 0 ? 70 : 30);
 ellipse(cx + Math.cos(da) * dr, cy + Math.sin(da) * dr, (i % 4 === 0 ? 4 : 2.5) * U, (i % 4 === 0 ? 4 : 2.5) * U); } for (i = 0; i < 12; i++) {
 var lv = seg[i] || 0, a0 = -Math.PI / 2 + (i - 0.5) / 12 * Math.PI * 2, a1 = a0 + Math.PI * 2 / 12;
 var c = segC[i] || [96, 183, 247], r0 = R * 0.42 * z, r1 = R * (0.47 + 0.5 * lv) * z;
