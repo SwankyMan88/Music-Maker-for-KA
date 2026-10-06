@@ -778,6 +778,7 @@
             <select id="trackSel" class="small" title="Track to edit"></select>
             <div class="grow small"></div>
             <button id="menuBtn" class="small" title="Song menu">☰</button>
+            <button id="mp3Btn" class="small" title="Download this song as an MP3">MP3</button>
             <button id="fullBtn" title="Open in a full window">⛶</button>
             <div id="more">
                 <div class="grp2">
@@ -2857,7 +2858,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v33/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v34/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -5720,7 +5721,8 @@ document.addEventListener("mousedown", function (e) {
 window.addEventListener("resize", layout);
 
 // Full window: writes a fresh copy of this page into a new window, carrying the current song.
-var fullPage = function () {
+// Extra settings (like the MP3 job) are written in after the songs.
+var fullPage = function (extra) {
     var page = document.documentElement.cloneNode(true);
     var body = page.querySelector("body");
     page.querySelectorAll("[data-dyn]").forEach(function (el) { el.remove(); });
@@ -5729,17 +5731,17 @@ var fullPage = function () {
     ["stage", "modal"].forEach(function (id) { page.querySelector("#" + id).className = "hide"; });
     body.removeAttribute("class");
     body.removeAttribute("data-view");
-    page.querySelector("#songScript").textContent = "\nvar songs = " + JSON.stringify(book.list) + ";\nvar songAt = " + book.at + ";\nvar popped = true;\n";
+    page.querySelector("#songScript").textContent = "\nvar songs = " + JSON.stringify(book.list) + ";\nvar songAt = " + book.at + ";\nvar popped = true;\n" + (extra || "");
     return "<!DOCTYPE html>" + page.outerHTML;
 };
 
 // The original page with the current song list written in, so the new window starts from scratch with the music.
-var withSongs = function (page) {
+var withSongs = function (page, extra) {
     var open = '<script id="songScript">';
     var at = page.indexOf(open);
     var end = page.indexOf("</scr" + "ipt>", at);
     if (at < 0 || end < 0) { return null; }
-    var mine = "\nvar startInPlayer = false;\nvar songs = " + JSON.stringify(book.list) + ";\nvar songAt = " + book.at + ";\nvar popped = true;\n";
+    var mine = "\nvar startInPlayer = false;\nvar songs = " + JSON.stringify(book.list) + ";\nvar songAt = " + book.at + ";\nvar popped = true;\n" + (extra || "");
     return page.slice(0, at + open.length) + mine + page.slice(end);
 };
 
@@ -5750,6 +5752,195 @@ $("fullBtn").addEventListener("click", function () {
     w.document.write("<p style=\"font: 16px sans-serif\">Opening Songboard...</p>");
     getOrig(function () {
         var html = (orig.text && withSongs(orig.text)) || fullPage();
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+    });
+});
+
+// MP3 download.
+// Khan Academy's page cannot start downloads itself, so the button opens a small window of its own that renders the song,
+// downloads the MP3 and closes. In the full window (already its own page) the download happens right there.
+var mp3Lib = [
+    "https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js",
+    "https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"
+];
+
+// A cover over the page that shows how far the MP3 has got.
+var mp3Show = function (msg, part) {
+    var box = $("mp3Box");
+    if (!box) {
+        box = document.createElement("div");
+        box.id = "mp3Box";
+        box.style.cssText = "position:fixed;inset:0;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;" +
+            "background:rgb(21, 23, 29);color:rgb(226, 228, 235);font:15px system-ui, sans-serif;text-align:center;padding:16px";
+        box.innerHTML = '<div id="mp3Msg"></div><div style="width:240px;height:8px;border-radius:4px;background:rgb(46, 51, 63)">' +
+            '<div id="mp3Bar" style="width:0;height:100%;border-radius:4px;background:rgb(96, 183, 247)"></div></div>';
+        document.body.appendChild(box);
+    }
+    $("mp3Msg").textContent = msg;
+    $("mp3Bar").style.width = Math.round(clamp(part || 0, 0, 1) * 100) + "%";
+};
+
+// Loads the MP3 encoder, trying each copy in turn.
+var mp3Load = function (i, done) {
+    if (window.lamejs) { return done(true); }
+    if (i >= mp3Lib.length) { return done(false); }
+    var tag = document.createElement("script");
+    tag.src = mp3Lib[i];
+    tag.onload = function () { done(!!window.lamejs); };
+    tag.onerror = function () { mp3Load(i + 1, done); };
+    document.head.appendChild(tag);
+};
+
+// Plays the whole song into a recording, the same way the player sounds: every track's volume, pan, effects and voices.
+var mp3Render = function (text, step, done) {
+    var s = core.decode(text), spt = 60 / (s.bpm * s.res), total = 0, solo = s.tracks.some(function (tr) { return tr.solo; });
+    s.tracks.forEach(function (tr) { tr.notes.forEach(function (nt) { total = Math.max(total, (nt.t + nt.l) * spt); }); });
+    var sr = 44100, off = new OfflineAudioContext(2, Math.ceil((total + 2.5) * sr), sr);
+    var master = off.createGain(), comp = off.createDynamicsCompressor();
+    var cfg = { threshold: -12, knee: 12, ratio: 4, attack: 0.004, release: 0.2 };
+    for (var k in cfg) { comp[k].value = cfg[k]; }
+    master.gain.value = 0.7;
+    master.connect(comp);
+    comp.connect(off.destination);
+    var fake = { context: off, eqLow: master }, work = [], cache = {};
+    s.tracks.forEach(function (tr) {
+        var ins = core.insOf(tr);
+        if (!ins || tr.mute || (solo && !tr.solo)) { return; }
+        var vox = ins.k === "vox", dest = tr.x && tr.x.fx && core.fx ? core.fx(fake, tr.x.fx, tr.pan / 50) : null, prev = "";
+        var vx = ins.vx;
+        if (vox && tr.x && tr.x.vx) {
+            vx = {};
+            Object.keys(ins.vx).forEach(function (q) { vx[q] = ins.vx[q]; });
+            Object.keys(tr.x.vx).forEach(function (q) { vx[q] = tr.x.vx[q]; });
+        }
+        if (ins.k !== "kit") { core.chain(tr.notes, vox); }
+        tr.notes.forEach(function (nt) {
+            var b = nt._bend, d = b ? b.len * spt : nt.l * spt, gl = b && b.gl ? core.secs(b.gl, spt) : null, pw = prev;
+            if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
+            if (nt._skip || (vox && !core.vox)) { return; }
+            work.push({ tr: tr, ins: ins, nt: nt, d: d, gl: gl, pw: pw, vx: vx, vox: vox, dest: dest });
+        });
+    });
+    // sounds are built a little at a time so the window keeps showing progress
+    var at = 0;
+    var build = function () {
+        var t0 = Date.now();
+        while (at < work.length && Date.now() - t0 < 40) {
+            var w = work[at], key = (w.vox ? "v" + w.pw + ":" + w.nt.w + ":" : core.key(w.tr.inst, w.nt.p, w.d, w.ins) + ":") + w.nt.p + ":" + Math.round(w.d * 1000) + JSON.stringify(w.gl) + JSON.stringify(w.vx || 0);
+            if (cache[key] === undefined) {
+                var r = w.vox ? core.vox(off, w.nt.w, w.nt.p, w.d, w.pw, w.vx, w.tr.notes, w.nt, w.gl) : { buf: core.render(off, w.ins, w.nt.p, w.d, w.gl), pre: 0 };
+                cache[key] = r && r.buf ? r : null;
+            }
+            var got = cache[key];
+            if (got) {
+                var src = off.createBufferSource(), vol = off.createGain(), pan = off.createStereoPanner();
+                src.buffer = got.buf;
+                vol.gain.value = w.tr.vol / 100 * w.nt.v / 127;
+                pan.pan.value = w.tr.pan / 50;
+                src.connect(vol);
+                if (w.dest) {
+                    vol.connect(w.dest);
+                } else {
+                    vol.connect(pan);
+                    pan.connect(master);
+                }
+                var when = w.nt.t * spt - (got.pre || 0);
+                src.start(Math.max(0, when), Math.max(0, -when));
+            }
+            at++;
+        }
+        step(at / Math.max(1, work.length));
+        if (at < work.length) {
+            setTimeout(build, 0);
+            return;
+        }
+        off.startRendering().then(done, function () { done(null); });
+    };
+    build();
+};
+
+// Turns the recording into an MP3 a piece at a time.
+var mp3Encode = function (buf, step, done) {
+    var enc = new lamejs.Mp3Encoder(2, buf.sampleRate, 192), chunks = [], at = 0, size = 1152 * 40;
+    var left = buf.getChannelData(0), right = buf.getChannelData(1);
+    var ints = function (a, from, n) {
+        var o = new Int16Array(n);
+        for (var i = 0; i < n; i++) {
+            var v = Math.max(-1, Math.min(1, a[from + i]));
+            o[i] = v < 0 ? v * 32768 : v * 32767;
+        }
+        return o;
+    };
+    var go = function () {
+        var t0 = Date.now();
+        while (at < left.length && Date.now() - t0 < 40) {
+            var n = Math.min(size, left.length - at);
+            var part = enc.encodeBuffer(ints(left, at, n), ints(right, at, n));
+            if (part.length) { chunks.push(new Uint8Array(part)); }
+            at += n;
+        }
+        step(at / left.length);
+        if (at < left.length) {
+            setTimeout(go, 0);
+            return;
+        }
+        var last = enc.flush();
+        if (last.length) { chunks.push(new Uint8Array(last)); }
+        done(new Blob(chunks, { type: "audio/mpeg" }));
+    };
+    go();
+};
+
+// The whole job: render, encode, download, and close the little window when it was opened just for this.
+var mp3Run = function (closeAfter) {
+    commit();
+    var text = book.list[book.at], title = core.decode(text).title || "Songboard song";
+    var name = title.replace(/[^a-z0-9 _-]/gi, "").trim().replace(/\s+/g, " ") || "song";
+    var fail = function (msg) { mp3Show(msg + (closeAfter ? " You can close this window." : ""), 0); };
+    mp3Show("Getting the MP3 maker ready...", 0);
+    mp3Load(0, function (ok) {
+        if (!ok) { return fail("The MP3 maker could not load (it needs the internet)."); }
+        voiceReady(function () {
+            mp3Render(text, function (p) { mp3Show("Building the sounds for “" + title + "”...", p * 0.5); }, function (buf) {
+                if (!buf) { return fail("The song could not be rendered."); }
+                mp3Encode(buf, function (p) { mp3Show("Making the MP3...", 0.5 + p * 0.5); }, function (blob) {
+                    var a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = name + ".mp3";
+                    document.body.appendChild(a);
+                    a.click();
+                    mp3Show(closeAfter ? "Downloaded “" + name + ".mp3”. This window will close." : "Downloaded “" + name + ".mp3”.", 1);
+                    setTimeout(function () {
+                        if (closeAfter) {
+                            window.close();
+                        } else {
+                            $("mp3Box").remove();
+                        }
+                    }, 2500);
+                });
+            });
+        });
+    });
+};
+
+$("mp3Btn").addEventListener("click", function () {
+    stopPlay();
+    commit();
+    if (window.popped) {
+        mp3Run(false);
+        return;
+    }
+    var w = window.open("", "songboardMp3", "width=420,height=240");
+    if (!w) {
+        alert("The MP3 window was blocked. Allow pop-ups for this page and try again.");
+        return;
+    }
+    w.document.write("<p style=\"font: 16px sans-serif\">Getting your MP3 ready...</p>");
+    getOrig(function () {
+        var job = "var mp3Job = true;\n";
+        var html = (orig.text && withSongs(orig.text, job)) || fullPage(job);
         w.document.open();
         w.document.write(html);
         w.document.close();
@@ -5821,6 +6012,11 @@ $("vel").addEventListener("change", function () {
     var ro = new ResizeObserver(function () { dirty = true; });
     [cv.roll, cv.ruler, $("arrBody")].forEach(function (el) { ro.observe(el); });
     requestAnimationFrame(frame);
+    // a window opened by the MP3 button makes the MP3 straight away
+    if (window.mp3Job) {
+        mp3Run(true);
+        return;
+    }
     if (window.startInPlayer && texts.length && !window.popped) {
         voiceReady(function () { openStage(0, false); });
     }
