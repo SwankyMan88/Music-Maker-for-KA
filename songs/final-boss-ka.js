@@ -265,10 +265,10 @@ if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre
 if (!loopLen && pos > total + 0.6) { halt(); pos = 0; } }; var doc = glob.document;
 bg = sfx.context.createScriptProcessor ? sfx.context.createScriptProcessor(2048, 1, 1) : null; if (bg) { var hush = sfx.context.createGain();
 hush.gain.value = 0; bg.connect(hush); hush.connect(sfx.context.destination); bg.onaudioprocess = function () {
-if (state === "play" && (!doc || doc.hidden)) { pump(); } }; } sfx.quit = function () { state = "stop"; if (bg) { bg.disconnect(); } };
-var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () { background(21, 23, 29); noStroke(); if (named < list.length) {
-names[named] = core.decode(list[named]).title || names[named]; named++; } if (state === "load") { var t0 = millis();
-while (done < jobs.length && millis() - t0 < 12) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
+if (state === "play" && (!doc || doc.hidden)) { pump(); } }; } sfx.voiceIn = function () { if (state !== "play") { prep(at); } };
+sfx.quit = function () { state = "stop"; if (bg) { bg.disconnect(); } }; var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () {
+background(21, 23, 29); noStroke(); if (named < list.length) { names[named] = core.decode(list[named]).title || names[named]; named++; }
+if (state === "load") { var t0 = millis(); while (done < jobs.length && millis() - t0 < 12) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
 bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, j.vx, j.tl, j.nt, j.gl); done++; continue; }
 j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl); if (j.r.step(3000)) { bufs[j.k] = { buf: j.r.buf, pre: 0 }; done++; } }
 state = done >= jobs.length ? "stop" : state; fill(226, 228, 235); textSize(15 * U); textAlign(CENTER, CENTER);

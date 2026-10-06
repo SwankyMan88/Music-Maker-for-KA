@@ -2194,6 +2194,10 @@ var playerSrc = function () {
             if (state === "play" && (!doc || doc.hidden)) { pump(); }
         };
     }
+    // The player page calls this when the singing voice finishes loading: a song that is not playing is set up again so its voices sing.
+    sfx.voiceIn = function () {
+        if (state !== "play") { prep(at); }
+    };
     // The HTML page calls this when it closes the player, so a closed player stops scheduling notes.
     sfx.quit = function () {
         state = "stop";
@@ -2413,6 +2417,7 @@ var getOrig = function (fn) {
     orig.wait.push(fn);
     if (orig.wait.length > 1) { return; }
     var done = function (t) {
+        if (orig.tried) { return; }
         orig.tried = true;
         orig.text = t ? t.replace(/\r/g, "") : null;
         var list = orig.wait;
@@ -2425,6 +2430,8 @@ var getOrig = function (fn) {
     tag.onload = function () { done(window.songboardPage || ""); };
     tag.onerror = function () { done(""); };
     document.head.appendChild(tag);
+    // a blocked site can hang without failing, so the exports go ahead without it after a while
+    setTimeout(function () { done(""); }, 8000);
 };
 
 // The engine's credits, put back if Khan Academy's rewrite dropped the comment.
@@ -2594,23 +2601,21 @@ var pjs = {
             "var pjsBody = " + pjs.packFn("pjsBody") + ";",
             "var pjsRun = " + pjs.packFn("pjsRun") + ";",
             "",
-            "// The singing voice loads from GitHub, the songs still play without it.",
+            "// The songs start straight away. The singing voice loads from GitHub afterwards,",
+            "// and if it can't load (no internet, or a blocked site) everything plays without it.",
+            "pjsRun(document.getElementById(\"cv\"), songs);",
             "var voiceFiles = [\"voice.js\", \"voice-hd.js\", \"voice-dict.js\"];",
-            "var started = false;",
-            "var start = function () {",
-            "    if (started) { return; }",
-            "    started = true;",
-            "    pjsRun(document.getElementById(\"cv\"), songs);",
-            "};",
             "voiceFiles.forEach(function (f, i) {",
             "    var tag = document.createElement(\"script\");",
             "    tag.src = \"" + cdn + "\" + f;",
             "    tag.async = false;",
-            "    tag.onerror = start;",
-            "    if (i === voiceFiles.length - 1) { tag.onload = start; }",
+            "    if (i === voiceFiles.length - 1) {",
+            "        tag.onload = function () {",
+            "            if (sfx.voiceIn) { sfx.voiceIn(); }",
+            "        };",
+            "    }",
             "    document.head.appendChild(tag);",
-            "});",
-            "setTimeout(start, 8000);"
+            "});"
         ].join("\n");
         return [
             "<!DOCTYPE html>",
@@ -2686,7 +2691,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v20/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v21/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
