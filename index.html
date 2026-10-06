@@ -2858,7 +2858,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v35/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v36/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -5935,7 +5935,121 @@ var mp3Make = function (text, step, done) {
     piece(0);
 };
 
-// The whole job: render, encode, download, and close the little window when it was opened just for this.
+// A test of every way a browser might save the MP3, since Khan Academy quietly blocks some of them.
+// Each way is numbered so it is easy to report which ones really saved a file.
+var mp3Ways = function (blob, file) {
+    var url = URL.createObjectURL(blob), raw = URL.createObjectURL(new Blob([blob], { type: "application/octet-stream" }));
+    var box = $("mp3Box"), list = [];
+    var note = function (i, msg) { $("mp3W" + i).textContent = msg; };
+    var link = function (href) {
+        var a = document.createElement("a");
+        a.href = href;
+        a.download = file;
+        a.style.color = "rgb(140, 205, 250)";
+        return a;
+    };
+    var asData = function (fn) {
+        var fr = new FileReader();
+        fr.onload = function () { fn(fr.result); };
+        fr.readAsDataURL(new Blob([blob], { type: "application/octet-stream" }));
+    };
+    list.push(["Auto click a download link", function (i) {
+        var a = link(url);
+        document.body.appendChild(a);
+        a.click();
+        note(i, "Clicked.");
+    }]);
+    list.push(["A link you click yourself", null, function (row) {
+        var a = link(url);
+        a.textContent = "Save " + file;
+        row.appendChild(a);
+    }]);
+    list.push(["A link you click yourself (data link)", null, function (row) {
+        asData(function (d) {
+            var a = link(d);
+            a.textContent = "Save " + file;
+            row.appendChild(a);
+        });
+    }]);
+    list.push(["Open the file in a new tab (then save it there)", function (i) {
+        note(i, window.open(url) ? "Opened." : "Blocked.");
+    }]);
+    list.push(["Hidden frame", function (i) {
+        var f = document.createElement("iframe");
+        f.style.display = "none";
+        f.src = raw;
+        document.body.appendChild(f);
+        note(i, "Tried.");
+    }]);
+    list.push(["Save dialog (pick where it goes)", function (i) {
+        if (!window.showSaveFilePicker) { return note(i, "This browser has no save dialog."); }
+        window.showSaveFilePicker({ suggestedName: file }).then(function (h) {
+            return h.createWritable().then(function (w) {
+                return w.write(blob).then(function () { return w.close(); });
+            });
+        }).then(function () { note(i, "Saved."); }, function (e) { note(i, "Failed: " + e.message); });
+    }]);
+    list.push(["Share menu", function (i) {
+        var f = new File([blob], file, { type: "audio/mpeg" });
+        if (!navigator.canShare || !navigator.canShare({ files: [f] })) { return note(i, "This browser cannot share files."); }
+        navigator.share({ files: [f], title: file }).then(function () { note(i, "Shared."); }, function (e) { note(i, "Failed: " + e.message); });
+    }]);
+    list.push(["From a second new window", function (i) {
+        var w = window.open("", "_blank", "width=380,height=200");
+        if (!w) { return note(i, "Blocked."); }
+        asData(function (d) {
+            w.document.write('<p style="font:15px sans-serif">Saving ' + file + '...</p><a id="go" download="' + file + '" href="' + d + '">Save ' + file + "</a>");
+            w.document.close();
+            w.document.getElementById("go").click();
+            note(i, "Opened and clicked.");
+        });
+    }]);
+    list.push(["Audio player (use its ⋮ menu, then Download)", null, function (row) {
+        var au = document.createElement("audio");
+        au.controls = true;
+        au.src = url;
+        au.style.width = "100%";
+        row.appendChild(au);
+    }]);
+    list.push(["Turn this window into the file (this window will change)", function (i) {
+        note(i, "Going...");
+        location.href = raw;
+    }]);
+    list.push(["Turn this window into the file, data link (this window will change)", function (i) {
+        note(i, "Going...");
+        asData(function (d) { location.href = d; });
+    }]);
+
+    box.style.justifyContent = "flex-start";
+    box.style.overflow = "auto";
+    box.style.textAlign = "left";
+    box.innerHTML = '<div style="width:100%;max-width:440px"><b>' + file + ' is ready.</b><br>Try each way and note which numbers really save a file.</div>';
+    list.forEach(function (w, k) {
+        var i = k + 1, row = document.createElement("div");
+        row.style.cssText = "width:100%;max-width:440px;padding:8px;border-radius:6px;background:rgb(31, 34, 42);display:flex;flex-direction:column;gap:6px";
+        row.innerHTML = "<div>" + i + ". " + w[0] + "</div>";
+        if (w[1]) {
+            var b = document.createElement("button");
+            b.textContent = "Try " + i;
+            b.addEventListener("click", function () {
+                try {
+                    w[1](i);
+                } catch (e) {
+                    note(i, "Error: " + e.message);
+                }
+            });
+            row.appendChild(b);
+        }
+        if (w[2]) { w[2](row); }
+        var st = document.createElement("div");
+        st.id = "mp3W" + i;
+        st.style.color = "rgb(141, 148, 163)";
+        row.appendChild(st);
+        box.appendChild(row);
+    });
+};
+
+// The whole job: render, encode, then offer the ways to save it.
 var mp3Run = function (closeAfter) {
     commit();
     var text = book.list[book.at], title = core.decode(text).title || "Songboard song";
@@ -5947,19 +6061,7 @@ var mp3Run = function (closeAfter) {
         voiceReady(function () {
             mp3Make(text, function (p) { mp3Show("Making “" + title + "”... " + Math.round(p * 100) + "%", p); }, function (blob, why) {
                 if (!blob) { return fail(why || "The song could not be rendered."); }
-                var a = document.createElement("a");
-                a.href = URL.createObjectURL(blob);
-                a.download = name + ".mp3";
-                document.body.appendChild(a);
-                a.click();
-                mp3Show(closeAfter ? "Downloaded “" + name + ".mp3”. This window will close." : "Downloaded “" + name + ".mp3”.", 1);
-                setTimeout(function () {
-                    if (closeAfter) {
-                        window.close();
-                    } else {
-                        $("mp3Box").remove();
-                    }
-                }, 2500);
+                mp3Ways(blob, name + ".mp3");
             });
         });
     });
@@ -5972,7 +6074,7 @@ $("mp3Btn").addEventListener("click", function () {
         mp3Run(false);
         return;
     }
-    var w = window.open("", "songboardMp3", "width=420,height=240");
+    var w = window.open("", "songboardMp3", "width=480,height=640");
     if (!w) {
         alert("The MP3 window was blocked. Allow pop-ups for this page and try again.");
         return;
