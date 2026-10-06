@@ -2059,7 +2059,7 @@ var playerSrc = function () {
         endShape();
     };
 
-    // Pulse: a ring of twelve pieces, one for each note name. A piece grows outward when its note plays,
+    // Pulse: a plain circle split into twelve pieces, one for each note name. A piece grows outward when its note plays,
     // and on every beat the whole picture jumps back a little and eases forward again.
     var seg = [], segC = [], lastBeat = -1;
     var drOrbit = function () {
@@ -2087,22 +2087,17 @@ var playerSrc = function () {
             col([96, 183, 247], i % 4 === 0 ? 70 : 30);
             ellipse(cx + Math.cos(da) * dr, cy + Math.sin(da) * dr, (i % 4 === 0 ? 4 : 2.5) * U, (i % 4 === 0 ? 4 : 2.5) * U);
         }
+        // at rest it is one plain circle; a piece only pushes outward while its note plays
         for (i = 0; i < 12; i++) {
-            var lv = seg[i] || 0, a0 = -Math.PI / 2 + (i - 0.5) / 12 * Math.PI * 2 + 0.05, a1 = a0 + Math.PI * 2 / 12 - 0.1;
-            var r0 = R * 0.3 * z, c = segC[i] || [96, 183, 247];
-            col([255, 255, 255], 10);
-            wedge(cx, cy, r0, R * z, a0, a1);
-            col(c, 40 * lv);
-            wedge(cx, cy, r0, R * (0.42 + 0.7 * lv) * z, a0 - 0.03, a1 + 0.03);
-            col(c, 80 + 175 * lv);
-            wedge(cx, cy, r0, R * (0.38 + 0.6 * lv) * z, a0, a1);
-            seg[i] = lv * 0.9;
+            var lv = seg[i] || 0, a0 = -Math.PI / 2 + (i - 0.5) / 12 * Math.PI * 2, a1 = a0 + Math.PI * 2 / 12;
+            var c = segC[i] || [96, 183, 247], r0 = R * 0.42 * z, r1 = R * (0.47 + 0.5 * lv) * z;
+            col([96 + (c[0] - 96) * lv, 183 + (c[1] - 183) * lv, 247 + (c[2] - 247) * lv], 150 + 105 * lv);
+            wedge(cx, cy, r0, r1, a0 - 0.004, a1 + 0.004);
+            seg[i] = lv * 0.88;
         }
         noStroke();
-        col([96, 183, 247], 50 + kick * 120);
-        ellipse(cx, cy, R * 0.5 * z * (1 + 0.3 * kick), R * 0.5 * z * (1 + 0.3 * kick));
-        col([21, 23, 29], 255);
-        ellipse(cx, cy, R * 0.36 * z, R * 0.36 * z);
+        col([96, 183, 247], 25 + kick * 60);
+        ellipse(cx, cy, R * 0.7 * z, R * 0.7 * z);
         strokeWeight(1);
     };
 
@@ -2741,7 +2736,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v23/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v24/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;

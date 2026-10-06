@@ -236,14 +236,12 @@ if (n.kit) { if (n.p < 37 && pos - n.s < 0.06) { hit = max(hit, n.v); } continue
 kick = max(kick * 0.84, hit); var z = 1 - 0.09 * kick; noStroke(); for (i = 0; i < 48; i++) {
 var da = i / 48 * Math.PI * 2 + pos * 0.15, dr = R * 1.3 * z; col([96, 183, 247], i % 4 === 0 ? 70 : 30);
 ellipse(cx + Math.cos(da) * dr, cy + Math.sin(da) * dr, (i % 4 === 0 ? 4 : 2.5) * U, (i % 4 === 0 ? 4 : 2.5) * U); } for (i = 0; i < 12; i++) {
-var lv = seg[i] || 0, a0 = -Math.PI / 2 + (i - 0.5) / 12 * Math.PI * 2 + 0.05, a1 = a0 + Math.PI * 2 / 12 - 0.1;
-var r0 = R * 0.3 * z, c = segC[i] || [96, 183, 247]; col([255, 255, 255], 10); wedge(cx, cy, r0, R * z, a0, a1); col(c, 40 * lv);
-wedge(cx, cy, r0, R * (0.42 + 0.7 * lv) * z, a0 - 0.03, a1 + 0.03); col(c, 80 + 175 * lv); wedge(cx, cy, r0, R * (0.38 + 0.6 * lv) * z, a0, a1);
-seg[i] = lv * 0.9; } noStroke(); col([96, 183, 247], 50 + kick * 120);
-ellipse(cx, cy, R * 0.5 * z * (1 + 0.3 * kick), R * 0.5 * z * (1 + 0.3 * kick)); col([21, 23, 29], 255); ellipse(cx, cy, R * 0.36 * z, R * 0.36 * z);
-strokeWeight(1); }; var drStars = function () { var cx = width / 2, cy = height / 2 - 34 * U;
-while (state === "play" && vi < notes.length && notes[vi].s <= pos) { var n = notes[vi];
-var hiP = (n.p - lo) / (hi - lo + 1), boom = n.kit && n.p < 37; var ang = n.kit ? random(0, TWO_PI) : hiP * TWO_PI;
+var lv = seg[i] || 0, a0 = -Math.PI / 2 + (i - 0.5) / 12 * Math.PI * 2, a1 = a0 + Math.PI * 2 / 12;
+var c = segC[i] || [96, 183, 247], r0 = R * 0.42 * z, r1 = R * (0.47 + 0.5 * lv) * z;
+col([96 + (c[0] - 96) * lv, 183 + (c[1] - 183) * lv, 247 + (c[2] - 247) * lv], 150 + 105 * lv); wedge(cx, cy, r0, r1, a0 - 0.004, a1 + 0.004);
+seg[i] = lv * 0.88; } noStroke(); col([96, 183, 247], 25 + kick * 60); ellipse(cx, cy, R * 0.7 * z, R * 0.7 * z); strokeWeight(1); };
+var drStars = function () { var cx = width / 2, cy = height / 2 - 34 * U; while (state === "play" && vi < notes.length && notes[vi].s <= pos) {
+var n = notes[vi]; var hiP = (n.p - lo) / (hi - lo + 1), boom = n.kit && n.p < 37; var ang = n.kit ? random(0, TWO_PI) : hiP * TWO_PI;
 if (boom) { kick = max(kick, n.v); } for (var j = 0; j < (boom ? 0 : n.kit ? 2 : 2 + round(n.v * 5)) && parts.length < 500; j++) {
 var sp = (n.kit ? random(3, 5) : random(0.8, 1.6) + hiP * 2.6) * U; var a2 = ang + random(-0.25, 0.25);
 parts.push({ x: cx, y: cy, vx: Math.cos(a2) * sp + n.pan * U, vy: Math.sin(a2) * sp, c: n.c, life: 1, z: n.kit ? 3 : 4 + (1 - hiP) * 8 }); } vi++; }
