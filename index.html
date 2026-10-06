@@ -2858,7 +2858,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v36/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v37/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -5783,12 +5783,16 @@ var mp3Show = function (msg, part) {
 };
 
 // Loads the MP3 encoder, trying each copy in turn.
+var mp3LibAt = 0;
 var mp3Load = function (i, done) {
     if (window.lamejs) { return done(true); }
     if (i >= mp3Lib.length) { return done(false); }
     var tag = document.createElement("script");
     tag.src = mp3Lib[i];
-    tag.onload = function () { done(!!window.lamejs); };
+    tag.onload = function () {
+        mp3LibAt = i;
+        done(!!window.lamejs);
+    };
     tag.onerror = function () { mp3Load(i + 1, done); };
     document.head.appendChild(tag);
 };
@@ -5808,13 +5812,77 @@ var mp3Next = function (fn) {
     mp3Ch.port2.postMessage(0);
 };
 
+// The MP3 encoder: a helper thread when the browser allows one, so encoding runs alongside the rendering,
+// otherwise the same encoder on the page itself.
+var mp3Coder = function (ready) {
+    var toInts = function (a) {
+        var o = new Int16Array(a.length);
+        for (var i = 0; i < a.length; i++) {
+            var v = Math.max(-1, Math.min(1, a[i]));
+            o[i] = v < 0 ? v * 32768 : v * 32767;
+        }
+        return o;
+    };
+    var plain = function () {
+        var enc = new lamejs.Mp3Encoder(2, 44100, 192), out = [];
+        ready({
+            add: function (l, r) {
+                var part = enc.encodeBuffer(toInts(l), toInts(r));
+                if (part.length) { out.push(new Uint8Array(part)); }
+            },
+            end: function (fn) {
+                var last = enc.flush();
+                if (last.length) { out.push(new Uint8Array(last)); }
+                fn(new Blob(out, { type: "audio/mpeg" }));
+            }
+        });
+    };
+    var src = "importScripts(" + JSON.stringify(mp3Lib[mp3LibAt]) + ");" +
+        "var enc = new lamejs.Mp3Encoder(2, 44100, 192);" +
+        "var ints = " + String(toInts) + ";" +
+        "onmessage = function (e) {" +
+        "    if (e.data.end) { postMessage({ end: true, b: new Uint8Array(enc.flush()) }); return; }" +
+        "    if (e.data.hi) { postMessage({ hi: true }); return; }" +
+        "    var p = enc.encodeBuffer(ints(e.data.l), ints(e.data.r));" +
+        "    if (p.length) { postMessage({ b: new Uint8Array(p) }); }" +
+        "};";
+    var w = null, out = [], finish = null, settled = false;
+    try {
+        w = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+    } catch (e) {
+        return plain();
+    }
+    var give = function () {
+        settled = true;
+        ready({
+            add: function (l, r) { w.postMessage({ l: l, r: r }, [l.buffer, r.buffer]); },
+            end: function (fn) {
+                finish = fn;
+                w.postMessage({ end: true });
+            }
+        });
+    };
+    w.onmessage = function (e) {
+        if (e.data.hi) { return give(); }
+        if (e.data.b && e.data.b.length) { out.push(e.data.b); }
+        if (e.data.end && finish) { finish(new Blob(out, { type: "audio/mpeg" })); }
+    };
+    w.onerror = function () {
+        if (!settled) {
+            settled = true;
+            plain();
+        }
+    };
+    w.postMessage({ hi: true });
+};
+
 // Makes the MP3 in pieces of about 15 seconds, so a long song never needs much memory or a long freeze.
-// Each piece starts a few seconds early so echoes and reverb carry over, then that lead-in is dropped,
-// and each finished piece goes straight into the MP3 before the next one is made.
+// Each piece starts a few seconds early so echoes and reverb carry over, then that lead-in is dropped.
+// A few pieces render at once while the next is being built, and finished pieces are encoded in order.
 var mp3Make = function (text, step, done) {
     var s = core.decode(text), spt = 60 / (s.bpm * s.res), total = 0, solo = s.tracks.some(function (tr) { return tr.solo; });
-    var sr = 44100, PIECE = 15, LEAD = 3, events = [], cache = {};
-    s.tracks.forEach(function (tr) {
+    var sr = 44100, PIECE = 15, LEAD = 3, AHEAD = 3, events = [], cache = {};
+    s.tracks.forEach(function (tr, ti) {
         var ins = core.insOf(tr);
         if (!ins || tr.mute || (solo && !tr.solo)) { return; }
         var vox = ins.k === "vox", prev = "", vx = ins.vx;
@@ -5830,28 +5898,40 @@ var mp3Make = function (text, step, done) {
             total = Math.max(total, nt.t * spt + d);
             if (nt._skip || (vox && !core.vox)) { return; }
             var key = (vox ? "v" + pw + ":" + nt.w + ":" : core.key(tr.inst, nt.p, d, ins) + ":") + nt.p + ":" + Math.round(d * 1000) + JSON.stringify(gl) + JSON.stringify(vx || 0);
-            events.push({ tr: tr, ins: ins, nt: nt, s: nt.t * spt, d: d, gl: gl, pw: pw, vx: vx, vox: vox, key: key });
+            events.push({ tr: tr, ti: ti, ins: ins, nt: nt, s: nt.t * spt, d: d, gl: gl, pw: pw, vx: vx, vox: vox, key: key });
         });
     });
     events.sort(function (a, b) { return a.s - b.s; });
     var end = total + 2.5, pieces = Math.max(1, Math.ceil(end / PIECE));
-    var enc = new lamejs.Mp3Encoder(2, sr, 192), chunks = [];
-    var ints = function (a, from, n) {
-        var o = new Int16Array(n);
-        for (var i = 0; i < n; i++) {
-            var v = Math.max(-1, Math.min(1, a[from + i]));
-            o[i] = v < 0 ? v * 32768 : v * 32767;
+    var built = 0, flying = 0, made = {}, next = 0, coder = null, failed = false, busy = false;
+    var show = function () { step((built * 0.45 + next * 0.55) / pieces); };
+    var fail = function (why) {
+        if (!failed) {
+            failed = true;
+            done(null, why);
         }
-        return o;
     };
 
-    var piece = function (k) {
-        if (k >= pieces) {
-            var last = enc.flush();
-            if (last.length) { chunks.push(new Uint8Array(last)); }
-            done(new Blob(chunks, { type: "audio/mpeg" }));
+    // finished pieces go into the encoder strictly in order
+    var drain = function () {
+        while (!failed && made[next]) {
+            var m = made[next];
+            delete made[next];
+            coder.add(m.l, m.r);
+            next++;
+            show();
+        }
+        if (next >= pieces) {
+            coder.end(function (blob) { done(blob); });
             return;
         }
+        if (built < pieces && flying < AHEAD) { mp3Next(function () { buildPiece(built); }); }
+    };
+
+    var buildPiece = function (k) {
+        // one piece is built at a time, and only so many render at once
+        if (failed || busy || k !== built || flying >= AHEAD) { return; }
+        busy = true;
         var from = k * PIECE, to = Math.min(end, from + PIECE), lead = k ? LEAD : 0, t0 = from - lead;
         var off = new OfflineAudioContext(2, Math.ceil((to - t0) * sr), sr);
         var master = off.createGain(), comp = off.createDynamicsCompressor();
@@ -5861,9 +5941,22 @@ var mp3Make = function (text, step, done) {
         master.connect(comp);
         comp.connect(off.destination);
         var fake = { context: off, eqLow: master }, buses = {};
+        // each track gets one bus with its pan (and its effects), shared by all its notes
+        var bus = function (e) {
+            if (!buses[e.ti]) {
+                if (e.tr.x && e.tr.x.fx && core.fx) {
+                    buses[e.ti] = core.fx(fake, e.tr.x.fx, e.tr.pan / 50);
+                } else {
+                    buses[e.ti] = off.createStereoPanner();
+                    buses[e.ti].pan.value = e.tr.pan / 50;
+                    buses[e.ti].connect(master);
+                }
+            }
+            return buses[e.ti];
+        };
         // only the notes that can be heard in this piece (counting their fade and echo) are built and played
         var list = events.filter(function (e) { return e.s < to && e.s + e.d + 4 > t0; }), at = 0;
-        var build = function () {
+        var fill = function () {
             var b0 = Date.now();
             while (at < list.length && Date.now() - b0 < 12) {
                 var e = list[at];
@@ -5876,192 +5969,129 @@ var mp3Make = function (text, step, done) {
                     got.used = k;
                     var when = e.s - got.pre - t0;
                     if (when + got.buf.duration > 0) {
-                        var bi = s.tracks.indexOf(e.tr);
-                        if (buses[bi] === undefined) { buses[bi] = e.tr.x && e.tr.x.fx && core.fx ? core.fx(fake, e.tr.x.fx, e.tr.pan / 50) : null; }
                         var src = off.createBufferSource(), vol = off.createGain();
                         src.buffer = got.buf;
                         vol.gain.value = e.tr.vol / 100 * e.nt.v / 127;
                         src.connect(vol);
-                        if (buses[bi]) {
-                            vol.connect(buses[bi]);
-                        } else {
-                            var pan = off.createStereoPanner();
-                            pan.pan.value = e.tr.pan / 50;
-                            vol.connect(pan);
-                            pan.connect(master);
-                        }
+                        vol.connect(bus(e));
                         src.start(Math.max(0, when), Math.max(0, -when));
                     }
                 }
                 at++;
             }
-            step((k + 0.6 * at / Math.max(1, list.length)) / pieces);
             if (at < list.length) {
-                mp3Next(build);
+                mp3Next(fill);
                 return;
             }
+            built++;
+            flying++;
+            busy = false;
+            show();
+            // sounds no later piece needs are let go, so memory stays small
+            Object.keys(cache).forEach(function (q) {
+                if (cache[q] && cache[q].used < k - 1) { delete cache[q]; }
+            });
             // if the browser never finishes a piece, say so instead of waiting forever
-            var stuck = setTimeout(function () { done(null, "A piece of the song never finished rendering."); }, 30000);
+            var stuck = setTimeout(function () { fail("A piece of the song never finished rendering."); }, 45000);
             off.startRendering().then(function (buf) {
                 clearTimeout(stuck);
-                var skip = Math.round(lead * sr), n = buf.length - skip, l = buf.getChannelData(0), r2 = buf.getChannelData(1), pos = 0;
-                // sounds no later piece needs are let go, so memory stays small
-                Object.keys(cache).forEach(function (q) {
-                    if (cache[q] && cache[q].used < k - 1) { delete cache[q]; }
-                });
-                var put = function () {
-                    var p0 = Date.now();
-                    while (pos < n && Date.now() - p0 < 12) {
-                        var m = Math.min(1152 * 20, n - pos);
-                        var part = enc.encodeBuffer(ints(l, skip + pos, m), ints(r2, skip + pos, m));
-                        if (part.length) { chunks.push(new Uint8Array(part)); }
-                        pos += m;
-                    }
-                    step((k + 0.6 + 0.4 * pos / Math.max(1, n)) / pieces);
-                    if (pos < n) {
-                        mp3Next(put);
-                        return;
-                    }
-                    mp3Next(function () { piece(k + 1); });
-                };
-                put();
+                flying--;
+                var skip = Math.round(lead * sr);
+                made[k] = { l: buf.getChannelData(0).slice(skip), r: buf.getChannelData(1).slice(skip) };
+                drain();
             }, function () {
                 clearTimeout(stuck);
-                done(null, "The song could not be rendered.");
+                fail("The song could not be rendered.");
             });
+            // the next piece is built while this one renders
+            if (built < pieces && flying < AHEAD) { mp3Next(function () { buildPiece(built); }); }
         };
-        build();
+        fill();
     };
-    piece(0);
-};
 
-// A test of every way a browser might save the MP3, since Khan Academy quietly blocks some of them.
-// Each way is numbered so it is easy to report which ones really saved a file.
-var mp3Ways = function (blob, file) {
-    var url = URL.createObjectURL(blob), raw = URL.createObjectURL(new Blob([blob], { type: "application/octet-stream" }));
-    var box = $("mp3Box"), list = [];
-    var note = function (i, msg) { $("mp3W" + i).textContent = msg; };
-    var link = function (href) {
-        var a = document.createElement("a");
-        a.href = href;
-        a.download = file;
-        a.style.color = "rgb(140, 205, 250)";
-        return a;
-    };
-    var asData = function (fn) {
-        var fr = new FileReader();
-        fr.onload = function () { fn(fr.result); };
-        fr.readAsDataURL(new Blob([blob], { type: "application/octet-stream" }));
-    };
-    list.push(["Auto click a download link", function (i) {
-        var a = link(url);
-        document.body.appendChild(a);
-        a.click();
-        note(i, "Clicked.");
-    }]);
-    list.push(["A link you click yourself", null, function (row) {
-        var a = link(url);
-        a.textContent = "Save " + file;
-        row.appendChild(a);
-    }]);
-    list.push(["A link you click yourself (data link)", null, function (row) {
-        asData(function (d) {
-            var a = link(d);
-            a.textContent = "Save " + file;
-            row.appendChild(a);
-        });
-    }]);
-    list.push(["Open the file in a new tab (then save it there)", function (i) {
-        note(i, window.open(url) ? "Opened." : "Blocked.");
-    }]);
-    list.push(["Hidden frame", function (i) {
-        var f = document.createElement("iframe");
-        f.style.display = "none";
-        f.src = raw;
-        document.body.appendChild(f);
-        note(i, "Tried.");
-    }]);
-    list.push(["Save dialog (pick where it goes)", function (i) {
-        if (!window.showSaveFilePicker) { return note(i, "This browser has no save dialog."); }
-        window.showSaveFilePicker({ suggestedName: file }).then(function (h) {
-            return h.createWritable().then(function (w) {
-                return w.write(blob).then(function () { return w.close(); });
-            });
-        }).then(function () { note(i, "Saved."); }, function (e) { note(i, "Failed: " + e.message); });
-    }]);
-    list.push(["Share menu", function (i) {
-        var f = new File([blob], file, { type: "audio/mpeg" });
-        if (!navigator.canShare || !navigator.canShare({ files: [f] })) { return note(i, "This browser cannot share files."); }
-        navigator.share({ files: [f], title: file }).then(function () { note(i, "Shared."); }, function (e) { note(i, "Failed: " + e.message); });
-    }]);
-    list.push(["From a second new window", function (i) {
-        var w = window.open("", "_blank", "width=380,height=200");
-        if (!w) { return note(i, "Blocked."); }
-        asData(function (d) {
-            w.document.write('<p style="font:15px sans-serif">Saving ' + file + '...</p><a id="go" download="' + file + '" href="' + d + '">Save ' + file + "</a>");
-            w.document.close();
-            w.document.getElementById("go").click();
-            note(i, "Opened and clicked.");
-        });
-    }]);
-    list.push(["Audio player (use its ⋮ menu, then Download)", null, function (row) {
-        var au = document.createElement("audio");
-        au.controls = true;
-        au.src = url;
-        au.style.width = "100%";
-        row.appendChild(au);
-    }]);
-    list.push(["Turn this window into the file (this window will change)", function (i) {
-        note(i, "Going...");
-        location.href = raw;
-    }]);
-    list.push(["Turn this window into the file, data link (this window will change)", function (i) {
-        note(i, "Going...");
-        asData(function (d) { location.href = d; });
-    }]);
-
-    box.style.justifyContent = "flex-start";
-    box.style.overflow = "auto";
-    box.style.textAlign = "left";
-    box.innerHTML = '<div style="width:100%;max-width:440px"><b>' + file + ' is ready.</b><br>Try each way and note which numbers really save a file.</div>';
-    list.forEach(function (w, k) {
-        var i = k + 1, row = document.createElement("div");
-        row.style.cssText = "width:100%;max-width:440px;padding:8px;border-radius:6px;background:rgb(31, 34, 42);display:flex;flex-direction:column;gap:6px";
-        row.innerHTML = "<div>" + i + ". " + w[0] + "</div>";
-        if (w[1]) {
-            var b = document.createElement("button");
-            b.textContent = "Try " + i;
-            b.addEventListener("click", function () {
-                try {
-                    w[1](i);
-                } catch (e) {
-                    note(i, "Error: " + e.message);
-                }
-            });
-            row.appendChild(b);
-        }
-        if (w[2]) { w[2](row); }
-        var st = document.createElement("div");
-        st.id = "mp3W" + i;
-        st.style.color = "rgb(141, 148, 163)";
-        row.appendChild(st);
-        box.appendChild(row);
+    mp3Coder(function (c) {
+        coder = c;
+        buildPiece(0);
     });
 };
 
-// The whole job: render, encode, then offer the ways to save it.
+// Saves the finished MP3 with the browser's Save dialog, the way that works on Khan Academy.
+// The dialog can only open right after a click, so the window shows a Save button; clicking it early just waits for the MP3.
+var mp3Save = function (getBlob, file, closeAfter) {
+    var box = $("mp3Box"), btn = document.createElement("button");
+    btn.textContent = "Save MP3";
+    btn.style.cssText = "font:600 16px system-ui, sans-serif;padding:10px 22px;border-radius:8px;border:0;background:rgb(96, 183, 247);color:rgb(21, 23, 29);cursor:pointer";
+    box.appendChild(btn);
+    var finish = function (msg) {
+        btn.remove();
+        mp3Show(msg, 1);
+        if (closeAfter) {
+            setTimeout(function () { window.close(); }, 1500);
+        } else {
+            setTimeout(function () { box.remove(); }, 2500);
+        }
+    };
+    btn.addEventListener("click", function () {
+        // browsers without the Save dialog get an ordinary download link instead
+        if (!window.showSaveFilePicker) {
+            getBlob(function (blob) {
+                var a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = file;
+                document.body.appendChild(a);
+                a.click();
+                finish("Downloaded “" + file + "”.");
+            });
+            return;
+        }
+        window.showSaveFilePicker({ suggestedName: file, types: [{ description: "MP3 audio", accept: { "audio/mpeg": [".mp3"] } }] }).then(function (h) {
+            btn.disabled = true;
+            btn.textContent = "Saving when ready...";
+            getBlob(function (blob) {
+                h.createWritable().then(function (w) {
+                    return w.write(blob).then(function () { return w.close(); });
+                }).then(function () {
+                    finish("Saved “" + file + "”." + (closeAfter ? " This window will close." : ""));
+                }, function (e) {
+                    btn.disabled = false;
+                    btn.textContent = "Save MP3";
+                    mp3Show("Could not save: " + e.message + ". Try Save again.", 1);
+                });
+            });
+        }, function () {
+            // closing the dialog without saving leaves the button ready to try again
+        });
+    });
+};
+
+// The whole job: start making the MP3 straight away, and save it when the Save button is clicked.
 var mp3Run = function (closeAfter) {
     commit();
     var text = book.list[book.at], title = core.decode(text).title || "Songboard song";
     var name = title.replace(/[^a-z0-9 _-]/gi, "").trim().replace(/\s+/g, " ") || "song";
-    var fail = function (msg) { mp3Show(msg + (closeAfter ? " You can close this window." : ""), 0); };
+    var blob = null, waiting = [];
+    var getBlob = function (fn) {
+        if (blob) {
+            fn(blob);
+        } else {
+            waiting.push(fn);
+        }
+    };
+    var fail = function (msg) {
+        var b = $("mp3Box").querySelector("button");
+        if (b) { b.remove(); }
+        mp3Show(msg + (closeAfter ? " You can close this window." : ""), 0);
+    };
     mp3Show("Getting the MP3 maker ready...", 0);
+    mp3Save(getBlob, name + ".mp3", closeAfter);
     mp3Load(0, function (ok) {
         if (!ok) { return fail("The MP3 maker could not load (it needs the internet)."); }
         voiceReady(function () {
-            mp3Make(text, function (p) { mp3Show("Making “" + title + "”... " + Math.round(p * 100) + "%", p); }, function (blob, why) {
-                if (!blob) { return fail(why || "The song could not be rendered."); }
-                mp3Ways(blob, name + ".mp3");
+            mp3Make(text, function (p) { mp3Show("Making \u201C" + title + "\u201D... " + Math.round(p * 100) + "%", p); }, function (made, why) {
+                if (!made) { return fail(why || "The song could not be rendered."); }
+                blob = made;
+                mp3Show(waiting.length ? "Saving..." : "\u201C" + name + ".mp3\u201D is ready. Click Save MP3.", 1);
+                waiting.splice(0).forEach(function (fn) { fn(made); });
             });
         });
     });
@@ -6074,7 +6104,7 @@ $("mp3Btn").addEventListener("click", function () {
         mp3Run(false);
         return;
     }
-    var w = window.open("", "songboardMp3", "width=480,height=640");
+    var w = window.open("", "songboardMp3", "width=440,height=260");
     if (!w) {
         alert("The MP3 window was blocked. Allow pop-ups for this page and try again.");
         return;

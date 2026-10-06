@@ -20,7 +20,7 @@ Processing.js program.
 
 In `index.html`, the voice loads from this repo through jsDelivr:
 
-    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v36/js/voice.js
+    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v37/js/voice.js
 
 It points at a release tag. After changing the voice files or the app, rebuild `js/page.js`, push a new tag and update the
 link in `index.html`, since jsDelivr caches files for a while.
@@ -41,5 +41,5 @@ Copyright (C) 1993-2015 Carnegie Mellon University. Its license is kept at the t
 - Drag from a note's output dot (right) to a later note to make it slide in. Click the line to set the slide time and shape, right click it to remove it.
 - The ✎ button on a track opens its sound effects, voice settings and the instrument's raw data.
 - The Acoustic group has instruments modelled on real ones: grand piano, nylon and steel guitar, upright bass, violin, cello, string section, trumpet, French horn, clarinet, oboe, choir, timpani and an acoustic drum kit. Switch a track's instrument to try them; songs keep their own instruments.
-- The MP3 button downloads the current song as an MP3. Khan Academy can't download from its own page, so a small window opens, makes the MP3, downloads it and closes (in the full window it downloads right there). The MP3 maker loads from cdnjs or jsDelivr, so it needs the internet.
+- The MP3 button saves the current song as an MP3. A small window opens and makes it straight away; click Save MP3 and pick where it goes (Khan Academy blocks normal downloads, but its Save dialog works). The MP3 maker loads from cdnjs or jsDelivr, so it needs the internet.
 - On phones: one finger edits, two fingers move and pinch to zoom, and Delete mode turns taps into deletes.
