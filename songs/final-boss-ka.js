@@ -267,12 +267,12 @@ for (var i = parts.length - 1; i >= 0; i--) { var q = parts[i]; q.x += q.vx; q.y
 continue; } col(q.c, q.life * 255); ellipse(q.x, q.y, q.z * U * q.life + 2, q.z * U * q.life + 2); } }; var drLyrics = function () { textSize(17 * U);
 textAlign(LEFT, CENTER); for (var li = 0; li < sing.length; li++) {
 var ly = sing[li].l, c = sing[li].c, y = height - (82 + (sing.length - 1 - li) * 22) * U; var k = -1, words = [], x = width / 2;
-for (var i = 0; i < ly.length && ly[i].s <= pos + 0.05; i++) { k = i; } for (var j = max(0, k - 3); j < ly.length && words.length < 7; j++) {
-if (/^[-_+]?$/.test(ly[j].w)) { continue; } var glue = words.length && !/-$/.test(words[words.length - 1].w);
+for (var i = 0; i < ly.length && ly[i].s <= pos + 0.05; i++) { k = i; } var fade = k < 0 ? 0 : constrain(1 - (pos - ly[k].e - 1) / 0.5, 0, 1);
+if (!fade) { continue; } var first = k; while (first > 0 && k - first < 5 && ly[first].s - ly[first - 1].e < 0.8) { first--; }
+for (var j = first; j <= k; j++) { if (/^[-_+]?$/.test(ly[j].w)) { continue; } var glue = words.length && !/-$/.test(words[words.length - 1].w);
 words.push({ j: j, w: ly[j].w, t: (glue ? " " : "") + ly[j].w.replace(/-$/, "") }); }
 for (var a = 0; a < words.length; a++) { x -= textWidth(words[a].t) / 2; } for (var b = 0; b < words.length; b++) {
-var now = state === "play" && words[b].j === k && pos < ly[k].e + 0.3;
-fill(now ? c[0] : (words[b].j < k ? 150 : 226), now ? c[1] : (words[b].j < k ? 154 : 228), now ? c[2] : (words[b].j < k ? 168 : 235));
+var now = state === "play" && words[b].j === k && pos < ly[k].e + 0.3; fill(now ? c[0] : 150, now ? c[1] : 154, now ? c[2] : 168, 255 * fade);
 text(words[b].t, x, y); x += textWidth(words[b].t); } } }; var drUi = function () {
 var by = height - 40 * U, bar = (width - 86 * U) * constrain(pos / max(total, 0.01), 0, 1); textAlign(LEFT, CENTER); fill(236, 238, 243);
 textSize(18 * U); text((data.title || "Untitled") + (list.length > 1 ? "  \u25BE" : ""), 16 * U, 24 * U); fill(141, 148, 163); textSize(12 * U);
