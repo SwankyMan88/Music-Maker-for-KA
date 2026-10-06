@@ -178,8 +178,8 @@ var hit = core.badRuns(ws); for (var k = 0; k < tr.notes.length; k++) { tr.notes
 // The player: loading, visuals, lyrics and controls.
 var list = typeof songs !== "undefined" ? songs : [song]; var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
 var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0;
-var bySt = function (x, y) { return x.s - y.s; }; var bg = null; var glob = (function () { return this; })();
-if (glob.songboardStop) { glob.songboardStop(sfx); } glob.songboardStop = function (next) { state = "stop"; if (bg) { bg.disconnect(); } sfx.stop();
+var bySt = function (x, y) { return x.s - y.s; }; var bg = null, drawn = 0; var kin = sfx.context.constructor;
+if (kin.songboardStop) { kin.songboardStop(sfx); } kin.songboardStop = function (next) { state = "stop"; if (bg) { bg.disconnect(); } sfx.stop();
 if (next !== sfx && sfx.context.close) { sfx.context.close(); } }; core.setup(sfx);
 for (var q = 0; q < list.length; q++) { names.push("Song " + (q + 1)); } var named = 0; var prep = function (n) { sfx.stop(); at = n;
 data = core.decode(list[n]); spt = 60 / (data.bpm * data.res); look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1;
@@ -223,19 +223,34 @@ for (var j = 0; j < nb; j++) { var row = lev[j] || {}, on = []; for (var t in ro
 col([96, 183, 247], 230); rect(j * bw + 2, bot - 3 * U, bw - 4, 3 * U, 3); } var sw = (bw - 4) / max(1, on.length);
 for (var k = 0; k < on.length; k++) { var h = row[on[k]] * tall + 3 * U, x = j * bw + 2 + k * sw; col(tint[on[k]], 230);
 rect(x, bot - h, max(1, sw - (on.length > 1 ? 1 : 0)), h, 3); col(tint[on[k]], 45);
-rect(x, bot + 4 * U, max(1, sw - (on.length > 1 ? 1 : 0)), h * 0.3, 3); row[on[k]] *= 0.9; } } }; var drOrbit = function () {
-var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.3;
-var bar = 240 / data.bpm, st = floor(pos / bar) * bar, nt = data.tracks.length; noFill(); stroke(255, 255, 255, 30);
-for (var t = 0; t < nt; t++) { ellipse(cx, cy, R * (0.6 + 1.4 * (t + 1) / nt), R * (0.6 + 1.4 * (t + 1) / nt)); } noStroke();
-for (var i = 0; i < notes.length; i++) { var n = notes[i]; if (n.s < st || n.s >= st + bar) { continue; }
-var ang = (n.s - st) / bar * TWO_PI - PI / 2; var r = R * (0.3 + 0.7 * (n.tr + 1) / nt); var sz = (lit(n) ? 8 + 10 * n.v : 7) * U;
-col(n.c, lit(n) ? 255 : 150); ellipse(cx + cos(ang) * r, cy + sin(ang) * r, sz, sz); } var hand = (pos - st) / bar * TWO_PI - PI / 2;
-stroke(252, 214, 105); strokeWeight(2); line(cx, cy, cx + cos(hand) * R * 1.05, cy + sin(hand) * R * 1.05); strokeWeight(1); noStroke(); };
-var drStars = function () { var cx = width / 2, cy = height / 2 - 34 * U; while (state === "play" && vi < notes.length && notes[vi].s <= pos) {
-var n = notes[vi]; var hiP = (n.p - lo) / (hi - lo + 1), boom = n.kit && n.p < 37; var ang = n.kit ? random(0, TWO_PI) : hiP * TWO_PI;
+rect(x, bot + 4 * U, max(1, sw - (on.length > 1 ? 1 : 0)), h * 0.3, 3); row[on[k]] *= 0.9; } } }; var curve = function (x, y, r, a0, a1) {
+var steps = max(1, floor((a1 - a0) * r / (5 * U))); for (var k = 0; k < steps; k++) {
+var p = a0 + (a1 - a0) * k / steps, q = a0 + (a1 - a0) * (k + 1) / steps;
+line(x + Math.cos(p) * r, y + Math.sin(p) * r, x + Math.cos(q) * r, y + Math.sin(q) * r); } }; var drOrbit = function () {
+var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.34, i, n;
+var span = 480 / data.bpm, st = floor(pos / span) * span, turn = Math.PI * 2, top = -Math.PI / 2; var place = [], rings = 0, beat = 0;
+for (i = 0; i < notes.length; i++) { n = notes[i]; if (!n.kit && place[n.tr] === undefined) { place[n.tr] = rings++; } }
+var rOf = function (k) { return R * (0.42 + 0.58 * (k + 0.5) / max(1, rings)); }; var w = constrain(R * 0.45 / max(1, rings), 3 * U, 11 * U);
+noFill(); strokeWeight(1); stroke(255, 255, 255, 16); for (i = 0; i < rings; i++) { ellipse(cx, cy, rOf(i) * 2, rOf(i) * 2); }
+for (i = 0; i < 8; i++) { var ta = top + i / 8 * turn, out = i % 4 === 0 ? 1.13 : 1.08; stroke(255, 255, 255, i % 4 === 0 ? 90 : 40);
+strokeWeight(i % 4 === 0 ? 2 : 1);
+line(cx + Math.cos(ta) * R * 1.03, cy + Math.sin(ta) * R * 1.03, cx + Math.cos(ta) * R * out, cy + Math.sin(ta) * R * out); }
+for (i = 0; i < notes.length; i++) { n = notes[i]; if (n.e < st || n.s >= st + span) { continue; }
+var a0 = top + (max(n.s, st) - st) / span * turn, on = lit(n); if (n.kit) { if (on && n.p < 37) { beat = max(beat, n.v); } if (on && n.p >= 37) {
+noStroke(); col(n.c, 220); ellipse(cx + Math.cos(a0) * R * 0.36, cy + Math.sin(a0) * R * 0.36, 6 * U, 6 * U); noFill(); } continue; }
+var a1 = top + (min(n.e, st + span) - st) / span * turn; stroke(n.c[0], n.c[1], n.c[2], on ? 255 : (n.e <= pos ? 120 : 55));
+strokeWeight(on ? w * 1.5 : w); curve(cx, cy, rOf(place[n.tr]), a0, max(a1, a0 + 0.03)); } kick = max(kick * 0.88, beat); noStroke();
+col([96, 183, 247], 35 + kick * 110); ellipse(cx, cy, R * (0.42 + 0.22 * kick), R * (0.42 + 0.22 * kick)); col([21, 23, 29], 255);
+ellipse(cx, cy, R * 0.3, R * 0.3); var hand = top + (pos - st) / span * turn; noFill(); for (i = 1; i <= 5; i++) { stroke(252, 214, 105, 46 - i * 8);
+strokeWeight(3 * U); curve(cx, cy, R * 1.03, hand - i * 0.09, hand - (i - 1) * 0.09); } [[9, 30], [5, 70], [2, 255]].forEach(function (gw) {
+stroke(252, 214, 105, gw[1]); strokeWeight(gw[0] * U * 0.6);
+line(cx + Math.cos(hand) * R * 0.18, cy + Math.sin(hand) * R * 0.18, cx + Math.cos(hand) * R * 1.05, cy + Math.sin(hand) * R * 1.05); });
+strokeWeight(1); noStroke(); }; var drStars = function () { var cx = width / 2, cy = height / 2 - 34 * U;
+while (state === "play" && vi < notes.length && notes[vi].s <= pos) { var n = notes[vi];
+var hiP = (n.p - lo) / (hi - lo + 1), boom = n.kit && n.p < 37; var ang = n.kit ? random(0, TWO_PI) : hiP * TWO_PI;
 if (boom) { kick = max(kick, n.v); } for (var j = 0; j < (boom ? 0 : n.kit ? 2 : 2 + round(n.v * 5)) && parts.length < 500; j++) {
 var sp = (n.kit ? random(3, 5) : random(0.8, 1.6) + hiP * 2.6) * U; var a2 = ang + random(-0.25, 0.25);
-parts.push({ x: cx, y: cy, vx: cos(a2) * sp + n.pan * U, vy: sin(a2) * sp, c: n.c, life: 1, z: n.kit ? 3 : 4 + (1 - hiP) * 8 }); } vi++; }
+parts.push({ x: cx, y: cy, vx: Math.cos(a2) * sp + n.pan * U, vy: Math.sin(a2) * sp, c: n.c, life: 1, z: n.kit ? 3 : 4 + (1 - hiP) * 8 }); } vi++; }
 col([96, 183, 247], 40 + kick * 90); ellipse(cx, cy, (40 + kick * 45) * U, (40 + kick * 45) * U); kick *= 0.88;
 for (var i = parts.length - 1; i >= 0; i--) { var q = parts[i]; q.x += q.vx; q.y += q.vy; q.life -= 0.012; if (q.life <= 0) { parts.splice(i, 1);
 continue; } col(q.c, q.life * 255); ellipse(q.x, q.y, q.z * U * q.life + 2, q.z * U * q.life + 2); } }; var drLyrics = function () { textSize(17 * U);
@@ -261,10 +276,10 @@ text(names[m], 22 * U, 54 * U + m * 24 * U); } }; var pump = function () { pos =
 base += loopLen; pos -= loopLen; lap--; vi = 0; parts = []; } for (var sg = 0; sg < 4000; sg++) { if (idx >= evs.length) { if (!loopLen) { break; }
 lap++; idx = 0; } var ev = evs[idx], b = bufs[ev.k], when = ev.s + lap * loopLen; if (when >= pos + 0.4) { break; }
 if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre, ev.g, ev.pan, ev.to); } idx++; }
-if (!loopLen && pos > total + 0.6) { halt(); pos = 0; } }; var doc = glob.document;
+if (!loopLen && pos > total + 0.6) { halt(); pos = 0; } };
 bg = sfx.context.createScriptProcessor ? sfx.context.createScriptProcessor(2048, 1, 1) : null; if (bg) { var hush = sfx.context.createGain();
 hush.gain.value = 0; bg.connect(hush); hush.connect(sfx.context.destination); bg.onaudioprocess = function () {
-if (state === "play" && (!doc || doc.hidden)) { pump(); } }; } sfx.voiceIn = function () { if (state !== "play") { prep(at); } };
+if (state === "play" && millis() - drawn > 300) { pump(); } }; } sfx.voiceIn = function () { if (state !== "play") { prep(at); } };
 sfx.quit = function () { state = "stop"; if (bg) { bg.disconnect(); } }; var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () {
 background(21, 23, 29); noStroke(); if (named < list.length) { names[named] = core.decode(list[named]).title || names[named]; named++; }
 if (state === "load") { var t0 = millis(); while (done < jobs.length && millis() - t0 < 12) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
@@ -272,10 +287,11 @@ bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, j.vx, j.tl, j.nt, j.gl); 
 j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl); if (j.r.step(3000)) { bufs[j.k] = { buf: j.r.buf, pre: 0 }; done++; } }
 state = done >= jobs.length ? "stop" : state; fill(226, 228, 235); textSize(15 * U); textAlign(CENTER, CENTER);
 text("Building sounds...", width / 2, height / 2 - 20 * U); fill(46, 51, 63); rect(width / 2 - 100 * U, height / 2, 200 * U, 8 * U, 4);
-fill(96, 183, 247); rect(width / 2 - 100 * U, height / 2, 200 * U * done / max(1, jobs.length), 8 * U, 4); return; } if (state === "play") { pump(); }
-(looks[look] || drRoll)(); drLyrics(); drUi(); }; mouseClicked = function () { var row = floor((mouseY - 42 * U) / (24 * U));
-if (menu || (mouseY < 36 * U && list.length > 1)) { if (menu && mouseX < 260 * U && row >= 0 && row < list.length) { prep(row); } menu = !menu;
-return; } if (state === "load") { return; } var p = constrain((mouseX - 66 * U) / (width - 86 * U), 0, 1) * total;
-var seek = mouseY > height - 56 * U && mouseX > 60 * U; if (!seek) { toggle(); } else if (state === "play") { go(p); } else { pos = p; } };
-mouseMoved = function () { var now = dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U; if (now !== over) { over = now;
-sfx.play(over ? "hover" : "unhover"); } }; keyPressed = function () { if (keyCode === 32) { toggle(); } };
+fill(96, 183, 247); rect(width / 2 - 100 * U, height / 2, 200 * U * done / max(1, jobs.length), 8 * U, 4); return; } drawn = millis();
+if (state === "play") { pump(); } (looks[look] || drRoll)(); drLyrics(); drUi(); }; mouseClicked = function () {
+var row = floor((mouseY - 42 * U) / (24 * U)); if (menu || (mouseY < 36 * U && list.length > 1)) {
+if (menu && mouseX < 260 * U && row >= 0 && row < list.length) { prep(row); } menu = !menu; return; } if (state === "load") { return; }
+var p = constrain((mouseX - 66 * U) / (width - 86 * U), 0, 1) * total; var seek = mouseY > height - 56 * U && mouseX > 60 * U;
+if (!seek) { toggle(); } else if (state === "play") { go(p); } else { pos = p; } }; mouseMoved = function () {
+var now = dist(mouseX, mouseY, 34 * U, height - 40 * U) < 21 * U; if (now !== over) { over = now; sfx.play(over ? "hover" : "unhover"); } };
+keyPressed = function () { if (keyCode === 32) { toggle(); } };
