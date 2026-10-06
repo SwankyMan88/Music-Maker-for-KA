@@ -1881,7 +1881,7 @@ var core = coreEdit(fxSrc(coreSrc()));
 var playerSrc = function () {
     var list = typeof songs !== "undefined" ? songs : [song];
     var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
-    var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0;
+    var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0, mxd = 0;
     var bySt = function (x, y) { return x.s - y.s; };
     var bg = null, drawn = 0;
     // Khan Academy keeps the page when a program restarts, so the last run's player is stopped first.
@@ -1901,16 +1901,21 @@ var playerSrc = function () {
     var named = 0;
 
     // gets one song from the list ready to play, sounds already built for other songs are kept
-    var prep = function (n) {
-        sfx.stop();
+    // With keep set, the song keeps playing while its notes are read again, so sounds that arrived late (the voice) can join in.
+    var prep = function (n, keep) {
+        if (!keep) {
+            sfx.stop();
+            data = core.decode(list[n]);
+            parts = []; lev = []; tint = [];
+            base = 0; pos = 0; idx = 0; vi = 0; kick = 0;
+            state = "load";
+        }
         at = n;
-        data = core.decode(list[n]);
         spt = 60 / (data.bpm * data.res);
         look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1;
-        evs = []; notes = []; sing = []; jobs = []; parts = []; lev = []; tint = [];
+        evs = []; notes = []; sing = []; jobs = [];
         var seen = {};
-        lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0;
-        state = "load";
+        lo = 127; hi = 0; total = 0; done = 0; mxd = 0.12;
         var solo = false;
         for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; }
         for (var ti = 0; ti < data.tracks.length; ti++) {
@@ -1928,6 +1933,7 @@ var playerSrc = function () {
                 var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox", b = nt._bend;
                 var d = b ? b.len * spt : e - s, gl = b && b.gl ? core.secs(b.gl, spt) : null;
                 total = max(total, e);
+                mxd = max(mxd, e - s);
                 notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti, v: nt.v / 127, pan: tr.pan / 50 });
                 lo = ins.k === "kit" ? lo : min(lo, nt.p);
                 hi = ins.k === "kit" ? hi : max(hi, nt.p);
@@ -1954,6 +1960,14 @@ var playerSrc = function () {
         // a repeating song loops at the end of its last bar
         var barLen = data.res * 4 * spt;
         loopLen = data.loop && evs.length ? floor(total / barLen + 0.999) * barLen : 0;
+        if (keep) {
+            // carry on from the first note that was not sent to the speakers yet
+            var from = pos + 0.4 - lap * loopLen;
+            idx = 0;
+            vi = 0;
+            while (idx < evs.length && evs[idx].s < from) { idx++; }
+            while (vi < notes.length && notes[vi].s < pos) { vi++; }
+        }
     };
     prep(0);
 
@@ -1964,6 +1978,15 @@ var playerSrc = function () {
     };
     var col = function (c, al) { fill(c[0], c[1], c[2], al); };
     var lit = function (n) { return state === "play" && pos >= n.s && pos < max(n.e, n.s + 0.12); };
+    // The first note starting at or after time t. Notes are in time order, so visuals only look at the few notes near now.
+    var near = function (t) {
+        var a = 0, b = notes.length;
+        while (a < b) {
+            var m = floor((a + b) / 2);
+            if (notes[m].s < t) { a = m + 1; } else { b = m; }
+        }
+        return a;
+    };
 
     var go = function (p) {
         sfx.context.resume();
@@ -1992,8 +2015,8 @@ var playerSrc = function () {
 
     var drRoll = function () {
         var top = 64 * U, bot = height - foot * U, cx = width * 0.3;
-        var rh = (bot - top - 26 * U) / max(12, hi - lo + 1);
-        for (var i = 0; i < notes.length; i++) {
+        var rh = (bot - top - 26 * U) / max(12, hi - lo + 1), last = pos + (width - cx) / (110 * U);
+        for (var i = near(pos - cx / (110 * U) - mxd); i < notes.length && notes[i].s <= last; i++) {
             var n = notes[i];
             var x1 = cx + (n.s - pos) * 110 * U;
             var x2 = cx + (n.e - pos) * 110 * U;
@@ -2014,7 +2037,7 @@ var playerSrc = function () {
 
     var drBars = function () {
         var nb = 32, bw = width / nb, bot = height - (foot + 8) * U, tall = bot - 74 * U;
-        for (var i = 0; i < notes.length && notes[i].s <= pos; i++) {
+        for (var i = near(pos - mxd); i < notes.length && notes[i].s <= pos; i++) {
             var n = notes[i];
             if (!lit(n)) { continue; }
             var b = n.kit ? (n.p < 37 ? 0 : n.p < 41 ? 1 : n.p === 42 || n.p === 44 || n.p === 46 ? 3 : 2) : floor((n.p - lo) / (hi - lo + 1) * (nb - 4)) + 4;
@@ -2046,7 +2069,7 @@ var playerSrc = function () {
 
     // A filled piece of a ring between two radii, drawn from points so it looks the same on Khan Academy and in the page.
     var wedge = function (x, y, r0, r1, a0, a1) {
-        var steps = 8;
+        var steps = 5;
         beginShape();
         for (var k = 0; k <= steps; k++) {
             var p = a0 + (a1 - a0) * k / steps;
@@ -2065,7 +2088,7 @@ var playerSrc = function () {
     var drOrbit = function () {
         var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0;
         var piece = Math.PI * 2 / 12, top = -Math.PI / 2;
-        for (i = 0; i < notes.length; i++) {
+        for (i = near(pos - mxd); i < notes.length && notes[i].s <= pos; i++) {
             n = notes[i];
             if (!lit(n)) { continue; }
             // a note's burst happens once, when it starts
@@ -2083,8 +2106,8 @@ var playerSrc = function () {
             seg[k] = max(seg[k] || 0, n.v);
             segC[k] = n.c;
             // each new note sends a copy of its piece flying outward, fading as it goes
-            if (fresh && ghosts.length < 40) { ghosts.push({ k: k, r0: 0.5 + 0.4 * n.v, r1: 0.58 + 0.5 * n.v, life: 1, c: n.c }); }
-            for (var j = 0; fresh && j < 3 + n.v * 6 && sparks.length < 260; j++) {
+            if (fresh && ghosts.length < 24) { ghosts.push({ k: k, r0: 0.5 + 0.4 * n.v, r1: 0.58 + 0.5 * n.v, life: 1, c: n.c }); }
+            for (var j = 0; fresh && j < 2 + n.v * 4 && sparks.length < 120; j++) {
                 var sa = top + k * piece + random(-0.3, 0.3) * piece, sp = random(2, 6) * U * (0.6 + n.v);
                 sparks.push({ x: cx + Math.cos(sa) * R * 0.6, y: cy + Math.sin(sa) * R * 0.6, vx: Math.cos(sa) * sp, vy: Math.sin(sa) * sp, c: n.c, life: 1 });
             }
@@ -2097,11 +2120,13 @@ var playerSrc = function () {
         cy += random(-1, 1) * kick * 2.5 * U;
         noStroke();
         // the flash: the whole screen lights up a little on a kick
-        col([96, 183, 247], kick * 38);
-        rect(0, 0, width, height);
+        if (kick > 0.02) {
+            col([96, 183, 247], kick * 38);
+            rect(0, 0, width, height);
+        }
         noStroke();
         // stars rushing past, in a burst of speed on every hit
-        while (rush.length < 70) { rush.push({ a: random(0, Math.PI * 2), d: random(0.1, 1.6), s: random(0.6, 1.4) }); }
+        while (rush.length < 40) { rush.push({ a: random(0, Math.PI * 2), d: random(0.1, 1.6), s: random(0.6, 1.4) }); }
         for (i = 0; i < rush.length; i++) {
             var st2 = rush[i];
             st2.d *= 1 + (0.012 + kick * 0.06) * st2.s;
@@ -2155,7 +2180,7 @@ var playerSrc = function () {
             var hiP = (n.p - lo) / (hi - lo + 1), boom = n.kit && n.p < 37;
             var ang = n.kit ? random(0, TWO_PI) : hiP * TWO_PI;
             if (boom) { kick = max(kick, n.v); }
-            for (var j = 0; j < (boom ? 0 : n.kit ? 2 : 2 + round(n.v * 5)) && parts.length < 500; j++) {
+            for (var j = 0; j < (boom ? 0 : n.kit ? 2 : 2 + round(n.v * 5)) && parts.length < 250; j++) {
                 var sp = (n.kit ? random(3, 5) : random(0.8, 1.6) + hiP * 2.6) * U;
                 var a2 = ang + random(-0.25, 0.25);
                 parts.push({ x: cx, y: cy, vx: Math.cos(a2) * sp + n.pan * U, vy: Math.sin(a2) * sp, c: n.c, life: 1, z: n.kit ? 3 : 4 + (1 - hiP) * 8 });
@@ -2274,10 +2299,9 @@ var playerSrc = function () {
             if (state === "play" && millis() - drawn > 300) { pump(); }
         };
     }
-    // The player page calls this when the singing voice finishes loading: a song that is not playing is set up again so its voices sing.
-    sfx.voiceIn = function () {
-        if (state !== "play") { prep(at); }
-    };
+    // The player page calls this when the singing voice finishes loading: the song is read again so its voices sing,
+    // and a song that is already playing keeps going while the voice is built.
+    sfx.voiceIn = function () { prep(at, state !== "load"); };
     // The HTML page calls this when it closes the player, so a closed player stops scheduling notes.
     sfx.quit = function () {
         state = "stop";
@@ -2293,21 +2317,22 @@ var playerSrc = function () {
             names[named] = core.decode(list[named]).title || names[named];
             named++;
         }
-        if (state === "load") {
-            var t0 = millis();
-            while (done < jobs.length && millis() - t0 < 12) {
-                var j = jobs[done], ji = j.ins;
-                if (ji.k === "vox") {
-                    bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, j.vx, j.tl, j.nt, j.gl);
-                    done++;
-                    continue;
-                }
-                j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl);
-                if (j.r.step(3000)) {
-                    bufs[j.k] = { buf: j.r.buf, pre: 0 };
-                    done++;
-                }
+        // sounds are built a little each frame: quickly while loading, and in small pieces while a song plays
+        var t0 = millis();
+        while (done < jobs.length && millis() - t0 < (state === "load" ? 12 : 3)) {
+            var j = jobs[done], ji = j.ins;
+            if (ji.k === "vox") {
+                bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, j.vx, j.tl, j.nt, j.gl);
+                done++;
+                continue;
             }
+            j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl);
+            if (j.r.step(3000)) {
+                bufs[j.k] = { buf: j.r.buf, pre: 0 };
+                done++;
+            }
+        }
+        if (state === "load") {
             state = done >= jobs.length ? "stop" : state;
             fill(226, 228, 235);
             textSize(15 * U);
@@ -2783,7 +2808,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v29/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v30/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -3468,6 +3493,7 @@ var drRuler = function (g, x0, w, h) {
 };
 
 var drHead = function (g, x0, h) {
+    if (noHead) { return; }
     var x = tx(nowTick(), x0);
     if (x >= x0) {
         g.fillStyle = "rgb(252, 214, 105)";
@@ -3717,18 +3743,51 @@ var drClock = function () {
     $("clock").textContent = where + " · " + Math.floor(sec / 60) + ":" + (s < 10 ? "0" : "") + s;
 };
 
+// While a song plays only the playhead moves, so the roll and lanes are drawn once without it and saved as pictures.
+// Each frame then copies the saved pictures back and draws just the playhead on top.
+var noHead = false, shots = {}, shotX = -1;
+var snapSave = function (c) {
+    // a hidden canvas has no size and nothing to save
+    if (!c.width || !c.height) { return; }
+    var o = shots[c.id] || (shots[c.id] = document.createElement("canvas"));
+    o.width = c.width;
+    o.height = c.height;
+    o.getContext("2d").drawImage(c, 0, 0);
+};
+var snapShow = function (c, x0, hd) {
+    var o = shots[c.id], g = c.getContext("2d");
+    if (!c.width || !c.height) { return true; }
+    if (!o ||o.width !== c.width || o.height !== c.height) { return false; }
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.drawImage(o, 0, 0);
+    var dpr = window.devicePixelRatio || 1;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drHead(g, x0, hd);
+    return true;
+};
 var frame = function () {
+    var moving = false;
     if (play.on) {
         var t = nowTick();
         var vis = viewTicks();
         if (ui.follow && !drag && (t > ui.x + vis * 0.92 || t < ui.x)) { ui.x = Math.max(0, t - vis * 0.05); }
-        dirty = true;
+        if (ui.x !== shotX) { dirty = true; }
+        moving = true;
     }
     if (dirty && !stage) {
         dirty = false;
         drTop();
+        noHead = true;
         drLanes();
         drRoll();
+        noHead = false;
+        snapSave(cv.lanes);
+        snapSave(cv.roll);
+        shotX = ui.x;
+        moving = true;
+    }
+    if (moving && !stage) {
+        if (!snapShow(cv.lanes, 0, cv.lanes.clientHeight) || !snapShow(cv.roll, HEAD, cv.roll.clientHeight)) { dirty = true; }
         drClock();
     }
     requestAnimationFrame(frame);

@@ -180,14 +180,14 @@ var hit = core.badRuns(ws); for (var k = 0; k < tr.notes.length; k++) { tr.notes
 
 // The player: loading, visuals, lyrics and controls.
 var list = typeof songs !== "undefined" ? songs : [song]; var names = [], bufs = {}, at = 0, menu = false, over = false, U = width / 400;
-var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0;
+var data, spt, look, evs, notes, sing, jobs, parts, lev, tint, lo, hi, total, done, base, pos, idx, vi, kick, state, foot, loopLen = 0, lap = 0, mxd = 0;
 var bySt = function (x, y) { return x.s - y.s; }; var bg = null, drawn = 0; var kin = sfx.context.constructor;
 if (kin.songboardStop) { kin.songboardStop(sfx); } kin.songboardStop = function (next) { state = "stop"; if (bg) { bg.disconnect(); } sfx.stop();
 if (next !== sfx && sfx.context.close) { sfx.context.close(); } }; core.setup(sfx);
-for (var q = 0; q < list.length; q++) { names.push("Song " + (q + 1)); } var named = 0; var prep = function (n) { sfx.stop(); at = n;
-data = core.decode(list[n]); spt = 60 / (data.bpm * data.res); look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1;
-evs = []; notes = []; sing = []; jobs = []; parts = []; lev = []; tint = []; var seen = {};
-lo = 127; hi = 0; total = 0; done = 0; base = 0; pos = 0; idx = 0; vi = 0; kick = 0; state = "load"; var solo = false;
+for (var q = 0; q < list.length; q++) { names.push("Song " + (q + 1)); } var named = 0; var prep = function (n, keep) { if (!keep) { sfx.stop();
+data = core.decode(list[n]); parts = []; lev = []; tint = []; base = 0; pos = 0; idx = 0; vi = 0; kick = 0; state = "load"; } at = n;
+spt = 60 / (data.bpm * data.res); look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1; evs = []; notes = []; sing = []; jobs = [];
+var seen = {}; lo = 127; hi = 0; total = 0; done = 0; mxd = 0.12; var solo = false;
 for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; } for (var ti = 0; ti < data.tracks.length; ti++) {
 var tr = data.tracks[ti], ins = core.insOf(tr), prev = "", ly = [], own = tr.x && tr.x.ins ? "c" + ti : "";
 var vx = ins && ins.vx, mine = tr.x && tr.x.vx ? JSON.stringify(tr.x.vx) : ""; if (mine) { vx = {}; for (var vk in ins.vx) { vx[vk] = ins.vx[vk]; }
@@ -195,7 +195,7 @@ for (var vk2 in tr.x.vx) { vx[vk2] = tr.x.vx[vk2]; } }
 var on = !tr.mute && (!solo || tr.solo), dest = tr.x && tr.x.fx && core.fx ? core.fx(sfx, tr.x.fx, tr.pan / 50) : null;
 if (ins && ins.k !== "kit") { core.chain(tr.notes, ins.k === "vox"); } for (var ni = 0; ins && ni < tr.notes.length; ni++) {
 var nt = tr.notes[ni], s = nt.t * spt, e = (nt.t + nt.l) * spt, vox = ins.k === "vox", b = nt._bend;
-var d = b ? b.len * spt : e - s, gl = b && b.gl ? core.secs(b.gl, spt) : null; total = max(total, e);
+var d = b ? b.len * spt : e - s, gl = b && b.gl ? core.secs(b.gl, spt) : null; total = max(total, e); mxd = max(mxd, e - s);
 notes.push({ s: s, e: e, p: nt.p, c: ins.c, kit: ins.k === "kit", tr: ti, v: nt.v / 127, pan: tr.pan / 50 });
 lo = ins.k === "kit" ? lo : min(lo, nt.p); hi = ins.k === "kit" ? hi : max(hi, nt.p);
 if (vox && !seen[round(s * 100) + nt.w]) { ly.push({ s: s, e: e, w: nt.w }); }
@@ -206,20 +206,25 @@ evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50, to: dest 
 for (var sl = 0; sl < ly.length; sl++) { seen[round(ly[sl].s * 100) + ly[sl].w] = true; }
 if (ly.length && sing.length < 3) { sing.push({ l: ly, c: ins.c }); } } foot = 104 + max(0, sing.length - 1) * 22; evs.sort(bySt); notes.sort(bySt);
 lo = hi < lo ? 60 : lo; hi = hi < lo ? 72 : hi; var barLen = data.res * 4 * spt;
-loopLen = data.loop && evs.length ? floor(total / barLen + 0.999) * barLen : 0; }; prep(0); var clock = function (t) { t = max(0, t);
-var sc = floor(t % 60); return floor(t / 60) + ":" + (sc < 10 ? "0" : "") + sc; }; var col = function (c, al) { fill(c[0], c[1], c[2], al); };
-var lit = function (n) { return state === "play" && pos >= n.s && pos < max(n.e, n.s + 0.12); }; var go = function (p) { sfx.context.resume();
-sfx.stop(); base = sfx.context.currentTime + 0.12 - p; pos = p; idx = vi = lap = 0; parts = []; while (idx < evs.length && evs[idx].s < p) { idx++; }
-while (vi < notes.length && notes[vi].s < p) { vi++; } state = "play"; }; var halt = function () { sfx.stop(); state = "stop"; };
-var toggle = function () { if (state === "play") { halt(); sfx.play("released"); } else if (state === "stop") { sfx.play("press");
-go(pos >= total ? 0 : pos); } }; var drRoll = function () { var top = 64 * U, bot = height - foot * U, cx = width * 0.3;
-var rh = (bot - top - 26 * U) / max(12, hi - lo + 1); for (var i = 0; i < notes.length; i++) { var n = notes[i]; var x1 = cx + (n.s - pos) * 110 * U;
+loopLen = data.loop && evs.length ? floor(total / barLen + 0.999) * barLen : 0; if (keep) { var from = pos + 0.4 - lap * loopLen; idx = 0; vi = 0;
+while (idx < evs.length && evs[idx].s < from) { idx++; } while (vi < notes.length && notes[vi].s < pos) { vi++; } } }; prep(0);
+var clock = function (t) { t = max(0, t); var sc = floor(t % 60); return floor(t / 60) + ":" + (sc < 10 ? "0" : "") + sc; };
+var col = function (c, al) { fill(c[0], c[1], c[2], al); };
+var lit = function (n) { return state === "play" && pos >= n.s && pos < max(n.e, n.s + 0.12); }; var near = function (t) {
+var a = 0, b = notes.length; while (a < b) { var m = floor((a + b) / 2); if (notes[m].s < t) { a = m + 1; } else { b = m; } } return a; };
+var go = function (p) { sfx.context.resume(); sfx.stop(); base = sfx.context.currentTime + 0.12 - p; pos = p; idx = vi = lap = 0; parts = [];
+while (idx < evs.length && evs[idx].s < p) { idx++; } while (vi < notes.length && notes[vi].s < p) { vi++; } state = "play"; };
+var halt = function () { sfx.stop(); state = "stop"; }; var toggle = function () { if (state === "play") { halt(); sfx.play("released");
+} else if (state === "stop") { sfx.play("press"); go(pos >= total ? 0 : pos); } }; var drRoll = function () {
+var top = 64 * U, bot = height - foot * U, cx = width * 0.3;
+var rh = (bot - top - 26 * U) / max(12, hi - lo + 1), last = pos + (width - cx) / (110 * U);
+for (var i = near(pos - cx / (110 * U) - mxd); i < notes.length && notes[i].s <= last; i++) { var n = notes[i]; var x1 = cx + (n.s - pos) * 110 * U;
 var x2 = cx + (n.e - pos) * 110 * U; if (x2 < 0 || x1 > width) { continue; } col(n.c, lit(n) ? 255 : 140); if (n.kit) {
 var lane = n.p < 37 ? 0 : n.p < 41 ? 1 : n.p < 49 && n.p !== 42 && n.p !== 44 && n.p !== 46 ? 2 : 3;
 rect(x1, bot - (14 + lane * 7) * U, max(3, min(x2 - x1, 7 * U)), 5 * U, 2); } else {
 rect(x1, top + 6 * U + (hi - n.p) * rh, max(2, x2 - x1 - 1), max(2, rh - 1), 2); } } stroke(255, 255, 255, 110); line(cx, top, cx, bot); noStroke();
 }; var drBars = function () { var nb = 32, bw = width / nb, bot = height - (foot + 8) * U, tall = bot - 74 * U;
-for (var i = 0; i < notes.length && notes[i].s <= pos; i++) { var n = notes[i]; if (!lit(n)) { continue; }
+for (var i = near(pos - mxd); i < notes.length && notes[i].s <= pos; i++) { var n = notes[i]; if (!lit(n)) { continue; }
 var b = n.kit ? (n.p < 37 ? 0 : n.p < 41 ? 1 : n.p === 42 || n.p === 44 || n.p === 46 ? 3 : 2) : floor((n.p - lo) / (hi - lo + 1) * (nb - 4)) + 4;
 lev[b] = lev[b] || {}; lev[b][n.tr] = max(lev[b][n.tr] || 0, (n.kit ? 0.9 : 1 - (pos - n.s) * 0.4) * (0.45 + 0.55 * n.v)); tint[n.tr] = n.c; }
 for (var j = 0; j < nb; j++) { var row = lev[j] || {}, on = []; for (var t in row) { if (row[t] > 0.01) { on.push(t); } } if (!on.length) {
@@ -227,20 +232,20 @@ col([96, 183, 247], 230); rect(j * bw + 2, bot - 3 * U, bw - 4, 3 * U, 3); } var
 for (var k = 0; k < on.length; k++) { var h = row[on[k]] * tall + 3 * U, x = j * bw + 2 + k * sw; col(tint[on[k]], 230);
 rect(x, bot - h, max(1, sw - (on.length > 1 ? 1 : 0)), h, 3); col(tint[on[k]], 45);
 rect(x, bot + 4 * U, max(1, sw - (on.length > 1 ? 1 : 0)), h * 0.3, 3); row[on[k]] *= 0.9; } } }; var wedge = function (x, y, r0, r1, a0, a1) {
-var steps = 8; beginShape(); for (var k = 0; k <= steps; k++) { var p = a0 + (a1 - a0) * k / steps;
+var steps = 5; beginShape(); for (var k = 0; k <= steps; k++) { var p = a0 + (a1 - a0) * k / steps;
 vertex(x + Math.cos(p) * r1, y + Math.sin(p) * r1); } for (k = steps; k >= 0; k--) { var q = a0 + (a1 - a0) * k / steps;
 vertex(x + Math.cos(q) * r0, y + Math.sin(q) * r0); } endShape(); }; var seg = [], segC = [], sparks = [], ghosts = [], spin = 0, rush = [];
 var drOrbit = function () { var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0;
-var piece = Math.PI * 2 / 12, top = -Math.PI / 2; for (i = 0; i < notes.length; i++) { n = notes[i]; if (!lit(n)) { continue; }
-var fresh = n.hy !== lap; n.hy = lap; if (n.kit) { if (n.p < 41 && fresh) { var hv = n.p < 37 ? n.v : n.v * 0.5; hit = max(hit, hv); } continue; }
-var k = n.p % 12; seg[k] = max(seg[k] || 0, n.v); segC[k] = n.c;
-if (fresh && ghosts.length < 40) { ghosts.push({ k: k, r0: 0.5 + 0.4 * n.v, r1: 0.58 + 0.5 * n.v, life: 1, c: n.c }); }
-for (var j = 0; fresh && j < 3 + n.v * 6 && sparks.length < 260; j++) {
+var piece = Math.PI * 2 / 12, top = -Math.PI / 2; for (i = near(pos - mxd); i < notes.length && notes[i].s <= pos; i++) { n = notes[i];
+if (!lit(n)) { continue; } var fresh = n.hy !== lap; n.hy = lap; if (n.kit) { if (n.p < 41 && fresh) { var hv = n.p < 37 ? n.v : n.v * 0.5;
+hit = max(hit, hv); } continue; } var k = n.p % 12; seg[k] = max(seg[k] || 0, n.v); segC[k] = n.c;
+if (fresh && ghosts.length < 24) { ghosts.push({ k: k, r0: 0.5 + 0.4 * n.v, r1: 0.58 + 0.5 * n.v, life: 1, c: n.c }); }
+for (var j = 0; fresh && j < 2 + n.v * 4 && sparks.length < 120; j++) {
 var sa = top + k * piece + random(-0.3, 0.3) * piece, sp = random(2, 6) * U * (0.6 + n.v);
 sparks.push({ x: cx + Math.cos(sa) * R * 0.6, y: cy + Math.sin(sa) * R * 0.6, vx: Math.cos(sa) * sp, vy: Math.sin(sa) * sp, c: n.c, life: 1 }); } }
 kick = max(kick * 0.84, hit); spin += 0.004 + kick * 0.05; var z = 1 - 0.09 * kick; cx += random(-1, 1) * kick * 2.5 * U;
-cy += random(-1, 1) * kick * 2.5 * U; noStroke(); col([96, 183, 247], kick * 38); rect(0, 0, width, height); noStroke();
-while (rush.length < 70) { rush.push({ a: random(0, Math.PI * 2), d: random(0.1, 1.6), s: random(0.6, 1.4) }); } for (i = 0; i < rush.length; i++) {
+cy += random(-1, 1) * kick * 2.5 * U; noStroke(); if (kick > 0.02) { col([96, 183, 247], kick * 38); rect(0, 0, width, height); } noStroke();
+while (rush.length < 40) { rush.push({ a: random(0, Math.PI * 2), d: random(0.1, 1.6), s: random(0.6, 1.4) }); } for (i = 0; i < rush.length; i++) {
 var st2 = rush[i]; st2.d *= 1 + (0.012 + kick * 0.06) * st2.s; if (st2.d > 2.4) { st2.d = random(0.1, 0.3); st2.a = random(0, Math.PI * 2); }
 col([255, 255, 255], min(200, st2.d * 120));
 ellipse(cx + Math.cos(st2.a) * R * st2.d, cy + Math.sin(st2.a) * R * st2.d, st2.d * 2.5 * U, st2.d * 2.5 * U); } noStroke();
@@ -256,7 +261,7 @@ if (q.life <= 0) { sparks.splice(i, 1); } } col([96, 183, 247], 25 + kick * 90);
 col([255, 255, 255], kick * 200); ellipse(cx, cy, R * 0.25 * kick, R * 0.25 * kick); strokeWeight(1); }; var drStars = function () {
 var cx = width / 2, cy = height / 2 - 34 * U; while (state === "play" && vi < notes.length && notes[vi].s <= pos) { var n = notes[vi];
 var hiP = (n.p - lo) / (hi - lo + 1), boom = n.kit && n.p < 37; var ang = n.kit ? random(0, TWO_PI) : hiP * TWO_PI;
-if (boom) { kick = max(kick, n.v); } for (var j = 0; j < (boom ? 0 : n.kit ? 2 : 2 + round(n.v * 5)) && parts.length < 500; j++) {
+if (boom) { kick = max(kick, n.v); } for (var j = 0; j < (boom ? 0 : n.kit ? 2 : 2 + round(n.v * 5)) && parts.length < 250; j++) {
 var sp = (n.kit ? random(3, 5) : random(0.8, 1.6) + hiP * 2.6) * U; var a2 = ang + random(-0.25, 0.25);
 parts.push({ x: cx, y: cy, vx: Math.cos(a2) * sp + n.pan * U, vy: Math.sin(a2) * sp, c: n.c, life: 1, z: n.kit ? 3 : 4 + (1 - hiP) * 8 }); } vi++; }
 col([96, 183, 247], 40 + kick * 90); ellipse(cx, cy, (40 + kick * 45) * U, (40 + kick * 45) * U); kick *= 0.88;
@@ -287,13 +292,13 @@ if (b && b.buf && when > pos - 0.03) { core.fire(sfx, b.buf, base + when - b.pre
 if (!loopLen && pos > total + 0.6) { halt(); pos = 0; } };
 bg = sfx.context.createScriptProcessor ? sfx.context.createScriptProcessor(2048, 1, 1) : null; if (bg) { var hush = sfx.context.createGain();
 hush.gain.value = 0; bg.connect(hush); hush.connect(sfx.context.destination); bg.onaudioprocess = function () {
-if (state === "play" && millis() - drawn > 300) { pump(); } }; } sfx.voiceIn = function () { if (state !== "play") { prep(at); } };
-sfx.quit = function () { state = "stop"; if (bg) { bg.disconnect(); } }; var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () {
-background(21, 23, 29); noStroke(); if (named < list.length) { names[named] = core.decode(list[named]).title || names[named]; named++; }
-if (state === "load") { var t0 = millis(); while (done < jobs.length && millis() - t0 < 12) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
+if (state === "play" && millis() - drawn > 300) { pump(); } }; } sfx.voiceIn = function () { prep(at, state !== "load"); }; sfx.quit = function () {
+state = "stop"; if (bg) { bg.disconnect(); } }; var looks = [drRoll, drRoll, drBars, drOrbit, drStars]; draw = function () { background(21, 23, 29);
+noStroke(); if (named < list.length) { names[named] = core.decode(list[named]).title || names[named]; named++; } var t0 = millis();
+while (done < jobs.length && millis() - t0 < (state === "load" ? 12 : 3)) { var j = jobs[done], ji = j.ins; if (ji.k === "vox") {
 bufs[j.k] = core.vox(sfx.context, j.w, j.p, j.d, j.pw, j.vx, j.tl, j.nt, j.gl); done++; continue; }
 j.r = j.r || core.job(sfx.context, ji, j.p, j.d, j.gl); if (j.r.step(3000)) { bufs[j.k] = { buf: j.r.buf, pre: 0 }; done++; } }
-state = done >= jobs.length ? "stop" : state; fill(226, 228, 235); textSize(15 * U); textAlign(CENTER, CENTER);
+if (state === "load") { state = done >= jobs.length ? "stop" : state; fill(226, 228, 235); textSize(15 * U); textAlign(CENTER, CENTER);
 text("Building sounds...", width / 2, height / 2 - 20 * U); fill(46, 51, 63); rect(width / 2 - 100 * U, height / 2, 200 * U, 8 * U, 4);
 fill(96, 183, 247); rect(width / 2 - 100 * U, height / 2, 200 * U * done / max(1, jobs.length), 8 * U, 4); return; } drawn = millis();
 if (state === "play") { pump(); } (looks[look] || drRoll)(); drLyrics(); drUi(); }; mouseClicked = function () {
