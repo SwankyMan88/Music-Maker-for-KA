@@ -178,7 +178,7 @@ if (next !== sfx && sfx.context.close) { sfx.context.close(); } }; core.setup(sf
 for (var q = 0; q < list.length; q++) { names.push("Song " + (q + 1)); } var named = 0; var prep = function (n, keep) { if (!keep) { sfx.stop();
 data = core.decode(list[n]); parts = []; lev = []; tint = []; base = 0; pos = 0; idx = 0; vi = 0; kick = 0; state = "load"; } at = n;
 spt = 60 / (data.bpm * data.res); look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1; evs = []; notes = []; sing = []; jobs = [];
-var seen = {}; lo = 127; hi = 0; total = 0; done = 0; mxd = 0.12; var solo = false;
+var seen = {}, queued = {}; lo = 127; hi = 0; total = 0; done = 0; mxd = 0.12; var solo = false;
 for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; } for (var ti = 0; ti < data.tracks.length; ti++) {
 var tr = data.tracks[ti], ins = core.insOf(tr), prev = "", ly = [], own = tr.x && tr.x.ins ? "c" + ti : "";
 var vx = ins && ins.vx, mine = tr.x && tr.x.vx ? JSON.stringify(tr.x.vx) : ""; if (mine) { vx = {}; for (var vk in ins.vx) { vx[vk] = ins.vx[vk]; }
@@ -192,7 +192,7 @@ lo = ins.k === "kit" ? lo : min(lo, nt.p); hi = ins.k === "kit" ? hi : max(hi, n
 if (vox && !seen[round(s * 100) + nt.w]) { ly.push({ s: s, e: e, w: nt.w }); }
 var k = (vox ? "v" + tr.inst + mine + nt.w + ":" + prev + ":" + (tr.notes[ni + 1] || {}).w + nt.p + ":" + round(d * 1000) : own + core.key(tr.inst, nt.p, d, ins)) + (gl ? JSON.stringify(gl) : "");
 var pw = prev; if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; } if (!on || nt._skip || (vox && !core.vox)) { continue; }
-if (bufs[k] === undefined) { bufs[k] = null; jobs.push({ k: k, ins: ins, vx: vx, p: nt.p, d: d, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: gl }); }
+if (!bufs[k] && !queued[k]) { queued[k] = true; jobs.push({ k: k, ins: ins, vx: vx, p: nt.p, d: d, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: gl }); }
 evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50, to: dest }); }
 for (var sl = 0; sl < ly.length; sl++) { seen[round(ly[sl].s * 100) + ly[sl].w] = true; }
 if (ly.length && sing.length < 3) { sing.push({ l: ly, c: ins.c }); } } foot = 104 + max(0, sing.length - 1) * 22; evs.sort(bySt); notes.sort(bySt);

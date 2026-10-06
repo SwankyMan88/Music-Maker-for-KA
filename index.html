@@ -1914,7 +1914,7 @@ var playerSrc = function () {
         spt = 60 / (data.bpm * data.res);
         look = (typeof visuals !== "undefined" && visuals[n]) || data.vis || 1;
         evs = []; notes = []; sing = []; jobs = [];
-        var seen = {};
+        var seen = {}, queued = {};
         lo = 127; hi = 0; total = 0; done = 0; mxd = 0.12;
         var solo = false;
         for (var a = 0; a < data.tracks.length; a++) { solo = solo || data.tracks[a].solo; }
@@ -1942,8 +1942,9 @@ var playerSrc = function () {
                 var pw = prev;
                 if (vox && !/^[-_+]?$/.test(nt.w)) { prev = nt.w; }
                 if (!on || nt._skip || (vox && !core.vox)) { continue; }
-                if (bufs[k] === undefined) {
-                    bufs[k] = null;
+                // a sound that is not finished yet is queued again, because setting the song up again throws away the old queue
+                if (!bufs[k] && !queued[k]) {
+                    queued[k] = true;
                     jobs.push({ k: k, ins: ins, vx: vx, p: nt.p, d: d, w: nt.w, pw: pw, tl: tr.notes, nt: nt, gl: gl });
                 }
                 evs.push({ s: s, k: k, g: tr.vol / 100 * nt.v / 127, pan: tr.pan / 50, to: dest });
@@ -2808,7 +2809,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v30/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v31/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
