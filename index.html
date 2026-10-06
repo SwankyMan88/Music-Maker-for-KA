@@ -2060,8 +2060,8 @@ var playerSrc = function () {
     };
 
     // Pulse: a circle split into twelve pieces, one for each note name. A piece bursts outward when its note plays,
-    // throwing sparks over a hexagon tunnel and rushing stars, and each drum hit jumps and shakes the picture and flashes the screen.
-    var seg = [], segC = [], sparks = [], spin = 0, tunnel = 0, rush = [];
+    // throwing sparks and a fading copy of itself over rushing stars, and each drum hit jumps and shakes the picture and flashes the screen.
+    var seg = [], segC = [], sparks = [], ghosts = [], spin = 0, rush = [];
     var drOrbit = function () {
         var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0;
         var piece = Math.PI * 2 / 12, top = -Math.PI / 2;
@@ -2082,6 +2082,8 @@ var playerSrc = function () {
             var k = n.p % 12;
             seg[k] = max(seg[k] || 0, n.v);
             segC[k] = n.c;
+            // each new note sends a copy of its piece flying outward, fading as it goes
+            if (fresh && ghosts.length < 40) { ghosts.push({ k: k, r0: 0.5 + 0.4 * n.v, r1: 0.58 + 0.5 * n.v, life: 1, c: n.c }); }
             for (var j = 0; fresh && j < 3 + n.v * 6 && sparks.length < 260; j++) {
                 var sa = top + k * piece + random(-0.3, 0.3) * piece, sp = random(2, 6) * U * (0.6 + n.v);
                 sparks.push({ x: cx + Math.cos(sa) * R * 0.6, y: cy + Math.sin(sa) * R * 0.6, vx: Math.cos(sa) * sp, vy: Math.sin(sa) * sp, c: n.c, life: 1 });
@@ -2097,20 +2099,6 @@ var playerSrc = function () {
         // the flash: the whole screen lights up a little on a kick
         col([96, 183, 247], kick * 38);
         rect(0, 0, width, height);
-        // a tunnel of hexagons flying toward the screen, faster with the tempo and on every hit
-        tunnel = (tunnel + (data.bpm / 6000 + kick * 0.03)) % 1;
-        noFill();
-        for (i = 0; i < 6; i++) {
-            var f = (i + tunnel) / 6, hr = R * 0.3 * Math.pow(9, f);
-            stroke(96, 183, 247, 70 * Math.sin(f * Math.PI) * (0.5 + kick));
-            strokeWeight((1 + 3 * f) * U);
-            beginShape();
-            for (var h = 0; h <= 6; h++) {
-                var ha = h / 6 * Math.PI * 2 + spin * 0.5;
-                vertex(cx + Math.cos(ha) * hr, cy + Math.sin(ha) * hr);
-            }
-            endShape();
-        }
         noStroke();
         // stars rushing past, in a burst of speed on every hit
         while (rush.length < 70) { rush.push({ a: random(0, Math.PI * 2), d: random(0.1, 1.6), s: random(0.6, 1.4) }); }
@@ -2132,6 +2120,15 @@ var playerSrc = function () {
             col([96 + (c[0] - 96) * lv, 183 + (c[1] - 183) * lv, 247 + (c[2] - 247) * lv], 150 + 105 * lv);
             wedge(cx, cy, r0, r1, a0 - 0.004, a1 + 0.004);
             seg[i] = lv * 0.88;
+        }
+        for (i = ghosts.length - 1; i >= 0; i--) {
+            var gh = ghosts[i], ga = top + (gh.k - 0.5) * piece;
+            col(gh.c, 130 * gh.life);
+            wedge(cx, cy, R * gh.r0 * z, R * gh.r1 * z, ga + 0.02, ga + piece - 0.02);
+            gh.r0 += 0.035;
+            gh.r1 += 0.04;
+            gh.life -= 0.045;
+            if (gh.life <= 0) { ghosts.splice(i, 1); }
         }
         for (i = sparks.length - 1; i >= 0; i--) {
             var q = sparks[i];
@@ -2786,7 +2783,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v28/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v29/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
