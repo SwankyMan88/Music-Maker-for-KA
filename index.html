@@ -2060,10 +2060,10 @@ var playerSrc = function () {
     };
 
     // Pulse: a circle split into twelve pieces, one for each note name. A piece bursts outward when its note plays,
-    // throwing sparks over a hexagon tunnel and rushing stars, and each drum hit jumps and shakes the picture, flashes the screen and sends out a shockwave.
-    var seg = [], segC = [], waves = [], sparks = [], spin = 0, tunnel = 0, rush = [];
+    // throwing sparks over a hexagon tunnel and rushing stars, and each drum hit jumps and shakes the picture and flashes the screen.
+    var seg = [], segC = [], sparks = [], spin = 0, tunnel = 0, rush = [];
     var drOrbit = function () {
-        var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0, hats = 0;
+        var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0;
         var piece = Math.PI * 2 / 12, top = -Math.PI / 2;
         for (i = 0; i < notes.length; i++) {
             n = notes[i];
@@ -2072,13 +2072,10 @@ var playerSrc = function () {
             var fresh = n.hy !== lap;
             n.hy = lap;
             if (n.kit) {
-                if (n.p >= 41) {
-                    hats = max(hats, n.v);
-                } else if (fresh) {
+                if (n.p < 41 && fresh) {
                     // kicks hit fully, snares and claps half as much
                     var hv = n.p < 37 ? n.v : n.v * 0.5;
                     hit = max(hit, hv);
-                    if (waves.length < 12) { waves.push({ r: R * 0.45, life: 1, c: n.c, w: hv }); }
                 }
                 continue;
             }
@@ -2094,8 +2091,8 @@ var playerSrc = function () {
         spin += 0.004 + kick * 0.05;
         var z = 1 - 0.09 * kick;
         // the screen shakes on a hit
-        cx += random(-1, 1) * kick * 7 * U;
-        cy += random(-1, 1) * kick * 7 * U;
+        cx += random(-1, 1) * kick * 2.5 * U;
+        cy += random(-1, 1) * kick * 2.5 * U;
         noStroke();
         // the flash: the whole screen lights up a little on a kick
         col([96, 183, 247], kick * 38);
@@ -2123,26 +2120,6 @@ var playerSrc = function () {
             if (st2.d > 2.4) { st2.d = random(0.1, 0.3); st2.a = random(0, Math.PI * 2); }
             col([255, 255, 255], min(200, st2.d * 120));
             ellipse(cx + Math.cos(st2.a) * R * st2.d, cy + Math.sin(st2.a) * R * st2.d, st2.d * 2.5 * U, st2.d * 2.5 * U);
-        }
-        // two rings of dots spinning opposite ways, faster on every hit
-        for (i = 0; i < 48; i++) {
-            var da = i / 48 * Math.PI * 2 + spin, dr = R * 1.3 * z, big = i % 4 === 0;
-            col([96, 183, 247], big ? 80 + kick * 120 : 35);
-            ellipse(cx + Math.cos(da) * dr, cy + Math.sin(da) * dr, (big ? 4 : 2.5) * U, (big ? 4 : 2.5) * U);
-            var db = -i / 48 * Math.PI * 2 - spin * 1.5, dq = R * 1.12 * z;
-            col([252, 214, 105], 25 + hats * 90);
-            ellipse(cx + Math.cos(db) * dq, cy + Math.sin(db) * dq, 2 * U, 2 * U);
-        }
-        // shockwaves from the drums
-        noFill();
-        for (i = waves.length - 1; i >= 0; i--) {
-            var wv = waves[i];
-            stroke(wv.c[0], wv.c[1], wv.c[2], 200 * wv.life);
-            strokeWeight((2 + 5 * wv.w) * wv.life * U);
-            ellipse(cx, cy, wv.r * 2, wv.r * 2);
-            wv.r += (6 + 6 * wv.w) * U;
-            wv.life -= 0.035;
-            if (wv.life <= 0) { waves.splice(i, 1); }
         }
         noStroke();
         for (i = 0; i < 12; i++) {
@@ -2809,7 +2786,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v27/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v28/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;

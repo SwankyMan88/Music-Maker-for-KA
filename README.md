@@ -20,7 +20,7 @@ Processing.js program.
 
 In `index.html`, the voice loads from this repo through jsDelivr:
 
-    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v27/js/voice.js
+    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v28/js/voice.js
 
 It points at a release tag. After changing the voice files or the app, rebuild `js/page.js`, push a new tag and update the
 link in `index.html`, since jsDelivr caches files for a while.
