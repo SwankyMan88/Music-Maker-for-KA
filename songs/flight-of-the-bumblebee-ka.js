@@ -223,29 +223,22 @@ for (var j = 0; j < nb; j++) { var row = lev[j] || {}, on = []; for (var t in ro
 col([96, 183, 247], 230); rect(j * bw + 2, bot - 3 * U, bw - 4, 3 * U, 3); } var sw = (bw - 4) / max(1, on.length);
 for (var k = 0; k < on.length; k++) { var h = row[on[k]] * tall + 3 * U, x = j * bw + 2 + k * sw; col(tint[on[k]], 230);
 rect(x, bot - h, max(1, sw - (on.length > 1 ? 1 : 0)), h, 3); col(tint[on[k]], 45);
-rect(x, bot + 4 * U, max(1, sw - (on.length > 1 ? 1 : 0)), h * 0.3, 3); row[on[k]] *= 0.9; } } }; var curve = function (x, y, r, a0, a1) {
-var steps = max(1, floor((a1 - a0) * r / (5 * U))); for (var k = 0; k < steps; k++) {
-var p = a0 + (a1 - a0) * k / steps, q = a0 + (a1 - a0) * (k + 1) / steps;
-line(x + Math.cos(p) * r, y + Math.sin(p) * r, x + Math.cos(q) * r, y + Math.sin(q) * r); } }; var drOrbit = function () {
-var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.34, i, n;
-var span = 480 / data.bpm, st = floor(pos / span) * span, turn = Math.PI * 2, top = -Math.PI / 2; var place = [], rings = 0, beat = 0;
-for (i = 0; i < notes.length; i++) { n = notes[i]; if (!n.kit && place[n.tr] === undefined) { place[n.tr] = rings++; } }
-var rOf = function (k) { return R * (0.42 + 0.58 * (k + 0.5) / max(1, rings)); }; var w = constrain(R * 0.45 / max(1, rings), 3 * U, 11 * U);
-noFill(); strokeWeight(1); stroke(255, 255, 255, 16); for (i = 0; i < rings; i++) { ellipse(cx, cy, rOf(i) * 2, rOf(i) * 2); }
-for (i = 0; i < 8; i++) { var ta = top + i / 8 * turn, out = i % 4 === 0 ? 1.13 : 1.08; stroke(255, 255, 255, i % 4 === 0 ? 90 : 40);
-strokeWeight(i % 4 === 0 ? 2 : 1);
-line(cx + Math.cos(ta) * R * 1.03, cy + Math.sin(ta) * R * 1.03, cx + Math.cos(ta) * R * out, cy + Math.sin(ta) * R * out); }
-for (i = 0; i < notes.length; i++) { n = notes[i]; if (n.e < st || n.s >= st + span) { continue; }
-var a0 = top + (max(n.s, st) - st) / span * turn, on = lit(n); if (n.kit) { if (on && n.p < 37) { beat = max(beat, n.v); } if (on && n.p >= 37) {
-noStroke(); col(n.c, 220); ellipse(cx + Math.cos(a0) * R * 0.36, cy + Math.sin(a0) * R * 0.36, 6 * U, 6 * U); noFill(); } continue; }
-var a1 = top + (min(n.e, st + span) - st) / span * turn; stroke(n.c[0], n.c[1], n.c[2], on ? 255 : (n.e <= pos ? 120 : 55));
-strokeWeight(on ? w * 1.5 : w); curve(cx, cy, rOf(place[n.tr]), a0, max(a1, a0 + 0.03)); } kick = max(kick * 0.88, beat); noStroke();
-col([96, 183, 247], 35 + kick * 110); ellipse(cx, cy, R * (0.42 + 0.22 * kick), R * (0.42 + 0.22 * kick)); col([21, 23, 29], 255);
-ellipse(cx, cy, R * 0.3, R * 0.3); var hand = top + (pos - st) / span * turn; noFill(); for (i = 1; i <= 5; i++) { stroke(252, 214, 105, 46 - i * 8);
-strokeWeight(3 * U); curve(cx, cy, R * 1.03, hand - i * 0.09, hand - (i - 1) * 0.09); } [[9, 30], [5, 70], [2, 255]].forEach(function (gw) {
-stroke(252, 214, 105, gw[1]); strokeWeight(gw[0] * U * 0.6);
-line(cx + Math.cos(hand) * R * 0.18, cy + Math.sin(hand) * R * 0.18, cx + Math.cos(hand) * R * 1.05, cy + Math.sin(hand) * R * 1.05); });
-strokeWeight(1); noStroke(); }; var drStars = function () { var cx = width / 2, cy = height / 2 - 34 * U;
+rect(x, bot + 4 * U, max(1, sw - (on.length > 1 ? 1 : 0)), h * 0.3, 3); row[on[k]] *= 0.9; } } }; var wedge = function (x, y, r0, r1, a0, a1) {
+var steps = 8; beginShape(); for (var k = 0; k <= steps; k++) { var p = a0 + (a1 - a0) * k / steps;
+vertex(x + Math.cos(p) * r1, y + Math.sin(p) * r1); } for (k = steps; k >= 0; k--) { var q = a0 + (a1 - a0) * k / steps;
+vertex(x + Math.cos(q) * r0, y + Math.sin(q) * r0); } endShape(); }; var seg = [], segC = [], lastBeat = -1; var drOrbit = function () {
+var cx = width / 2, cy = height / 2 - 34 * U, R = min(width, height) * 0.36, i, n, hit = 0; var nb = floor(pos / (60 / data.bpm));
+if (state === "play" && nb !== lastBeat) { hit = 0.5; } lastBeat = nb; for (i = 0; i < notes.length; i++) { n = notes[i]; if (!lit(n)) { continue; }
+if (n.kit) { if (n.p < 37 && pos - n.s < 0.06) { hit = max(hit, n.v); } continue; } var k = n.p % 12; seg[k] = max(seg[k] || 0, n.v); segC[k] = n.c; }
+kick = max(kick * 0.84, hit); var z = 1 - 0.09 * kick; noStroke(); for (i = 0; i < 48; i++) {
+var da = i / 48 * Math.PI * 2 + pos * 0.15, dr = R * 1.3 * z; col([96, 183, 247], i % 4 === 0 ? 70 : 30);
+ellipse(cx + Math.cos(da) * dr, cy + Math.sin(da) * dr, (i % 4 === 0 ? 4 : 2.5) * U, (i % 4 === 0 ? 4 : 2.5) * U); } for (i = 0; i < 12; i++) {
+var lv = seg[i] || 0, a0 = -Math.PI / 2 + (i - 0.5) / 12 * Math.PI * 2 + 0.05, a1 = a0 + Math.PI * 2 / 12 - 0.1;
+var r0 = R * 0.3 * z, c = segC[i] || [96, 183, 247]; col([255, 255, 255], 10); wedge(cx, cy, r0, R * z, a0, a1); col(c, 40 * lv);
+wedge(cx, cy, r0, R * (0.42 + 0.7 * lv) * z, a0 - 0.03, a1 + 0.03); col(c, 80 + 175 * lv); wedge(cx, cy, r0, R * (0.38 + 0.6 * lv) * z, a0, a1);
+seg[i] = lv * 0.9; } noStroke(); col([96, 183, 247], 50 + kick * 120);
+ellipse(cx, cy, R * 0.5 * z * (1 + 0.3 * kick), R * 0.5 * z * (1 + 0.3 * kick)); col([21, 23, 29], 255); ellipse(cx, cy, R * 0.36 * z, R * 0.36 * z);
+strokeWeight(1); }; var drStars = function () { var cx = width / 2, cy = height / 2 - 34 * U;
 while (state === "play" && vi < notes.length && notes[vi].s <= pos) { var n = notes[vi];
 var hiP = (n.p - lo) / (hi - lo + 1), boom = n.kit && n.p < 37; var ang = n.kit ? random(0, TWO_PI) : hiP * TWO_PI;
 if (boom) { kick = max(kick, n.v); } for (var j = 0; j < (boom ? 0 : n.kit ? 2 : 2 + round(n.v * 5)) && parts.length < 500; j++) {
