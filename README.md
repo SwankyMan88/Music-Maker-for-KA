@@ -20,7 +20,7 @@ Processing.js program.
 
 In `index.html`, the voice loads from this repo through jsDelivr:
 
-    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v38/js/voice.js
+    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v39/js/voice.js
 
 It points at a release tag. After changing the voice files or the app, rebuild `js/page.js`, push a new tag and update the
 link in `index.html`, since jsDelivr caches files for a while.
@@ -39,7 +39,7 @@ Copyright (C) 1993-2015 Carnegie Mellon University. Its license is kept at the t
 - Right click deletes. The middle button drags the view in any direction. The wheel zooms (Alt + wheel changes note height).
 - Drag on the ruler to pick a section to copy, paste, duplicate, delete or loop.
 - Click a track header (Ctrl or Shift for more) and use Ctrl+C / Ctrl+V to copy whole tracks. Drag the ⠿ grip to reorder tracks.
-- Drag from a note's output dot (right) to a later note to make it slide in. Click the line to set the slide time and shape, right click it to remove it.
+- Grab a note's right end and pull it up or down to bend it: a connected part grows out at the new pitch and the sound glides into it (pull right to make the part longer). The part is the same note: move it, stretch it, bend it again from its own end, or edit its words. Click the band between them to set the glide time and shape, right click it to let go.
 - The ✎ button on a track opens its sound effects, voice settings and the instrument's raw data.
 - The Acoustic group has instruments modelled on real ones: grand piano, nylon and steel guitar, upright bass, violin, cello, string section, trumpet, French horn, clarinet, oboe, choir, timpani and an acoustic drum kit. Switch a track's instrument to try them; songs keep their own instruments.
 - The MP3 button saves the current song as an MP3. A small window opens and makes it straight away; click Save MP3 and pick where it goes (Khan Academy blocks normal downloads, but its Save dialog works). The MP3 maker loads from cdnjs or jsDelivr, so it needs the internet.

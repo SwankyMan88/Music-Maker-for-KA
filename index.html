@@ -2969,7 +2969,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v38/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v39/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -3373,6 +3373,16 @@ var links = function (tr) {
     return out;
 };
 
+// The parts that grow out of a note through its slides, in order: together with the note they are one sound.
+var partsOf = function (tr, n) {
+    var next = new Map(links(tr)), out = [], at = n;
+    while (next.has(at) && out.indexOf(next.get(at)) < 0 && next.get(at) !== n) {
+        at = next.get(at);
+        out.push(at);
+    }
+    return out;
+};
+
 // After notes move, joins follow the notes they were made between. A join that ends up going backwards is dropped.
 var relink = function (pairs, last) {
     pairs.forEach(function (pr) {
@@ -3737,15 +3747,25 @@ var drLanes = function () {
     drHead(g, 0, c.h);
 };
 
-var drNote = function (g, n, x, y, w, color, on, label) {
-    g.fillStyle = on ? "rgba(255, 255, 255, 0.92)" : color;
+// A note. A part that grows out of another note through a slide is drawn as an outline of the same colour.
+var drNote = function (g, n, x, y, w, color, on, label, part, edge) {
     g.beginPath();
     if (g.roundRect) {
         g.roundRect(x, y + 1, w, ui.zy - 2, 3);
     } else {
         g.rect(x, y + 1, w, ui.zy - 2);
     }
-    g.fill();
+    if (part) {
+        g.fillStyle = on ? "rgba(255, 255, 255, 0.3)" : "rgba(" + edge[0] + ", " + edge[1] + ", " + edge[2] + ", 0.22)";
+        g.fill();
+        g.strokeStyle = on ? "rgba(255, 255, 255, 0.95)" : "rgb(" + edge[0] + ", " + edge[1] + ", " + edge[2] + ")";
+        g.lineWidth = 1.5;
+        g.stroke();
+        g.lineWidth = 1;
+    } else {
+        g.fillStyle = on ? "rgba(255, 255, 255, 0.92)" : color;
+        g.fill();
+    }
     g.fillStyle = "rgba(0, 0, 0, 0.35)";
     g.fillRect(x + w - 3, y + 3, 2, ui.zy - 6);
     if (label && ui.zy >= 11) {
@@ -3753,55 +3773,44 @@ var drNote = function (g, n, x, y, w, color, on, label) {
         g.beginPath();
         g.rect(x, y, w - 4, ui.zy);
         g.clip();
-        g.fillStyle = "rgb(30, 22, 34)";
+        g.fillStyle = part ? "rgb(236, 238, 243)" : "rgb(30, 22, 34)";
         g.fillText(n.w || "·", x + 4, y + ui.zy / 2 + 0.5);
         g.restore();
     }
 };
 
-// Where a join's line runs, as points along it (straight, or an S curve for smooth slides).
+// Where a slide runs, as points along its middle: from the end of the first note, level until the next part starts,
+// then sliding to the part's pitch over the slide's time (straight, or an S curve for smooth slides).
 var linkPath = function (a, b) {
-    var x1 = tx(a.t, HEAD) + Math.max(3, a.l * ui.zx - 1) + 7, y1 = rollY(a.p) + ui.zy / 2;
-    var x2 = tx(b.t, HEAD) - 3, y2 = rollY(b.p) + ui.zy / 2, pts = [];
+    var x0 = tx(a.t, HEAD) + Math.max(3, a.l * ui.zx - 1), y1 = rollY(a.p) + ui.zy / 2;
+    var x1 = Math.max(x0, tx(b.t, HEAD)), y2 = rollY(b.p) + ui.zy / 2;
+    var slide = clamp(a.g.ms / 1000 / spt() * ui.zx, 6, Math.max(6, b.l * ui.zx * 0.8)), pts = [[x0, y1]];
     for (var i = 0; i <= 16; i++) {
         var u = i / 16, k = a.g.c ? u * u * (3 - 2 * u) : u;
-        pts.push([x1 + (x2 - x1) * u, y1 + (y2 - y1) * k]);
+        pts.push([x1 + slide * u, y1 + (y2 - y1) * k]);
     }
     return pts;
 };
 
-var drLinks = function (g, tr, w, h) {
-    var dots = ui.zy >= 10;
-    g.strokeStyle = "rgba(240, 242, 248, 0.75)";
-    g.lineWidth = 2;
+// Slides are bands as thick as a note, flowing from one part of the sound into the next.
+var drLinks = function (g, tr, w) {
+    var half = ui.zy / 2 - 1, c = insOf(tr).c;
+    g.fillStyle = "rgba(" + c[0] + ", " + c[1] + ", " + c[2] + ", 0.55)";
     links(tr).forEach(function (pr) {
-        var pts = linkPath(pr[0], pr[1]);
-        if (pts[16][0] < HEAD || pts[0][0] > w) { return; }
+        var pts = linkPath(pr[0], pr[1]), last = pts[pts.length - 1];
+        if (last[0] < HEAD || pts[0][0] > w) { return; }
         g.beginPath();
         pts.forEach(function (pt, i) {
             if (i) {
-                g.lineTo(pt[0], pt[1]);
+                g.lineTo(pt[0], pt[1] - half);
             } else {
-                g.moveTo(pt[0], pt[1]);
+                g.moveTo(pt[0] - 2, pt[1] - half);
             }
         });
-        g.stroke();
+        for (var i = pts.length - 1; i >= 0; i--) { g.lineTo(pts[i][0] - (i ? 0 : 2), pts[i][1] + half); }
+        g.closePath();
+        g.fill();
     });
-    g.lineWidth = 1;
-    if (!dots) { return; }
-    var list = ord(tr);
-    for (var k = seek(list, ui.x - tr._m); k < list.length && tx(list[k].t, HEAD) <= w; k++) {
-        var n = list[k], x = tx(n.t, HEAD), y = rollY(n.p) + ui.zy / 2, nw = Math.max(3, n.l * ui.zx - 1);
-        if (y < RUL || y > h) { continue; }
-        g.fillStyle = tr._in.has(n) ? "rgb(252, 214, 105)" : "rgba(220, 224, 232, 0.55)";
-        g.beginPath();
-        g.arc(x - 3, y, 2.5, 0, Math.PI * 2);
-        g.fill();
-        g.fillStyle = n.g ? "rgb(252, 214, 105)" : "rgba(220, 224, 232, 0.55)";
-        g.beginPath();
-        g.arc(x + nw + 7, y, 3, 0, Math.PI * 2);
-        g.fill();
-    }
 };
 
 var drRoll = function () {
@@ -3846,19 +3855,11 @@ var drRoll = function () {
         var picked = new Set(sel);
         g.font = "600 " + Math.min(12, ui.zy - 2) + "px system-ui, sans-serif";
         g.textBaseline = "middle";
+        // the slide bands go underneath, so every part's outline stays crisp on top
+        drLinks(g, tr, w);
         each(tr, function (n) {
-            drNote(g, n, tx(n.t, HEAD), rollY(n.p), Math.max(3, n.l * ui.zx - 1), rgb(ins.c, 0.5 + 0.5 * n.v / 127), picked.has(n), isVox(tr));
+            drNote(g, n, tx(n.t, HEAD), rollY(n.p), Math.max(3, n.l * ui.zx - 1), rgb(ins.c, 0.5 + 0.5 * n.v / 127), picked.has(n), isVox(tr), tr._in.has(n), ins.c);
         });
-        drLinks(g, tr, w, h);
-    }
-    if (ui.wire) {
-        g.strokeStyle = "rgba(252, 214, 105, 0.9)";
-        g.lineWidth = 2;
-        g.beginPath();
-        g.moveTo(ui.wire.x1, ui.wire.y1);
-        g.lineTo(ui.wire.x2, ui.wire.y2);
-        g.stroke();
-        g.lineWidth = 1;
     }
     if (tr && !tr.notes.length) {
         g.fillStyle = "rgba(200, 206, 220, 0.55)";
@@ -4281,17 +4282,6 @@ var hitLane = function (row, x, y) {
     return null;
 };
 
-// The note whose output dot (just past its right end) is under the pointer.
-var outAt = function (tr, m) {
-    if (!tr || ui.zy < 10) { return null; }
-    var list = ord(tr), best = null;
-    for (var k = seek(list, ui.x - tr._m); k < list.length && tx(list[k].t, HEAD) <= m.x + 10; k++) {
-        var n = list[k], ox = tx(n.t, HEAD) + Math.max(3, n.l * ui.zx - 1) + 7, oy = rollY(n.p) + ui.zy / 2;
-        if (m.x > ox - 4 && Math.hypot(m.x - ox, m.y - oy) <= 6) { best = n; }
-    }
-    return best;
-};
-
 // The join whose line passes under the pointer, as its starting note.
 var linkAt = function (tr, m) {
     if (!tr) { return null; }
@@ -4302,22 +4292,10 @@ var linkAt = function (tr, m) {
             var ax = pts[i - 1][0], ay = pts[i - 1][1], bx = pts[i][0], by = pts[i][1];
             var len = Math.max(1, (bx - ax) * (bx - ax) + (by - ay) * (by - ay));
             var u = clamp(((m.x - ax) * (bx - ax) + (m.y - ay) * (by - ay)) / len, 0, 1);
-            if (Math.hypot(m.x - (ax + (bx - ax) * u), m.y - (ay + (by - ay) * u)) <= 5) { hit = pr[0]; }
+            if (Math.hypot(m.x - (ax + (bx - ax) * u), m.y - (ay + (by - ay) * u)) <= Math.max(5, ui.zy / 2)) { hit = pr[0]; }
         }
     });
     return hit;
-};
-
-// Join one note's output to a later note's input. A note only takes one slide in.
-var join = function (a, b) {
-    var tr = cur();
-    if (!a || !b || a === b || b.t <= a.t) { return false; }
-    links(tr).forEach(function (pr) {
-        if (pr[1] === b && pr[0] !== a) { delete pr[0].g; }
-    });
-    a.g = { dt: b.t - a.t, dp: b.p - a.p, ms: a.g ? a.g.ms : 120, c: a.g ? a.g.c : 0 };
-    bump(tr);
-    return true;
 };
 
 // A small box for a join: how long the slide takes and whether it is straight or smooth.
@@ -4357,8 +4335,10 @@ var nearEdge = function (n, x) {
     return x > tx(n.t, HEAD) + w - Math.min(7, w / 3);
 };
 
+// Removing a note removes the parts that grow out of it too, since they are one sound.
 var removeNotes = function (tr, list) {
     var gone = new Set(list);
+    list.forEach(function (n) { partsOf(tr, n).forEach(function (p) { gone.add(p); }); });
     links(tr).forEach(function (pr) {
         if (gone.has(pr[1])) { delete pr[0].g; }
     });
@@ -4408,6 +4388,14 @@ cv.roll.addEventListener("pointerdown", function (e) {
     var m = rollPos(e);
     var tr = cur();
     if (gesture(e, true)) { return; }
+    // the notes area keeps hold of the pointer while the button is down, so letting go anywhere ends the drag
+    if (e.pointerType !== "touch" && cv.roll.setPointerCapture) {
+        try {
+            cv.roll.setPointerCapture(e.pointerId);
+        } catch (er) {
+            er = null;
+        }
+    }
     shutLyric(true);
     ui.focus = "notes";
     pickMarks();
@@ -4425,8 +4413,9 @@ cv.roll.addEventListener("pointerdown", function (e) {
     var tk = rollT(m.x), p = clamp(rollP(m.y), 0, 127);
     var hit = hitNote(tr, m.x, m.y);
     var now = performance.now();
-    var out = !hit && outAt(tr, m), wire = !hit && !out && linkAt(tr, m);
+    var wire = !hit && linkAt(tr, m);
     dirty = true;
+    // a slide band: right click (or delete mode) undoes the slide, a click opens its settings
     if (wire && (e.button === 2 || ui.trash)) {
         delete wire.g;
         commit();
@@ -4434,12 +4423,6 @@ cv.roll.addEventListener("pointerdown", function (e) {
     }
     if (wire && e.button === 0) {
         editSlide(wire);
-        return;
-    }
-    if (out && e.button === 0 && !ui.trash) {
-        var oy = rollY(out.p) + ui.zy / 2;
-        drag = { k: "link", from: out };
-        ui.wire = { x1: tx(out.t, HEAD) + Math.max(3, out.l * ui.zx - 1) + 7, y1: oy, x2: m.x, y2: m.y };
         return;
     }
     if (e.button === 2 || (ui.trash && e.button === 0)) {
@@ -4491,9 +4474,18 @@ cv.roll.addEventListener("pointerdown", function (e) {
     }
     ui.vel = $("vel").value = hit.v;
     var edge = !made && nearEdge(hit, m.x);
-    var orig = sel.map(function (o) { return { n: o, t: o.t, l: o.l, p: o.p }; });
+    // moving a note carries the parts that grow out of it, since they are one sound
+    var group = sel.slice();
+    if (!edge && !made) {
+        sel.forEach(function (o) {
+            partsOf(tr, o).forEach(function (q) {
+                if (group.indexOf(q) < 0) { group.push(q); }
+            });
+        });
+    }
+    var orig = (edge ? sel : group).map(function (o) { return { n: o, t: o.t, l: o.l, p: o.p }; });
     drag = {
-        k: edge ? "size" : "move", t0: tk, p0: p, cx: m.x, orig: orig, ref: hit, lp: hit.p, moved: made,
+        k: edge ? "size" : "move", t0: tk, p0: p, cx: m.x, cy: m.y, orig: orig, ref: hit, lp: hit.p, moved: made,
         minT: minOf(orig, "t"), minP: minOf(orig, "p"), maxP: maxOf(orig, "p"), pairs: links(tr)
     };
     if (!edge) { preview(tr, hit.p, hit.w); }
@@ -4515,7 +4507,10 @@ cv.roll.addEventListener("pointermove", function (e) {
     } else if (ui.trash) {
         cv.roll.style.cursor = "not-allowed";
     } else if (hit) {
-        cv.roll.style.cursor = nearEdge(hit, m.x) ? "ew-resize" : "move";
+        // a note's end stretches it sideways, or pulled up or down grows a new part out of it
+        cv.roll.style.cursor = nearEdge(hit, m.x) ? (hit.g ? "ew-resize" : "all-scroll") : "move";
+    } else if (linkAt(cur(), m)) {
+        cv.roll.style.cursor = "pointer";
     } else {
         cv.roll.style.cursor = "crosshair";
     }
@@ -4646,6 +4641,19 @@ var moves = {
             drag.ref.l = ui.len = Math.max(drag.ref.t + ui.snap, Math.ceil(tk / ui.snap) * ui.snap) - drag.ref.t;
             return;
         }
+        // pulling a note's end up or down (before it has been stretched) grows a new part out of it at that pitch,
+        // joined by a smooth slide: the same sound, carrying on at a new note
+        var a = drag.ref, tr = cur(), pitch = clamp(rollP(m.y), 0, 127);
+        if (!drag.moved && drag.orig.length === 1 && !a.g && pitch !== a.p && Math.abs(m.y - drag.cy) > ui.zy * 0.6) {
+            var b = { t: a.t + a.l, l: Math.max(ui.snap, Math.min(a.l, song.res)), p: pitch, v: a.v, w: isVox(tr) ? "-" : "" };
+            tr.notes.push(b);
+            a.g = { dt: b.t - a.t, dp: b.p - a.p, ms: 90, c: 1 };
+            sel = [b];
+            drag = { k: "bend", a: a, b: b, cx: m.x, lp: b.p };
+            bump(tr);
+            preview(tr, b.p, b.w);
+            return;
+        }
         var d = Math.round((tk - drag.t0) / ui.snap) * ui.snap;
         drag.orig.forEach(function (o) { o.n.l = Math.max(1, o.l + d); });
         if (d) {
@@ -4653,9 +4661,18 @@ var moves = {
             ui.len = drag.ref.l;
         }
     },
-    link: function (e, m) {
-        ui.wire.x2 = m.x;
-        ui.wire.y2 = m.y;
+    // While growing a new part: up and down set its pitch, and pulling right makes it longer.
+    bend: function (e, m) {
+        var tr = cur(), b = drag.b, pitch = clamp(rollP(m.y), 0, 127);
+        if (m.x - drag.cx > 6) { b.l = Math.max(ui.snap, Math.round((rollT(m.x) - b.t) / ui.snap) * ui.snap); }
+        b.p = pitch;
+        drag.a.g.dp = b.p - drag.a.p;
+        bump(tr);
+        if (b.p !== drag.lp) {
+            drag.lp = b.p;
+            clearTimeout(drag.sing);
+            drag.sing = setTimeout(function () { preview(tr, b.p, b.w); }, isVox(tr) ? 90 : 0);
+        }
     },
     order: function (e) {
         var r = $("heads").getBoundingClientRect();
@@ -4690,7 +4707,8 @@ var moves = {
 window.addEventListener("pointermove", function (e) {
     if (fingers.has(e.pointerId)) { fingers.set(e.pointerId, { x: e.clientX, y: e.clientY }); }
     if (!drag) { return; }
-    moves[drag.k](e, rollPos(e));
+    // some drags (like the second click that opens a note's editor) have nothing to do while the pointer moves
+    if (moves[drag.k]) { moves[drag.k](e, rollPos(e)); }
     dirty = true;
 });
 
@@ -4702,11 +4720,7 @@ var lift = function (e) {
     ui.box = null;
     if (d.k === "move" && d.pairs) { relink(d.pairs, true); }
     if ((d.k === "move" || d.k === "size") && d.moved) { commit(); }
-    if (d.k === "link") {
-        var m = rollPos(e);
-        if (join(d.from, hitNote(cur(), m.x + 4, m.y) || hitNote(cur(), m.x, m.y))) { commit(); }
-        ui.wire = null;
-    }
+    if (d.k === "bend") { commit(); }
     if (d.k === "order") { moveTrack(d.from, d.to); }
     if (d.k === "size" && d.fresh && isVox(cur())) { openLyric(d.ref); }
     if (d.k === "edit") { editNote(d.ref); }
@@ -5350,14 +5364,13 @@ var demos = {
         '<text x="150" y="80" fill="rgb(244, 133, 120)" font-size="11" font-family="system-ui, sans-serif">' +
         '<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.4;0.6;1"/>right click</text>' +
         demoCursor("40,70;140,46;140,46;140,46;40,70")),
-    // dragging from a note's end dot to a later note makes the sound slide into it
+    // pulling a note's end upward grows a connected outline part out of it, joined by a smooth band
     slide: demoBox(
-        '<rect x="30" y="58" width="80" height="12" rx="2" fill="rgb(96, 183, 247)"/>' +
-        '<rect x="180" y="22" width="80" height="12" rx="2" fill="rgb(96, 183, 247)"/>' +
-        '<circle cx="114" cy="64" r="4" fill="rgb(252, 214, 105)"/>' +
-        '<path d="M114 64 C 150 64, 150 28, 180 28" fill="none" stroke="rgb(252, 214, 105)" stroke-width="2" stroke-dasharray="90" stroke-dashoffset="90">' +
-        '<animate attributeName="stroke-dashoffset" dur="3s" repeatCount="indefinite" values="90;90;0;0;90" keyTimes="0;0.2;0.6;0.9;1"/></path>' +
-        demoCursor("60,85;114,64;114,64;182,28;182,28;60,85"))
+        '<g><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.3;0.42;0.92;1"/>' +
+        '<path d="M120 58 L128 58 C 144 58, 144 26, 158 26 L158 38 C 144 38, 144 70, 128 70 L120 70 Z" fill="rgba(96, 183, 247, 0.55)"/>' +
+        '<rect x="128" y="25" width="96" height="14" rx="3" fill="rgba(96, 183, 247, 0.22)" stroke="rgb(96, 183, 247)" stroke-width="1.5"/></g>' +
+        '<rect x="30" y="57" width="92" height="14" rx="3" fill="rgb(96, 183, 247)"/>' +
+        demoCursor("50,88;118,64;118,64;150,30;215,30;215,30;50,88"))
 };
 var keyList = function (rows) {
     return '<div class="keys">' + rows.map(function (r) { return "<kbd>" + r[0] + "</kbd><span>" + r[1] + "</span>"; }).join("") + "</div>";
@@ -5369,7 +5382,7 @@ var tourSteps = [
     { at: "#roll", demo: "place", title: "Add notes", text: "Click in the notes area to place a note. Drag its right edge to make it longer, or drag the middle to move it. Higher rows are higher notes." },
     { at: "#roll", demo: "edit", title: "Edit a note", text: "Click a note twice to edit it. Singing voices get a box for their words (split syllables like <b>hel-lo</b>), other instruments get their loudness from 1 to 127. Press Enter to keep it." },
     { at: "#roll", demo: "erase", title: "Delete notes", text: "Right click a note to delete it. Hold Shift and drag over empty space to select several notes at once." },
-    { at: "#roll", demo: "slide", title: "Slide between notes", text: "Every note has a dot at its right end. Drag from it to a later note and the sound glides into that note. Click the line to change the glide, right click it to remove it." },
+    { at: "#roll", demo: "slide", title: "Bend a note", text: "Grab a note's right end and pull it up or down: a connected part grows out at the new pitch and the sound glides smoothly into it. Pull right as you go to make the part longer. The part is the same note, so you can move it, stretch it, bend it again from its own end, or edit its words. Click the band to change the glide, right click it to let go." },
     { at: "#ruler", title: "Move around", text: "Click the numbered ruler to move the playhead, or drag along it to pick a section to loop or copy. The mouse wheel zooms, and holding the wheel down while dragging moves the view." },
     { at: "#playBtn", title: "Play it", text: "Press here or <b>Space</b> to play and stop. <b>⏮</b> goes back to the start, <b>Loop</b> repeats a section and <b>Follow</b> scrolls along with the music." },
     { title: "Handy keys", html: keyList([["Space", "Play and stop"], ["Ctrl + Z", "Undo (Ctrl + Y redoes)"], ["Ctrl + C / V", "Copy and paste notes, a section or whole tracks"], ["Ctrl + D", "Duplicate what is selected"], ["Arrow keys", "Move the selected notes"], ["L", "Loop on or off"], ["Home", "Back to the start"]]) },
