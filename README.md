@@ -20,7 +20,7 @@ Processing.js program.
 
 In `index.html`, the voice loads from this repo through jsDelivr:
 
-    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v41/js/voice.js
+    https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v42/js/voice.js
 
 It points at a release tag. After changing the voice files or the app, rebuild `js/page.js`, push a new tag and update the
 link in `index.html`, since jsDelivr caches files for a while.
@@ -36,6 +36,7 @@ Copyright (C) 1993-2015 Carnegie Mellon University. Its license is kept at the t
 
 - The **?** button opens a click-through tour that lights up each part of the page with a short animated example.
 - Left click adds a note, drag a note to move it, drag its right edge to stretch it, click a note twice to edit it (lyrics for voices, loudness for the rest).
+- Select notes by holding Shift and dragging a box over them, or turn on Select (⬚) in the notes bar and drag. Shift-click (or click in Select mode) adds or removes one note, Ctrl+A selects the whole track and Esc clears. Drag any selected note to move them all.
 - Right click deletes. The middle button drags the view in any direction. The wheel zooms (Alt + wheel changes note height).
 - Drag on the ruler to pick a section to copy, paste, duplicate, delete or loop.
 - Click a track header (Ctrl or Shift for more) and use Ctrl+C / Ctrl+V to copy whole tracks. Drag the ⠿ grip to reorder tracks.

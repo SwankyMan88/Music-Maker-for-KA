@@ -945,6 +945,7 @@
                     <label>Velocity <input id="vel" type="range" min="1" max="127" value="100"></label>
                     <button id="lyrBtn" title="Type a line of lyrics and spread it across notes">Fill lyrics</button>
                     <button id="trashBtn" class="mob" title="Tap notes to delete them">🗑 Delete mode</button>
+                    <button id="pickBtn" title="Drag over notes to select them, click notes to add or remove them (or hold Shift)">⬚ Select</button>
                     <div class="sec" title="Works on selected notes, or on the section picked on the ruler">
                         <button id="copyBtn" title="Ctrl+C">Copy</button>
                         <button id="pasteBtn" title="Ctrl+V, pastes at the playhead">Paste</button>
@@ -2983,7 +2984,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v41/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v42/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -3890,6 +3891,25 @@ var drRoll = function () {
         g.fillRect(Math.min(b.x0, b.x1), Math.min(b.y0, b.y1), Math.abs(b.x1 - b.x0), Math.abs(b.y1 - b.y0));
         g.strokeRect(Math.min(b.x0, b.x1) + 0.5, Math.min(b.y0, b.y1) + 0.5, Math.abs(b.x1 - b.x0), Math.abs(b.y1 - b.y0));
     }
+    // a small label says what is selected and what can be done with it
+    var tip = sel.length > 1 ? sel.length + " notes selected · drag one to move them all · Copy, Duplicate, Delete or arrow keys · Esc clears" :
+        (ui.pick ? "Select mode: drag over notes to box them in, click a note to add or remove it" : "");
+    if (tip && tr) {
+        g.font = "600 12px system-ui, sans-serif";
+        var tw = g.measureText(tip).width + 20, tyy = h - 30;
+        g.fillStyle = "rgba(14, 16, 20, 0.88)";
+        g.beginPath();
+        if (g.roundRect) {
+            g.roundRect(HEAD + 10, tyy, tw, 22, 11);
+        } else {
+            g.rect(HEAD + 10, tyy, tw, 22);
+        }
+        g.fill();
+        g.fillStyle = "rgb(140, 205, 250)";
+        g.textAlign = "left";
+        g.textBaseline = "middle";
+        g.fillText(tip, HEAD + 20, tyy + 11);
+    }
 
     g.fillStyle = "rgb(21, 23, 28)";
     g.fillRect(0, RUL, HEAD, h - RUL);
@@ -4459,7 +4479,8 @@ cv.roll.addEventListener("pointerdown", function (e) {
         return;
     }
     lastTap = { t: now, n: hit };
-    if (!hit && e.shiftKey) {
+    // Shift, or Select mode: drag over empty space to box notes in (a new box starts a new selection)
+    if (!hit && (e.shiftKey || ui.pick)) {
         sel = [];
         ui.box = { x0: m.x, y0: m.y, x1: m.x, y1: m.y };
         drag = { k: "box" };
@@ -4475,7 +4496,8 @@ cv.roll.addEventListener("pointerdown", function (e) {
         preview(tr, p, "la");
         return;
     }
-    if (e.shiftKey) {
+    // Shift-click, or a click in Select mode, adds a note to the selection or takes it out
+    if (e.shiftKey || (ui.pick && sel.indexOf(hit) < 0)) {
         if (sel.indexOf(hit) >= 0) {
             sel.splice(sel.indexOf(hit), 1);
         } else {
@@ -4505,7 +4527,7 @@ cv.roll.addEventListener("pointerdown", function (e) {
     }
     var orig = (edge ? sel : group).map(function (o) { return { n: o, t: o.t, l: o.l, p: o.p }; });
     drag = {
-        k: edge ? "size" : "move", t0: tk, p0: p, cx: m.x, cy: m.y, orig: orig, ref: hit, lp: hit.p, moved: made,
+        k: edge ? "size" : "move", t0: tk, p0: p, cx: m.x, cy: m.y, orig: orig, ref: hit, lp: hit.p, moved: made, pickTap: ui.pick,
         minT: minOf(orig, "t"), minP: minOf(orig, "p"), maxP: maxOf(orig, "p"), pairs: links(tr)
     };
     if (!edge) { preview(tr, hit.p, hit.w); }
@@ -4741,6 +4763,8 @@ var lift = function (e) {
     if (d.k === "move" && d.pairs) { relink(d.pairs, true); }
     if ((d.k === "move" || d.k === "size") && d.moved) { commit(); }
     if (d.k === "bend") { commit(); }
+    // in Select mode, a click on a selected note that did not drag it takes it out of the selection
+    if (d.k === "move" && !d.moved && d.pickTap && sel.indexOf(d.ref) >= 0) { sel.splice(sel.indexOf(d.ref), 1); }
     if (d.k === "order") { moveTrack(d.from, d.to); }
     if (d.k === "size" && d.fresh && isVox(cur())) { openLyric(d.ref); }
     if (d.k === "edit") { editNote(d.ref); }
@@ -5352,45 +5376,98 @@ $("saveBtn").addEventListener("click", function () { saveBox(""); });
 
 // The tour: the ? button walks through Songboard one step at a time, lighting up the part of the page each step is about.
 // Steps with an example show a small looping animation of the action.
-var demoBox = function (inner) {
-    return '<svg viewBox="0 0 300 96" xmlns="http://www.w3.org/2000/svg">' +
-        '<g stroke="rgb(40, 44, 54)" stroke-width="1">' +
-        [16, 32, 48, 64, 80].map(function (y) { return '<line x1="0" x2="300" y1="' + y + '" y2="' + y + '"/>'; }).join("") +
-        [60, 120, 180, 240].map(function (x) { return '<line y1="0" y2="96" x1="' + x + '" x2="' + x + '"/>'; }).join("") +
-        "</g>" + inner + "</svg>";
+// The tour's examples are small copies of the real piano roll: keys down the left, darker rows for the black keys,
+// a numbered ruler, beat and bar lines, and notes with the same grip at their right end. Each loops every 4 seconds.
+var DEMO = { top: 14, rh: 9, key: 26, beat: 34, dur: "4s" };
+var demoRoll = function (inner) {
+    var s = '<svg viewBox="0 0 300 122" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">';
+    for (var i = 0; i < 12; i++) {
+        var black = [1, 3, 6, 8, 10].indexOf(11 - i) >= 0, y = DEMO.top + i * DEMO.rh;
+        s += '<rect x="' + DEMO.key + '" y="' + y + '" width="' + (300 - DEMO.key) + '" height="' + DEMO.rh + '" fill="' + (black ? "rgb(26, 28, 34)" : "rgb(32, 35, 43)") + '"/>';
+        s += '<rect x="0" y="' + y + '" width="' + DEMO.key + '" height="' + DEMO.rh + '" fill="' + (black ? "rgb(36, 39, 47)" : "rgb(218, 221, 228)") + '" stroke="rgb(70, 75, 88)" stroke-width="0.4"/>';
+    }
+    for (var b = 0; b <= 8; b++) {
+        var x = DEMO.key + b * DEMO.beat;
+        s += '<line x1="' + x + '" x2="' + x + '" y1="' + DEMO.top + '" y2="122" stroke="rgba(160, 170, 190, ' + (b % 4 ? 0.1 : 0.26) + ')"/>';
+    }
+    s += '<rect width="300" height="' + DEMO.top + '" fill="rgb(24, 26, 32)"/>';
+    s += '<text x="' + (DEMO.key + 3) + '" y="10" font-size="8" fill="rgb(141, 148, 163)">1</text><text x="' + (DEMO.key + 4 * DEMO.beat + 3) + '" y="10" font-size="8" fill="rgb(141, 148, 163)">2</text>';
+    return s + inner + "</svg>";
 };
-var demoCursor = function (values) {
-    return '<path d="M0 0 L0 14 L4 10 L7 17 L9 16 L6 9 L11 9 Z" fill="rgb(236, 238, 243)" stroke="rgb(21, 23, 29)" stroke-width="1">' +
-        '<animateTransform attributeName="transform" type="translate" dur="3s" repeatCount="indefinite" values="' + values + '"/></path>';
+// one row's top edge, counting rows down from the highest note shown
+var demoY = function (row) { return DEMO.top + row * DEMO.rh; };
+// a note like the editor draws it, with its darker grip; widths and fades can be animated
+var demoNote = function (x, row, w, color, o) {
+    o = o || {};
+    var y = demoY(row) + 1, h = DEMO.rh - 2, anim = "", grip = "";
+    if (o.widths) {
+        anim = '<animate attributeName="width" dur="' + DEMO.dur + '" repeatCount="indefinite" values="' + o.widths + '" keyTimes="' + o.times + '"/>';
+        grip = '<animate attributeName="x" dur="' + DEMO.dur + '" repeatCount="indefinite" values="' + o.widths.split(";").map(function (v) { return x + Math.max(0, Number(v) - 3); }).join(";") + '" keyTimes="' + o.times + '"/>';
+    }
+    var fill = o.fills ? '<animate attributeName="fill" dur="' + DEMO.dur + '" repeatCount="indefinite" values="' + o.fills + '" keyTimes="' + o.fillTimes + '"/>' : "";
+    var fade = o.fade ? '<animate attributeName="opacity" dur="' + DEMO.dur + '" repeatCount="indefinite" values="' + o.fade + '" keyTimes="' + o.fadeTimes + '"/>' : "";
+    return "<g>" + fade + '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="2" fill="' + color + '">' + anim + fill + "</rect>" +
+        '<rect x="' + (x + w - 3) + '" y="' + (y + 1.5) + '" width="1.6" height="' + (h - 3) + '" fill="rgba(0, 0, 0, 0.35)">' + grip + "</rect>" +
+        (o.label ? '<text x="' + (x + 3) + '" y="' + (y + h - 1.6) + '" font-size="6.5" font-weight="600" fill="rgb(30, 22, 34)">' + o.label + "</text>" : "") + "</g>";
 };
+// the pointer, moving through points at given times
+var demoCursor = function (points, times) {
+    return '<path d="M0 0 L0 13 L3.6 9.6 L6.4 15.6 L8.4 14.7 L5.7 8.8 L10.4 8.8 Z" fill="rgb(250, 250, 252)" stroke="rgb(21, 23, 29)" stroke-width="0.9">' +
+        '<animateTransform attributeName="transform" type="translate" dur="' + DEMO.dur + '" repeatCount="indefinite" values="' + points + '" keyTimes="' + times + '"/></path>';
+};
+// a ring that shows where the pointer clicks (red for a right click)
+var demoClick = function (x, y, at, right) {
+    var t0 = Math.max(0, at - 0.001), t1 = Math.min(1, at + 0.08);
+    return '<circle cx="' + x + '" cy="' + y + '" r="2" fill="none" stroke="' + (right ? "rgb(244, 133, 120)" : "rgb(140, 205, 250)") + '" stroke-width="1.4" opacity="0">' +
+        '<animate attributeName="r" dur="' + DEMO.dur + '" repeatCount="indefinite" values="2;2;9;9" keyTimes="0;' + t0 + ";" + t1 + ';1"/>' +
+        '<animate attributeName="opacity" dur="' + DEMO.dur + '" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;' + t0 + ";" + (t0 + 0.01) + ";" + t1 + ';1"/></circle>';
+};
+var GREEN = "rgb(104, 221, 121)", PINK = "rgb(252, 141, 211)";
 var demos = {
-    // a click places a note, then dragging its right edge stretches it
-    place: demoBox(
-        '<rect x="60" y="34" height="12" rx="2" fill="rgb(96, 183, 247)">' +
-        '<animate attributeName="width" dur="3s" repeatCount="indefinite" values="0;0;14;14;110;110;0" keyTimes="0;0.15;0.2;0.35;0.7;0.95;1"/></rect>' +
-        demoCursor("40,60;62,40;62,40;74,40;170,40;170,40;40,60")),
-    // clicking twice opens a box to type the words for a voice note
-    edit: demoBox(
-        '<rect x="70" y="40" width="120" height="14" rx="2" fill="rgb(252, 141, 211)"/>' +
-        '<rect x="70" y="14" width="120" height="20" rx="4" fill="rgb(21, 23, 29)" stroke="rgb(96, 183, 247)">' +
-        '<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.25;0.3;0.9;1"/></rect>' +
-        '<text x="78" y="28" fill="rgb(236, 238, 243)" font-size="12" font-family="system-ui, sans-serif">' +
-        '<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.4;0.45;0.9;1"/>hel-lo</text>' +
-        demoCursor("30,70;110,46;110,46;110,46;30,70")),
-    // a right click removes a note
-    erase: demoBox(
-        '<rect x="100" y="40" width="90" height="12" rx="2" fill="rgb(96, 183, 247)">' +
-        '<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1;1;0;0;1" keyTimes="0;0.4;0.5;0.9;1"/></rect>' +
-        '<text x="150" y="80" fill="rgb(244, 133, 120)" font-size="11" font-family="system-ui, sans-serif">' +
-        '<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.4;0.6;1"/>right click</text>' +
-        demoCursor("40,70;140,46;140,46;140,46;40,70")),
-    // pulling a note's end upward grows a connected outline part out of it, joined by a smooth band
-    slide: demoBox(
-        '<g><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.3;0.42;0.92;1"/>' +
-        '<path d="M120 58 L128 58 C 144 58, 144 26, 158 26 L158 38 C 144 38, 144 70, 128 70 L120 70 Z" fill="rgba(96, 183, 247, 0.55)"/>' +
-        '<rect x="128" y="25" width="96" height="14" rx="3" fill="rgba(96, 183, 247, 0.22)" stroke="rgb(96, 183, 247)" stroke-width="1.5"/></g>' +
-        '<rect x="30" y="57" width="92" height="14" rx="3" fill="rgb(96, 183, 247)"/>' +
-        demoCursor("50,88;118,64;118,64;150,30;215,30;215,30;50,88"))
+    // click on an empty row to place a note, then drag its right end to make it longer
+    place: demoRoll(
+        demoNote(60, 7, 30, GREEN) + demoNote(196, 4, 50, GREEN) +
+        demoNote(110, 5, 12, GREEN, { widths: "0;0;12;12;66;66;0", times: "0;0.18;0.2;0.32;0.68;0.94;1" }) +
+        demoClick(114, demoY(5) + 4, 0.19) +
+        demoCursor("40,100;112,56;112,56;120,56;174,56;174,56;40,100", "0;0.18;0.3;0.34;0.68;0.94;1")),
+    // click a voice note twice, type its words, press Enter
+    edit: demoRoll(
+        demoNote(60, 6, 50, PINK, { label: "la" }) + demoNote(178, 3, 60, PINK, { label: "sky" }) +
+        demoNote(112, 4, 62, PINK, { label: "word" }) +
+        demoClick(140, demoY(4) + 4, 0.16) + demoClick(140, demoY(4) + 4, 0.22) +
+        '<g opacity="0"><animate attributeName="opacity" dur="4s" repeatCount="indefinite" values="0;0;1;1;0;0" keyTimes="0;0.24;0.25;0.82;0.83;1"/>' +
+        '<rect x="110" y="' + (demoY(4) - 2) + '" width="76" height="13" rx="2" fill="rgb(20, 22, 27)" stroke="rgb(96, 183, 247)" stroke-width="1.2"/>' +
+        '<clipPath id="typed"><rect x="113" y="' + (demoY(4) - 2) + '" height="13" width="0"><animate attributeName="width" dur="4s" repeatCount="indefinite" values="0;0;40;40" keyTimes="0;0.32;0.62;1"/></rect></clipPath>' +
+        '<text x="114" y="' + (demoY(4) + 7.5) + '" font-size="8" fill="rgb(236, 238, 243)" clip-path="url(#typed)">hel-lo</text></g>' +
+        '<text x="196" y="112" font-size="7" fill="rgb(141, 148, 163)" opacity="0"><animate attributeName="opacity" dur="4s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.66;0.67;0.82;0.83"/>Enter</text>' +
+        demoCursor("40,104;140,52;140,52;150,74;150,74;40,104", "0;0.15;0.24;0.3;0.92;1")),
+    // drag over empty space to box notes in; with Shift, or with Select turned on
+    select: demoRoll(
+        [[60, 6, 30], [98, 4, 26], [130, 7, 34], [172, 5, 30], [236, 3, 40]].map(function (n, i) {
+            var inside = i >= 1 && i <= 3;
+            return demoNote(n[0], n[1], n[2], GREEN, inside ? { fills: GREEN + ";" + GREEN + ";rgb(245, 247, 250);rgb(245, 247, 250);" + GREEN, fillTimes: "0;" + (0.32 + i * 0.08) + ";" + (0.33 + i * 0.08) + ";0.9;1" } : null);
+        }).join("") +
+        '<rect x="90" y="' + (demoY(3) - 3) + '" height="58" width="0" fill="rgba(97, 183, 246, 0.12)" stroke="rgb(97, 183, 246)" stroke-width="1">' +
+        '<animate attributeName="width" dur="4s" repeatCount="indefinite" values="0;0;118;118;0" keyTimes="0;0.2;0.62;0.9;1"/></rect>' +
+        '<g opacity="0"><animate attributeName="opacity" dur="4s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.12;0.13;0.62;0.63"/>' +
+        '<rect x="232" y="100" width="34" height="14" rx="3" fill="rgb(46, 51, 63)" stroke="rgb(70, 77, 92)"/><text x="238" y="110" font-size="8" font-weight="600" fill="rgb(236, 238, 243)">Shift</text></g>' +
+        demoCursor("30,104;90,24;90,24;208,82;208,82;30,104", "0;0.18;0.2;0.62;0.9;1")),
+    // right click a note to remove it
+    erase: demoRoll(
+        demoNote(60, 6, 40, GREEN) + demoNote(200, 4, 50, GREEN) +
+        demoNote(116, 5, 60, GREEN, { fade: "1;1;0;0;1", fadeTimes: "0;0.4;0.46;0.92;1" }) +
+        demoClick(146, demoY(5) + 4, 0.4, true) +
+        '<text x="160" y="' + (demoY(5) - 4) + '" font-size="7" fill="rgb(244, 133, 120)" opacity="0"><animate attributeName="opacity" dur="4s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.38;0.39;0.6;0.61"/>right click</text>' +
+        demoCursor("40,100;146,58;146,58;146,58;40,100", "0;0.36;0.5;0.9;1")),
+    // grab a note's right end and pull it up: an outline part grows out of it, joined by a smooth band
+    slide: demoRoll(
+
+        '<g opacity="0"><animate attributeName="opacity" dur="4s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.3;0.38;0.92;1"/>' +
+        '<path d="M122 ' + (demoY(7) + 1) + " L128 " + (demoY(7) + 1) + " C 140 " + (demoY(7) + 1) + ", 140 " + (demoY(3) + 1) + ", 152 " + (demoY(3) + 1) +
+        " L152 " + (demoY(3) + 8) + " C 140 " + (demoY(3) + 8) + ", 140 " + (demoY(7) + 8) + ", 128 " + (demoY(7) + 8) + " L122 " + (demoY(7) + 8) + ' Z" fill="rgba(104, 221, 121, 0.55)"/>' +
+        '<rect x="128" y="' + (demoY(3) + 1) + '" width="68" height="7" rx="2" fill="rgba(104, 221, 121, 0.22)" stroke="' + GREEN + '" stroke-width="1.2"/></g>' +
+        demoNote(40, 7, 88, GREEN) +
+        demoCursor("50,104;125,78;125,78;150,42;192,42;192,42;50,104", "0;0.22;0.28;0.42;0.62;0.92;1"))
 };
 var keyList = function (rows) {
     return '<div class="keys">' + rows.map(function (r) { return "<kbd>" + r[0] + "</kbd><span>" + r[1] + "</span>"; }).join("") + "</div>";
@@ -5401,11 +5478,12 @@ var tourSteps = [
     { at: "#arrBody", title: "Your tracks", text: "Each row is one instrument. Click a track to work on its notes. <b>M</b> mutes it, <b>S</b> plays only it, <b>✎</b> shapes its sound and <b>✕</b> deletes it. Drag <b>⠿</b> to move a track up or down." },
     { at: "#roll", demo: "place", title: "Add notes", text: "Click in the notes area to place a note. Drag its right edge to make it longer, or drag the middle to move it. Higher rows are higher notes." },
     { at: "#roll", demo: "edit", title: "Edit a note", text: "Click a note twice to edit it. Singing voices get a box for their words (split syllables like <b>hel-lo</b>), other instruments get their loudness from 1 to 127. Press Enter to keep it." },
-    { at: "#roll", demo: "erase", title: "Delete notes", text: "Right click a note to delete it. Hold Shift and drag over empty space to select several notes at once." },
+    { at: "#pickBtn", demo: "select", title: "Select notes", text: "Hold <b>Shift</b> and drag over empty space to draw a box around notes, or turn on <b>⬚ Select</b> here and just drag. Shift-click (or click in Select mode) adds or removes one note. <b>Ctrl + A</b> selects every note on the track and <b>Esc</b> clears. Then drag any selected note to move them all, or use Copy, Duplicate, Delete and the arrow keys." },
+    { at: "#roll", demo: "erase", title: "Delete notes", text: "Right click a note to delete it. To remove many at once, select them and press <b>Delete</b>." },
     { at: "#roll", demo: "slide", title: "Bend a note", text: "Grab a note's right end and pull it up or down: a connected part grows out at the new pitch and the sound glides smoothly into it. Pull right as you go to make the part longer. The part is the same note, so you can move it, stretch it, bend it again from its own end, or edit its words. Click the band to change the glide, right click it to let go." },
     { at: "#ruler", title: "Move around", text: "Click the numbered ruler to move the playhead, or drag along it to pick a section to loop or copy. The mouse wheel zooms, and holding the wheel down while dragging moves the view." },
     { at: "#playBtn", title: "Play it", text: "Press here or <b>Space</b> to play and stop. <b>⏮</b> goes back to the start, <b>Loop</b> repeats a section and <b>Follow</b> scrolls along with the music." },
-    { title: "Handy keys", html: keyList([["Space", "Play and stop"], ["Ctrl + Z", "Undo (Ctrl + Y redoes)"], ["Ctrl + C / V", "Copy and paste notes, a section or whole tracks"], ["Ctrl + D", "Duplicate what is selected"], ["Arrow keys", "Move the selected notes"], ["L", "Loop on or off"], ["Home", "Back to the start"]]) },
+    { title: "Handy keys", html: keyList([["Space", "Play and stop"], ["Ctrl + Z", "Undo (Ctrl + Y redoes)"], ["Ctrl + C / V", "Copy and paste notes, a section or whole tracks"], ["Ctrl + D", "Duplicate what is selected"], ["Shift + drag", "Box notes in to select them"], ["Ctrl + A", "Select every note on the track"], ["Esc", "Clear the selection"], ["Arrow keys", "Move the selected notes"], ["Delete", "Remove the selected notes"], ["L", "Loop on or off"], ["Home", "Back to the start"]]) },
     { at: "#saveBtn", title: "Keep your songs", text: "<b>Save</b> keeps your songs in this browser. <b>Text</b> (under Export) gives song text you can bring back with <b>Import</b>, which is the safest copy. <b>New</b> starts another song." },
     { at: "#pjsBtn", title: "Share your music", text: "<b>PJS</b> makes a Khan Academy program, <b>Player</b> makes a page that plays your songs with their visuals, and <b>MP3</b> saves the song as a sound file." },
     { title: "You're ready", text: "That's everything you need to start. Have fun making music!" }
@@ -5982,7 +6060,19 @@ var mobile = platform === "Android" || platform === "iOS";
 
 $("trashBtn").addEventListener("click", function () {
     ui.trash = !ui.trash;
+    ui.pick = false;
     $("trashBtn").classList.toggle("on", ui.trash);
+    $("pickBtn").classList.remove("on");
+});
+
+// Select mode: dragging over empty space draws a box that selects notes, and clicking a note adds or removes it,
+// the same as holding Shift. It never places notes, so selecting works without a keyboard too.
+$("pickBtn").addEventListener("click", function () {
+    ui.pick = !ui.pick;
+    ui.trash = false;
+    $("pickBtn").classList.toggle("on", ui.pick);
+    $("trashBtn").classList.remove("on");
+    dirty = true;
 });
 
 var setView = function (v) {
