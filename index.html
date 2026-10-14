@@ -2969,7 +2969,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v39/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v40/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -4396,7 +4396,11 @@ cv.roll.addEventListener("pointerdown", function (e) {
             er = null;
         }
     }
+    // a click while a note's words or loudness are being edited only closes (and keeps) the edit,
+    // so clicking away never drops a new note where the click landed
+    var editing = !!lyr.n;
     shutLyric(true);
+    if (editing && e.button !== 1) { return; }
     ui.focus = "notes";
     pickMarks();
     if (e.button === 1) { return startPan(e, true); }
