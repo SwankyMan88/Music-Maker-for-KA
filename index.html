@@ -1474,7 +1474,8 @@ var coreSrc = function () {
     // Bend step times are kept in ticks on the notes, this turns them into seconds.
     core.secs = function (gl, sp) {
         var p = [];
-        for (var i = 0; i < gl.p.length; i++) { p.push({ at: gl.p[i].at * sp, s: gl.p[i].s, t: gl.p[i].t, c: gl.p[i].c }); }
+        // a slide that fills a gap lasts exactly as long as the gap
+        for (var i = 0; i < gl.p.length; i++) { p.push({ at: gl.p[i].at * sp, s: gl.p[i].s, t: gl.p[i].d ? gl.p[i].d * sp : gl.p[i].t, c: gl.p[i].c }); }
         return { s0: gl.s0, p: p };
     };
 
@@ -1495,11 +1496,24 @@ var coreSrc = function () {
             to._in = n;
             h = vox ? n : n._head || n;
             h._bend = h._bend || { len: h.l, gl: vox ? null : { s0: 0, p: [] } };
+            // with a gap between the notes, the slide fills it: it leaves at the end of the first note and arrives
+            // just as the next one starts (d is the gap in ticks); without a gap it glides in over the slide time
+            var gap = to.t - (n.t + n.l);
             if (vox) {
                 h._bend.len = Math.max(h._bend.len, to.t - n.t);
-                to._bend = { len: to.l, gl: { s0: n.p - to.p, p: [{ at: 0, s: 0, t: n.g.ms / 1000, c: n.g.c }] } };
+                if (gap > 0) {
+                    h._bend.gl = h._bend.gl || { s0: 0, p: [] };
+                    h._bend.gl.p.push({ at: n.l, s: to.p - n.p, t: n.g.ms / 1000, c: n.g.c, d: gap });
+                    to._bend = { len: to.l, gl: null };
+                } else {
+                    to._bend = { len: to.l, gl: { s0: n.p - to.p, p: [{ at: 0, s: 0, t: n.g.ms / 1000, c: n.g.c }] } };
+                }
             } else {
-                h._bend.gl.p.push({ at: to.t - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c });
+                if (gap > 0) {
+                    h._bend.gl.p.push({ at: n.t + n.l - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c, d: gap });
+                } else {
+                    h._bend.gl.p.push({ at: to.t - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c });
+                }
                 h._bend.len = to.t + to.l - h.t;
                 to._skip = to._head = h;
             }
@@ -2969,7 +2983,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v40/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v41/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -3779,15 +3793,16 @@ var drNote = function (g, n, x, y, w, color, on, label, part, edge) {
     }
 };
 
-// Where a slide runs, as points along its middle: from the end of the first note, level until the next part starts,
-// then sliding to the part's pitch over the slide's time (straight, or an S curve for smooth slides).
+// Where a slide runs, as points along its middle (straight, or an S curve for smooth slides).
+// With a gap between the notes it flows all the way from the end of the first note to the start of the next,
+// the way it sounds; with no gap it glides into the next part over the slide's time.
 var linkPath = function (a, b) {
     var x0 = tx(a.t, HEAD) + Math.max(3, a.l * ui.zx - 1), y1 = rollY(a.p) + ui.zy / 2;
-    var x1 = Math.max(x0, tx(b.t, HEAD)), y2 = rollY(b.p) + ui.zy / 2;
-    var slide = clamp(a.g.ms / 1000 / spt() * ui.zx, 6, Math.max(6, b.l * ui.zx * 0.8)), pts = [[x0, y1]];
+    var x1 = Math.max(x0, tx(b.t, HEAD)), y2 = rollY(b.p) + ui.zy / 2, gap = b.t > a.t + a.l;
+    var from = gap ? x0 : x1, span = gap ? x1 - x0 : clamp(a.g.ms / 1000 / spt() * ui.zx, 6, Math.max(6, b.l * ui.zx * 0.8)), pts = [];
     for (var i = 0; i <= 16; i++) {
         var u = i / 16, k = a.g.c ? u * u * (3 - 2 * u) : u;
-        pts.push([x1 + slide * u, y1 + (y2 - y1) * k]);
+        pts.push([from + span * u, y1 + (y2 - y1) * k]);
     }
     return pts;
 };
@@ -4303,7 +4318,8 @@ var editSlide = function (n) {
     var g = n.g;
     modal({
         title: "Slide",
-        html: '<p class="note">The second note starts at the first note\'s pitch and slides to its own.</p>' + knob("Slide time (ms)", 20, 2000, g.ms, 10) +
+        html: '<p class="note">The sound slides from the first note\'s pitch to the next part\'s. When there is a gap between them, the slide fills the gap, ' +
+            "leaving at the end of the first note and arriving as the next part starts. When they touch, it glides in over the slide time.</p>" + knob("Slide time (ms)", 20, 2000, g.ms, 10) +
             '<label class="knob"><span>Shape</span><select id="slShape"><option value="0">Straight (linear)</option><option value="1">Smooth (cubic)</option></select><span></span></label>',
         btns: [
             { t: "Done", hi: true, fn: closeModal },

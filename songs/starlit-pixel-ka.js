@@ -89,13 +89,16 @@ if (t < dt) { t = t / dt; return t + t - t * t - 1; } if (t > 1 - dt) { t = (t -
 core.bend = function (gl, t) { var off = gl.s0; for (var i = 0; i < gl.p.length && t >= gl.p[i].at; i++) {
 var u = Math.min(1, (t - gl.p[i].at) / gl.p[i].t); off += (gl.p[i].s - off) * (gl.p[i].c ? u * u * (3 - 2 * u) : u); } return off; };
 core.secs = function (gl, sp) { var p = [];
-for (var i = 0; i < gl.p.length; i++) { p.push({ at: gl.p[i].at * sp, s: gl.p[i].s, t: gl.p[i].t, c: gl.p[i].c }); } return { s0: gl.s0, p: p }; };
-core.chain = function (notes, vox) { var spot = {}, i, n, to, h; for (i = 0; i < notes.length; i++) { n = notes[i];
+for (var i = 0; i < gl.p.length; i++) { p.push({ at: gl.p[i].at * sp, s: gl.p[i].s, t: gl.p[i].d ? gl.p[i].d * sp : gl.p[i].t, c: gl.p[i].c }); }
+return { s0: gl.s0, p: p }; }; core.chain = function (notes, vox) { var spot = {}, i, n, to, h; for (i = 0; i < notes.length; i++) { n = notes[i];
 n._bend = n._skip = n._in = n._head = null; spot[n.t + ":" + n.p] = n; } for (i = 0; i < notes.length; i++) { n = notes[i];
 to = n.g && spot[(n.t + n.g.dt) + ":" + (n.p + n.g.dp)]; if (!to || to.t <= n.t || to._in) { continue; } to._in = n; h = vox ? n : n._head || n;
-h._bend = h._bend || { len: h.l, gl: vox ? null : { s0: 0, p: [] } }; if (vox) { h._bend.len = Math.max(h._bend.len, to.t - n.t);
-to._bend = { len: to.l, gl: { s0: n.p - to.p, p: [{ at: 0, s: 0, t: n.g.ms / 1000, c: n.g.c }] } }; } else {
-h._bend.gl.p.push({ at: to.t - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c }); h._bend.len = to.t + to.l - h.t; to._skip = to._head = h; } } };
+h._bend = h._bend || { len: h.l, gl: vox ? null : { s0: 0, p: [] } }; var gap = to.t - (n.t + n.l); if (vox) {
+h._bend.len = Math.max(h._bend.len, to.t - n.t); if (gap > 0) { h._bend.gl = h._bend.gl || { s0: 0, p: [] };
+h._bend.gl.p.push({ at: n.l, s: to.p - n.p, t: n.g.ms / 1000, c: n.g.c, d: gap }); to._bend = { len: to.l, gl: null }; } else {
+to._bend = { len: to.l, gl: { s0: n.p - to.p, p: [{ at: 0, s: 0, t: n.g.ms / 1000, c: n.g.c }] } }; } } else { if (gap > 0) {
+h._bend.gl.p.push({ at: n.t + n.l - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c, d: gap }); } else {
+h._bend.gl.p.push({ at: to.t - h.t, s: to.p - h.p, t: n.g.ms / 1000, c: n.g.c }); } h._bend.len = to.t + to.l - h.t; to._skip = to._head = h; } } };
 core.layerJob = function (ctx, out, L, base, hold, gl) { var sr = ctx.sampleRate, w = L.w || "sin", pw = L.pw || 0.5, step = L.nr ? sr / L.nr : 0;
 var g = L.g === undefined ? 0.3 : L.g, s = L.s === undefined ? 1 : L.s;
 var a = L.a || 0.002, d = L.d || 0.2, r = L.r || 0.05, damp = 1.4 - (L.fq || 0) * 1.25;
