@@ -724,8 +724,100 @@
             #modal.hide {
                 display: none;
             }
+
+            /* The tour: a spotlight on one part of the page and a card that explains it, one step at a time. */
+            #tour {
+                position: fixed;
+                inset: 0;
+                z-index: 40;
+            }
+            #tour.hide {
+                display: none;
+            }
+            #tour.dim {
+                background: rgba(9, 10, 14, 0.7);
+            }
+            #tourHole {
+                position: fixed;
+                border-radius: 8px;
+                box-shadow: 0 0 0 9999px rgba(9, 10, 14, 0.7);
+                outline: 2px solid rgb(96, 183, 247);
+                transition: left 0.25s, top 0.25s, width 0.25s, height 0.25s;
+                pointer-events: none;
+            }
+            #tourHole.none {
+                left: 50% !important;
+                top: 50% !important;
+                width: 0 !important;
+                height: 0 !important;
+                outline: none;
+            }
+            #tourCard {
+                position: fixed;
+                width: min(360px, calc(100% - 24px));
+                max-height: calc(100% - 24px);
+                overflow-y: auto;
+                background: rgb(31, 34, 42);
+                border: 1px solid rgb(55, 61, 73);
+                border-radius: 12px;
+                padding: 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
+                transition: left 0.25s, top 0.25s;
+            }
+            #tourStep {
+                color: rgb(141, 148, 163);
+                font-size: 12px;
+                letter-spacing: 0.06em;
+            }
+            #tourTitle {
+                font-size: 17px;
+                font-weight: 700;
+            }
+            #tourText {
+                color: rgb(196, 201, 212);
+                line-height: 1.5;
+            }
+            #tourDemo:empty {
+                display: none;
+            }
+            #tourDemo svg {
+                width: 100%;
+                height: auto;
+                display: block;
+                border-radius: 8px;
+                background: rgb(22, 24, 30);
+            }
+            #tourBtns {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+            #tourBtns .grow {
+                flex: 1;
+            }
+            .keys {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                gap: 6px 12px;
+                align-items: center;
+            }
+            .keys kbd {
+                background: rgb(46, 51, 63);
+                border: 1px solid rgb(70, 77, 92);
+                border-bottom-width: 2px;
+                border-radius: 5px;
+                padding: 1px 7px;
+                font: 600 12px system-ui, sans-serif;
+                white-space: nowrap;
+                justify-self: start;
+            }
             .box {
                 width: min(720px, calc(100% - 32px));
+                max-height: calc(100% - 32px);
+                overflow-y: auto;
                 background: rgb(31, 34, 42);
                 border: 1px solid rgb(55, 61, 73);
                 border-radius: 10px;
@@ -778,7 +870,7 @@
             <select id="trackSel" class="small" title="Track to edit"></select>
             <div class="grow small"></div>
             <button id="menuBtn" class="small" title="Song menu">☰</button>
-            <button id="mp3Btn" class="small" title="Download this song as an MP3">MP3</button>
+            <button id="mp3Btn" title="Download this song as an MP3">MP3</button>
             <button id="fullBtn" title="Open in a full window">⛶</button>
             <div id="more">
                 <div class="grp2">
@@ -896,6 +988,21 @@
             </div>
         </div>
 
+        <div id="tour" class="hide">
+            <div id="tourHole"></div>
+            <div id="tourCard">
+                <div id="tourStep"></div>
+                <div id="tourTitle"></div>
+                <div id="tourDemo"></div>
+                <div id="tourText"></div>
+                <div id="tourBtns">
+                    <button id="tourSkip">Skip</button>
+                    <div class="grow"></div>
+                    <button id="tourBack">Back</button>
+                    <button id="tourNext" class="hi">Next</button>
+                </div>
+            </div>
+        </div>
         <div id="modal" class="hide">
             <div class="box">
                 <div id="mTitle"></div>
@@ -2862,7 +2969,7 @@ var pjs = {
             // If neither loads, everything still works and Vox tracks stay quiet.
             var voiceFrom = [
                 "js/",
-                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v37/js/"
+                "https://cdn.jsdelivr.net/gh/SwankyMan88/Music-Maker-for-KA@v38/js/"
             ];
             var voiceWait = [];
             var voiceDone = false;
@@ -3145,7 +3252,14 @@ var redo = function () {
 
 // Notes change a lot while editing, so a sorted copy of each track is kept until the next change.
 var ver = 0;
-var bump = function () { ver++; };
+// Marks note lists as changed so they are sorted again: one track when only its notes moved (fast while dragging), or every track.
+var bump = function (tr) {
+    if (tr) {
+        tr._v = -1;
+    } else {
+        ver++;
+    }
+};
 
 var ord = function (tr) {
     if (tr._v === ver && tr._s) { return tr._s; }
@@ -3271,7 +3385,7 @@ var relink = function (pairs, last) {
             delete a.g;
         }
     });
-    bump();
+    bump(cur());
 };
 
 var keep = function (key, make, peek) {
@@ -3357,10 +3471,17 @@ var warmUp = function (from, ready) {
     warmStep();
 };
 
+// Before playing, sounds are built in quick bursts so play starts fast. Once the song is playing,
+// they are built only a few seconds ahead of the playhead: in small pieces while well ahead, so the page stays smooth,
+// and in quick bursts again when the playhead gets close (songs full of voices need that).
 var warmStep = function () {
-    var t0 = performance.now();
-    while (warm.at < warm.list.length && performance.now() - t0 < 25) {
+    var t0 = performance.now(), playing = play.on && !warm.wait, now = playing ? nowTick() : 0;
+    var nx = warm.list[warm.at], close = playing && nx && nx.n.t < now + 2.5 / spt();
+    var relaxed = playing && !close;
+    var budget = relaxed ? 8 : 25, ahead = playing ? now + 6 / spt() : Infinity;
+    while (warm.at < warm.list.length && performance.now() - t0 < budget) {
         var w = warm.list[warm.at];
+        if (!warm.job && w.n.t > ahead) { break; }
         if (!warm.job) {
             var sk = synthOf(w.tr, w.n, w.n.l * spt());
             if (!sk || bufs[sk.key] !== undefined) {
@@ -3384,7 +3505,7 @@ var warmStep = function () {
         warm.wait = null;
         fn();
     }
-    if (warm.at < warm.list.length) { warm.timer = setTimeout(warmStep, 5); }
+    if (warm.at < warm.list.length) { warm.timer = setTimeout(warmStep, relaxed ? 30 : 5); }
     if (warm.wait) { $("playBtn").textContent = Math.round(warm.at / Math.max(1, warm.list.length) * 100) + "%"; }
 };
 
@@ -3477,6 +3598,8 @@ var startPlay = function (from) {
 };
 
 var stopPlay = function () {
+    // building the rest of the song can wait for the next play, so editing stays smooth
+    clearTimeout(warm.timer);
     if (warm.wait) {
         warm.wait = null;
         $("playBtn").textContent = "▶";
@@ -4193,7 +4316,7 @@ var join = function (a, b) {
         if (pr[1] === b && pr[0] !== a) { delete pr[0].g; }
     });
     a.g = { dt: b.t - a.t, dp: b.p - a.p, ms: a.g ? a.g.ms : 120, c: a.g ? a.g.c : 0 };
-    bump();
+    bump(tr);
     return true;
 };
 
@@ -4241,7 +4364,7 @@ var removeNotes = function (tr, list) {
     });
     tr.notes = tr.notes.filter(function (n) { return !gone.has(n); });
     sel = sel.filter(function (n) { return !gone.has(n); });
-    bump();
+    bump(tr);
 };
 
 var startPan = function (e, roll) {
@@ -4325,9 +4448,11 @@ cv.roll.addEventListener("pointerdown", function (e) {
         return;
     }
     if (e.button !== 0) { return; }
-    if (hit && lastTap.n === hit && now - lastTap.t < 400) {
+    // A second click opens the editor when the button comes back up: opening it on the way down lets the browser's
+    // own click handling take the typing focus straight back, which closed the box before anything could be typed.
+    if (hit && lastTap.n === hit && now - lastTap.t < 500) {
         lastTap.n = null;
-        editNote(hit);
+        drag = { k: "edit", ref: hit };
         return;
     }
     lastTap = { t: now, n: hit };
@@ -4340,7 +4465,7 @@ cv.roll.addEventListener("pointerdown", function (e) {
     if (!hit) {
         var n = { t: Math.max(0, Math.floor(tk / ui.snap) * ui.snap), l: isKit(tr) ? Math.max(ui.snap, 3) : ui.len, p: p, v: ui.vel, w: "" };
         tr.notes.push(n);
-        bump();
+        bump(tr);
         sel = [n];
         lastTap = { t: now, n: n };
         drag = { k: "size", fresh: true, t0: tk, cx: m.x, orig: [{ n: n, t: n.t, l: n.l, p: n.p }], ref: n, moved: true };
@@ -4360,7 +4485,7 @@ cv.roll.addEventListener("pointerdown", function (e) {
     if (made) {
         var copies = sel.map(copyNote);
         tr.notes = tr.notes.concat(copies);
-        bump();
+        bump(tr);
         hit = copies[sel.indexOf(hit)];
         sel = copies;
     }
@@ -4503,12 +4628,19 @@ var moves = {
         relink(drag.pairs, false);
         if (drag.ref.p !== drag.lp) {
             drag.lp = drag.ref.p;
-            preview(cur(), drag.ref.p, drag.ref.w);
+            // a voice takes a moment to build, so it only sings once the note has settled on a pitch
+            var tr = cur(), ref = drag.ref;
+            clearTimeout(drag.sing);
+            if (isVox(tr)) {
+                drag.sing = setTimeout(function () { preview(tr, ref.p, ref.w); }, 90);
+            } else {
+                preview(tr, ref.p, ref.w);
+            }
         }
     },
     size: function (e, m) {
         var tk = rollT(m.x);
-        bump();
+        bump(cur());
         if (drag.fresh) {
             if (Math.abs(m.x - drag.cx) <= 3) { return; }
             drag.ref.l = ui.len = Math.max(drag.ref.t + ui.snap, Math.ceil(tk / ui.snap) * ui.snap) - drag.ref.t;
@@ -4577,6 +4709,7 @@ var lift = function (e) {
     }
     if (d.k === "order") { moveTrack(d.from, d.to); }
     if (d.k === "size" && d.fresh && isVox(cur())) { openLyric(d.ref); }
+    if (d.k === "edit") { editNote(d.ref); }
     if (d.k === "erase" && d.hit) { commit(); }
     if (d.k === "ruler" && !d.moved) {
         ui.head = d.a;
@@ -5183,44 +5316,162 @@ var saveSongs = function (texts) {
 
 $("saveBtn").addEventListener("click", function () { saveBox(""); });
 
-$("helpBtn").addEventListener("click", function () {
-    var list = function (head, items) { return "<h3>" + head + "</h3><ul><li>" + items.join("</li><li>") + "</li></ul>"; };
-    modal({
-        title: "How Songboard works",
-        html: '<div class="help">' +
-            list("Making music", [
-                "Pick an instrument on the left and press <b>+ Track</b> (or drag it onto the track list).",
-                "Click a track, then click in the notes area below to add notes. Drag a note to move it, drag its right edge to make it longer.",
-                "Click a note a second time to edit it: words for Vox voices, loudness for everything else.",
-                "Right click deletes notes and slide lines."
-            ]) +
-            list("Moving around", [
-                "Mouse wheel zooms in and out. Hold the middle button (the wheel) and drag to move around.",
-                "Click the ruler (the numbered strip) to move the playhead, drag on it to pick a section.",
-                "On phones: one finger edits, two fingers move and pinch to zoom, Delete mode removes notes."
-            ]) +
-            list("Tracks", [
-                "✎ edits a track's sound: effects, the singer's voice, and the instrument's raw settings.",
-                "M mutes, S plays only that track, ✕ deletes it. Drag ⠿ to move a track up or down.",
-                "Click a track's name area to pick it, then Ctrl+C and Ctrl+V copy the whole track."
-            ]) +
-            list("Slides", [
-                "Every note has a dot on each end. Drag from a note's right dot to a later note to slide into it.",
-                "Click the line to change how long the slide takes and its shape, right click it to remove it."
-            ]) +
-            list("Copy, paste and keys", [
-                "Space plays and stops, Home goes back to the start, L loops, Ctrl+Z undoes.",
-                "Ctrl+C, Ctrl+V and Ctrl+D copy, paste and duplicate selected notes, a section or whole tracks.",
-                "Shift and drag on empty space selects several notes. Arrow keys move selected notes."
-            ]) +
-            list("Sharing", [
-                "Export Text gives song text you can Import later or paste into the page's song list.",
-                "Export PJS makes a Khan Academy program, Export Player makes a page that only plays your songs.",
-                "Save keeps songs in this browser. Export Text is the safe copy."
-            ]) + "</div>",
-        btns: [{ t: "Got it", hi: true, fn: closeModal }]
-    });
+// The tour: the ? button walks through Songboard one step at a time, lighting up the part of the page each step is about.
+// Steps with an example show a small looping animation of the action.
+var demoBox = function (inner) {
+    return '<svg viewBox="0 0 300 96" xmlns="http://www.w3.org/2000/svg">' +
+        '<g stroke="rgb(40, 44, 54)" stroke-width="1">' +
+        [16, 32, 48, 64, 80].map(function (y) { return '<line x1="0" x2="300" y1="' + y + '" y2="' + y + '"/>'; }).join("") +
+        [60, 120, 180, 240].map(function (x) { return '<line y1="0" y2="96" x1="' + x + '" x2="' + x + '"/>'; }).join("") +
+        "</g>" + inner + "</svg>";
+};
+var demoCursor = function (values) {
+    return '<path d="M0 0 L0 14 L4 10 L7 17 L9 16 L6 9 L11 9 Z" fill="rgb(236, 238, 243)" stroke="rgb(21, 23, 29)" stroke-width="1">' +
+        '<animateTransform attributeName="transform" type="translate" dur="3s" repeatCount="indefinite" values="' + values + '"/></path>';
+};
+var demos = {
+    // a click places a note, then dragging its right edge stretches it
+    place: demoBox(
+        '<rect x="60" y="34" height="12" rx="2" fill="rgb(96, 183, 247)">' +
+        '<animate attributeName="width" dur="3s" repeatCount="indefinite" values="0;0;14;14;110;110;0" keyTimes="0;0.15;0.2;0.35;0.7;0.95;1"/></rect>' +
+        demoCursor("40,60;62,40;62,40;74,40;170,40;170,40;40,60")),
+    // clicking twice opens a box to type the words for a voice note
+    edit: demoBox(
+        '<rect x="70" y="40" width="120" height="14" rx="2" fill="rgb(252, 141, 211)"/>' +
+        '<rect x="70" y="14" width="120" height="20" rx="4" fill="rgb(21, 23, 29)" stroke="rgb(96, 183, 247)">' +
+        '<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.25;0.3;0.9;1"/></rect>' +
+        '<text x="78" y="28" fill="rgb(236, 238, 243)" font-size="12" font-family="system-ui, sans-serif">' +
+        '<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.4;0.45;0.9;1"/>hel-lo</text>' +
+        demoCursor("30,70;110,46;110,46;110,46;30,70")),
+    // a right click removes a note
+    erase: demoBox(
+        '<rect x="100" y="40" width="90" height="12" rx="2" fill="rgb(96, 183, 247)">' +
+        '<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1;1;0;0;1" keyTimes="0;0.4;0.5;0.9;1"/></rect>' +
+        '<text x="150" y="80" fill="rgb(244, 133, 120)" font-size="11" font-family="system-ui, sans-serif">' +
+        '<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.4;0.6;1"/>right click</text>' +
+        demoCursor("40,70;140,46;140,46;140,46;40,70")),
+    // dragging from a note's end dot to a later note makes the sound slide into it
+    slide: demoBox(
+        '<rect x="30" y="58" width="80" height="12" rx="2" fill="rgb(96, 183, 247)"/>' +
+        '<rect x="180" y="22" width="80" height="12" rx="2" fill="rgb(96, 183, 247)"/>' +
+        '<circle cx="114" cy="64" r="4" fill="rgb(252, 214, 105)"/>' +
+        '<path d="M114 64 C 150 64, 150 28, 180 28" fill="none" stroke="rgb(252, 214, 105)" stroke-width="2" stroke-dasharray="90" stroke-dashoffset="90">' +
+        '<animate attributeName="stroke-dashoffset" dur="3s" repeatCount="indefinite" values="90;90;0;0;90" keyTimes="0;0.2;0.6;0.9;1"/></path>' +
+        demoCursor("60,85;114,64;114,64;182,28;182,28;60,85"))
+};
+var keyList = function (rows) {
+    return '<div class="keys">' + rows.map(function (r) { return "<kbd>" + r[0] + "</kbd><span>" + r[1] + "</span>"; }).join("") + "</div>";
+};
+var tourSteps = [
+    { title: "Welcome to Songboard", text: "This short tour shows how to make a song, one part at a time. Use Next and Back (or the arrow keys). The <b>?</b> button brings it back any time." },
+    { at: "#pal", title: "Pick a sound", text: "Choose an instrument from this list, then press <b>+ Track</b> to add it to your song. You can also drag an instrument onto the tracks." },
+    { at: "#arrBody", title: "Your tracks", text: "Each row is one instrument. Click a track to work on its notes. <b>M</b> mutes it, <b>S</b> plays only it, <b>✎</b> shapes its sound and <b>✕</b> deletes it. Drag <b>⠿</b> to move a track up or down." },
+    { at: "#roll", demo: "place", title: "Add notes", text: "Click in the notes area to place a note. Drag its right edge to make it longer, or drag the middle to move it. Higher rows are higher notes." },
+    { at: "#roll", demo: "edit", title: "Edit a note", text: "Click a note twice to edit it. Singing voices get a box for their words (split syllables like <b>hel-lo</b>), other instruments get their loudness from 1 to 127. Press Enter to keep it." },
+    { at: "#roll", demo: "erase", title: "Delete notes", text: "Right click a note to delete it. Hold Shift and drag over empty space to select several notes at once." },
+    { at: "#roll", demo: "slide", title: "Slide between notes", text: "Every note has a dot at its right end. Drag from it to a later note and the sound glides into that note. Click the line to change the glide, right click it to remove it." },
+    { at: "#ruler", title: "Move around", text: "Click the numbered ruler to move the playhead, or drag along it to pick a section to loop or copy. The mouse wheel zooms, and holding the wheel down while dragging moves the view." },
+    { at: "#playBtn", title: "Play it", text: "Press here or <b>Space</b> to play and stop. <b>⏮</b> goes back to the start, <b>Loop</b> repeats a section and <b>Follow</b> scrolls along with the music." },
+    { title: "Handy keys", html: keyList([["Space", "Play and stop"], ["Ctrl + Z", "Undo (Ctrl + Y redoes)"], ["Ctrl + C / V", "Copy and paste notes, a section or whole tracks"], ["Ctrl + D", "Duplicate what is selected"], ["Arrow keys", "Move the selected notes"], ["L", "Loop on or off"], ["Home", "Back to the start"]]) },
+    { at: "#saveBtn", title: "Keep your songs", text: "<b>Save</b> keeps your songs in this browser. <b>Text</b> (under Export) gives song text you can bring back with <b>Import</b>, which is the safest copy. <b>New</b> starts another song." },
+    { at: "#pjsBtn", title: "Share your music", text: "<b>PJS</b> makes a Khan Academy program, <b>Player</b> makes a page that plays your songs with their visuals, and <b>MP3</b> saves the song as a sound file." },
+    { title: "You're ready", text: "That's everything you need to start. Have fun making music!" }
+];
+var tour = { at: 0 };
+
+// The part of the page a step points at, when it is showing.
+var tourTarget = function (st) {
+    var el = st.at && document.querySelector(st.at);
+    if (!el) { return null; }
+    var r = el.getBoundingClientRect();
+    return r.width > 4 && r.height > 4 ? r : null;
+};
+
+// Puts the card beside the lit part where there is room, otherwise above or below it, always fully on screen.
+var tourPlace = function () {
+    var st = tourSteps[tour.at], r = tourTarget(st), hole = $("tourHole"), card = $("tourCard");
+    var W = window.innerWidth, H = window.innerHeight, cw = card.offsetWidth, ch = card.offsetHeight, gap = 14, x, y;
+    // with nothing to light up, the whole page is dimmed behind the card
+    $("tour").classList.toggle("dim", !r);
+    if (!r) {
+        hole.classList.add("none");
+        x = (W - cw) / 2;
+        y = (H - ch) / 2;
+    } else {
+        hole.classList.remove("none");
+        var pad = 6, hx = Math.max(4, r.left - pad), hy = Math.max(4, r.top - pad);
+        hole.style.left = hx + "px";
+        hole.style.top = hy + "px";
+        hole.style.width = (Math.min(W - 4, r.right + pad) - hx) + "px";
+        hole.style.height = (Math.min(H - 4, r.bottom + pad) - hy) + "px";
+        if (document.body.classList.contains("single")) {
+            x = (W - cw) / 2;
+            y = r.top > H / 2 ? gap : H - ch - gap;
+        } else if (W - r.right >= cw + gap * 2) {
+            x = r.right + gap;
+            y = r.top;
+        } else if (r.left >= cw + gap * 2) {
+            x = r.left - cw - gap;
+            y = r.top;
+        } else if (H - r.bottom >= ch + gap * 2) {
+            x = r.left;
+            y = r.bottom + gap;
+        } else if (r.top >= ch + gap * 2) {
+            x = r.left;
+            y = r.top - ch - gap;
+        } else {
+            x = W - cw - gap;
+            y = H - ch - gap;
+        }
+    }
+    card.style.left = clamp(x, 12, Math.max(12, W - cw - 12)) + "px";
+    card.style.top = clamp(y, 12, Math.max(12, H - ch - 12)) + "px";
+};
+
+var tourShow = function (i) {
+    tour.at = clamp(i, 0, tourSteps.length - 1);
+    var st = tourSteps[tour.at], last = tour.at === tourSteps.length - 1;
+    $("tourStep").textContent = "STEP " + (tour.at + 1) + " OF " + tourSteps.length;
+    $("tourTitle").textContent = st.title;
+    $("tourText").innerHTML = st.html || st.text;
+    $("tourDemo").innerHTML = st.demo ? demos[st.demo] : "";
+    $("tourBack").style.visibility = tour.at ? "visible" : "hidden";
+    $("tourNext").textContent = last ? "Done" : "Next";
+    $("tourSkip").style.visibility = last ? "hidden" : "visible";
+    tourPlace();
+};
+
+var tourOpen = function () {
+    stopPlay();
+    closeModal();
+    $("tour").classList.remove("hide");
+    tourShow(0);
+};
+var tourClose = function () { $("tour").classList.add("hide"); };
+var tourOn = function () { return !$("tour").classList.contains("hide"); };
+
+$("helpBtn").addEventListener("click", tourOpen);
+$("tourNext").addEventListener("click", function () {
+    if (tour.at === tourSteps.length - 1) {
+        tourClose();
+    } else {
+        tourShow(tour.at + 1);
+    }
 });
+$("tourBack").addEventListener("click", function () { tourShow(tour.at - 1); });
+$("tourSkip").addEventListener("click", tourClose);
+window.addEventListener("resize", function () {
+    if (tourOn()) { tourPlace(); }
+});
+// While the tour is open, the arrow keys, Enter and Escape drive it, and no other shortcut fires.
+window.addEventListener("keydown", function (e) {
+    if (!tourOn()) { return; }
+    if (e.key === "ArrowRight" || e.key === "Enter") { $("tourNext").click(); }
+    if (e.key === "ArrowLeft" && tour.at) { tourShow(tour.at - 1); }
+    if (e.key === "Escape") { tourClose(); }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+}, true);
 
 $("lyrBtn").addEventListener("click", function () {
     var tr = cur();
